@@ -4,6 +4,7 @@
 #include <string>
 
 #include "cyclus.h"
+#include "boost/shared_ptr.hpp"
 
 namespace tricycle {
 
@@ -98,14 +99,31 @@ class Reactor : public cyclus::Facility  {
   }
   double startup_inventory;
 
+  #pragma cyclus var { \
+    "default": 'fill', \
+    "doc": "Method of refueling the reactor", \
+    "tooltip": "Options: 'schedule' or 'fill'", \
+    "uilabel": "Refuel Mode" \
+  }
+  std::string refuel_mode;
 
   #pragma cyclus var { \
+    "default": 0.1, \
     "doc": "Quantity of fuel which reactor tries to purchase", \
-    "tooltip": "Defaults to fill reserve inventory", \
+    "tooltip": "Defaults to 100g/purchase", \
     "units": "kg", \
     "uilabel": "Buy quantity" \
   }
   double buy_quantity;
+
+ #pragma cyclus var { \
+    "default": 1, \
+    "doc": "Frequency which reactor tries to purchase new fuel", \
+    "tooltip": "Reactor is active for 1 timestep, then dormant for buy_frequency-1 timesteps", \
+    "units": "Timesteps", \
+    "uilabel": "Buy frequency" \
+  }
+  double buy_frequency;
 
   #pragma cyclus var { \
     "doc": "Fresh fuel commodity", \
@@ -114,16 +132,15 @@ class Reactor : public cyclus::Facility  {
   }
   std::string fuel_incommod;
 
-/* !Marked for deletion!
   #pragma cyclus var { \
-    "doc": "Fresh fuel recipe", \
-    "tooltip": "Fresh fuel recipe", \
-    "uilabel": "Fuel Input Recipe" \
+    "doc": "Fresh fuel commodity", \
+    "tooltip": "Name of fuel commodity requested", \
+    "uilabel": "Fuel input commodity" \
   }
-  std::string fuel_inrecipe;
-*/
+  std::string he3_outcommod;
+
   #pragma cyclus var { \
-    "default": 100.0, \
+    "default": 1000.0, \
     "doc": "Initial mass of full blanket material", \
     "tooltip": "Only blanket material mass, not structural mass", \
     "uilabel": "Initial Mass of Blanket" \
@@ -143,15 +160,26 @@ class Reactor : public cyclus::Facility  {
     "uilabel": "Fuel input commodity" \
   }
   std::string blanket_inrecipe;
-/*
 
-    #pragma cyclus var { \
-    "doc": "Fresh Fuel recipe", \
-    "tooltip": "Fresh fuel recipe", \
-    "uilabel": "Fuel Input Recipe" \
+  #pragma cyclus var { \
+    "default": 0.3, \
+    "doc": "Li-6 enrichment requirement percent as a decimal", \
+    "tooltip": "Defaults to 30% (0.3)", \
+    "units": "%", \
+    "uilabel": "Minimum Blanket Enrichment" \
   }
-  std::string blanket_inrecipe;
-*/
+  double min_blanket_enrichment;
+
+
+  //WARNING: The default on this is completely arbitrary!
+  #pragma cyclus var { \
+    "default": 0.05, \
+    "doc": "Percent of blanket that gets recycled every timestep", \
+    "tooltip": "Defaults to 5% (0.05)", \
+    "units": "%", \
+    "uilabel": "Blanket Turnover Rate" \
+  }
+  double blanket_turnover_rate;
 
   bool operational = false; 
 //-----------------------------------------------------------//
@@ -164,7 +192,11 @@ class Reactor : public cyclus::Facility  {
   #pragma cyclus var {"capacity" : "1000"} //capacity set to 1000 arbitrarily
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_core;
 
-  //Tritium stored in the reserve system of the reactor
+  //Tritium reserve for the reactor:
+  #pragma cyclus var {"capacity" : "1000"}
+  cyclus::toolkit::ResBuf<cyclus::Material> tritium_reserve;
+
+  //Excess tritium in the reactor to be sold off:
   #pragma cyclus var {"capacity" : "1000"}
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_storage;
 
@@ -173,19 +205,19 @@ class Reactor : public cyclus::Facility  {
   cyclus::toolkit::ResBuf<cyclus::Material> helium_storage;
 
   //blanket material
-  #pragma cyclus var {"capacity" : "1000"}
+  #pragma cyclus var {"capacity" : "100000"}
   cyclus::toolkit::ResBuf<cyclus::Material> blanket;
 
 //-----------------------------------------------------------//
 //                   Buy and Sell Policies                   //
 //-----------------------------------------------------------//
   cyclus::toolkit::MatlBuyPolicy fuel_startup_policy;
-  cyclus::toolkit::MatlBuyPolicy fuel_schedule_policy;
   cyclus::toolkit::MatlBuyPolicy fuel_refill_policy;
   cyclus::toolkit::MatlBuyPolicy blanket_startup_policy;
+  cyclus::toolkit::MatlBuyPolicy blanket_refill_policy;
 
-
-  cyclus::toolkit::MatlSellPolicy sell_policy;
+  cyclus::toolkit::MatlSellPolicy tritium_sell_policy;
+  cyclus::toolkit::MatlSellPolicy helium_sell_policy;
 
 //-----------------------------------------------------------//
 //                     Fusion Functions                      //
@@ -195,7 +227,7 @@ class Reactor : public cyclus::Facility  {
   void OperateReactor(double TBR, double burn_rate=55.8);
   void DecayInventory(cyclus::toolkit::ResBuf<cyclus::Material> &inventory);
   void CombineInventory(cyclus::toolkit::ResBuf<cyclus::Material> &inventory);
-  void ExtractHelium(cyclus::Material::Ptr material);
+  void ExtractHelium(cyclus::toolkit::ResBuf<cyclus::Material> &inventory);
   void Record(std::string Status, double power);
   void DepleteBlanket(double bred_tritium_mass);
   cyclus::Material::Ptr BreedTritium(double fuel_usage, double TBR);
