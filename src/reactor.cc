@@ -10,14 +10,14 @@ std::string Reactor::str() {
 }
 
 void Reactor::Tick() {
-  std::cout << "Timestep: " << context()->time() <<std::endl;
+  //std::cout << "Timestep: " << context()->time() <<std::endl;
   if(operational){
     OperateReactor(TBR);
     blanket_refill_policy.Start();
-    Reactor::Record("Online", fusion_power);
+    Reactor::RecordStatus("Online", fusion_power);
   }
   else{
-    Reactor::Record("Shut-down", 0);
+    Reactor::RecordStatus("Shut-down", 0);
   }
 
   DecayInventory(tritium_core);
@@ -47,7 +47,6 @@ void Reactor::Tick() {
 
   //0.85 is arbitrary, but corresponds to 3 missed purchases at default value for turnover
   if(!blanket.empty() && blanket.quantity() > 0.85*blanket_size){
-    std::cout<<"Hello"<<std::endl;
     cyclus::Material::Ptr blanket_mat = blanket.Pop();
     cyclus::Material::Ptr spent_blanket = blanket_mat->ExtractQty(blanket_size*blanket_turnover_rate);
     blanket.Push(blanket_mat);
@@ -64,27 +63,44 @@ void Reactor::Tock() {
       operational = true;
     }
     catch (const std::exception& e) {
-      std::cerr << "Exception caught: " << e.what() << std::endl;
+      RecordEvent("Startup Error", e.what());
+      LOG(cyclus::LEV_INFO2, "Reactor") << e.what();
     }
   }
   
   CombineInventory(tritium_reserve);
   CombineInventory(blanket);
 
-  std::cout << "Tritium in Core: " << tritium_core.quantity() << std::endl;
-  std::cout << "Tritium in Reserve: " << tritium_reserve.quantity() << std::endl;
-  std::cout << "Tritium in Storage: " << tritium_storage.quantity() << std::endl;
-  std::cout << "Lithium in Storage: " << blanket.quantity() <<std::endl;
-  std::cout << "Helium in Storage: " << helium_storage.quantity() << std::endl << std::endl;
+  RecordInventories(tritium_core.quantity(),\
+                    tritium_reserve.quantity(),\
+                    tritium_storage.quantity(),\
+                    blanket.quantity(),\
+                    helium_storage.quantity());
 
 }
 
 void Reactor::EnterNotify() {
   cyclus::Facility::EnterNotify();
   
-  fuel_startup_policy.Init(this, &tritium_reserve, std::string("Tritium Storage"),reserve_inventory+startup_inventory, 6).Set(fuel_incommod).Start();
-  blanket_startup_policy.Init(this, &blanket, std::string("Blanket Startup"),blanket_size).Set(blanket_incommod).Start();
-  blanket_refill_policy.Init(this, &blanket, std::string("Blanket Refill"), blanket_size, blanket_size).Set(blanket_incommod);
+  fuel_startup_policy.Init(this, \
+                          &tritium_reserve,\
+                          std::string("Tritium Storage"),\
+                          reserve_inventory+startup_inventory,\
+                          reserve_inventory+startup_inventory)\
+                          .Set(fuel_incommod).Start();
+
+  blanket_startup_policy.Init(this,\
+                              &blanket,\
+                              std::string("Blanket Startup"),\
+                              blanket_size,\
+                              blanket_size)\
+                              .Set(blanket_incommod).Start();
+
+  blanket_refill_policy.Init(this,\
+                            &blanket,\
+                            std::string("Blanket Refill"),\
+                            blanket_size, blanket_size)\
+                            .Set(blanket_incommod);
 
   //Tritium Buy Policy Selection:
   if(refuel_mode == "schedule"){
@@ -95,7 +111,12 @@ void Reactor::EnterNotify() {
     //fuel_refill_policy.Init(this, &tritium_reserve, std::string("Input"), quantity_dist, active_dist, dormant_dist, size_dist).Set(fuel_incommod);
   }
   else if(refuel_mode == "fill"){
-    fuel_refill_policy.Init(this, &tritium_reserve, std::string("Input"), reserve_inventory, reserve_inventory).Set(fuel_incommod);
+    fuel_refill_policy.Init(this,\
+                            &tritium_reserve,\
+                            std::string("Input"),\
+                            reserve_inventory,\
+                            reserve_inventory)\
+                            .Set(fuel_incommod);
   }
   else{
     throw cyclus::KeyError("Refill mode " + refuel_mode + " not recognized! Try 'schedule' or 'fill'.");
@@ -105,25 +126,44 @@ void Reactor::EnterNotify() {
   helium_sell_policy.Init(this, &helium_storage, std::string("Helium-3")).Set(he3_outcommod).Start();
 }
 
-void Reactor::PrintComp(cyclus::Material::Ptr mat){
+std::string Reactor::GetComp(cyclus::Material::Ptr mat){
+  std::string comp = "{";
   cyclus::CompMap c = mat->comp()->atom();
   cyclus::compmath::Normalize(&c, 1);
   for(std::map<const int, double>::const_iterator it = c.begin();it != c.end(); ++it){
-      std::cout << it->first << " " << it->second << "\n";
+      comp = comp + std::string("{") + std::to_string(it->first) + std::string(",") + std::to_string(it->second) + std::string("},");
   }
+  comp.pop_back();  
+  comp = comp + std::string("}");
+  return comp;
 }
 
 void Reactor::Startup(){
+  double reserve_qty = tritium_reserve.quantity();
   cyclus::Material::Ptr initial_reserve = tritium_reserve.Pop();
-  try{
+  cyclus::CompMap c = initial_reserve->comp()->atom();
+  cyclus::compmath::Normalize(&c, 1);
+
+  if((reserve_qty >= (startup_inventory + reserve_inventory)) && (c[10030000] == 1)){ 
     cyclus::Material::Ptr initial_core = initial_reserve->ExtractQty(startup_inventory);
     tritium_core.Push(initial_core);
     tritium_reserve.Push(initial_reserve);
+    RecordEvent("Startup", "Core Loaded with " + std::to_string(tritium_core.quantity()) + " kg of Tritium.");
   }
-  catch (const std::exception& e) {
-    std::cerr << "Exception caught: " << e.what() << std::endl;
+  else if(c[10030000] != 1){
     tritium_reserve.Push(initial_reserve);
-    throw e;
+    throw cyclus::ValueError("Startup Failed: Fuel incommod not as expected. " \
+                            + std::string("Expected Composition: {{10030000,1}}. ") \
+                            + std::string("Fuel Incommod Composition: ") \
+                            + std::string(GetComp(initial_reserve)));
+  }
+  else{
+    tritium_reserve.Push(initial_reserve);
+    throw cyclus::ValueError("Startup Failed: " \
+                             + std::to_string(tritium_reserve.quantity()) \
+                             + " kg in reserve is less than required " \
+                             + std::to_string(startup_inventory+reserve_inventory) \
+                             + " kg to start-up!" );
   }
 }
 
@@ -162,13 +202,36 @@ void Reactor::ExtractHelium(cyclus::toolkit::ResBuf<cyclus::Material> &inventory
   }
 }
 
-void Reactor::Record(std::string status, double power){
+void Reactor::RecordEvent(std::string name, std::string val) {
+  context()
+      ->NewDatum("ReactorEvents")
+      ->AddVal("AgentId", id())
+      ->AddVal("Time", context()->time())
+      ->AddVal("Event", name)
+      ->AddVal("Value", val)
+      ->Record();
+}
+
+void Reactor::RecordStatus(std::string status, double power){
     context()
-      ->NewDatum("ReactorData")
+      ->NewDatum("ReactorStatus")
       ->AddVal("AgentId", id())
       ->AddVal("Time", context()->time())
       ->AddVal("Status", status)
       ->AddVal("Power", power)
+      ->Record();
+}
+
+void Reactor::RecordInventories(double core, double reserve, double storage, double blanket, double helium){
+    context()
+      ->NewDatum("ReactorInventories")
+      ->AddVal("AgentId", id())
+      ->AddVal("Time", context()->time())
+      ->AddVal("TritiumCore", core)
+      ->AddVal("TritiumReserve", reserve)
+      ->AddVal("TritiumStorage", storage)
+      ->AddVal("LithiumBlanket", blanket)
+      ->AddVal("HeliumStorage", helium)
       ->Record();
 }
 

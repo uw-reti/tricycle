@@ -228,7 +228,9 @@ class Reactor : public cyclus::Facility  {
   void DecayInventory(cyclus::toolkit::ResBuf<cyclus::Material> &inventory);
   void CombineInventory(cyclus::toolkit::ResBuf<cyclus::Material> &inventory);
   void ExtractHelium(cyclus::toolkit::ResBuf<cyclus::Material> &inventory);
-  void Record(std::string Status, double power);
+  void RecordEvent(std::string name, std::string val);
+  void RecordStatus(std::string Status, double power);
+  void RecordInventories(double core, double reserve, double storage, double blanket, double helium);
   void DepleteBlanket(double bred_tritium_mass);
   cyclus::Material::Ptr BreedTritium(double fuel_usage, double TBR);
 
@@ -237,7 +239,7 @@ class Reactor : public cyclus::Facility  {
 //-----------------------------------------------------------//
 //                      Test Functions                       //
 //-----------------------------------------------------------//
-  void PrintComp(cyclus::Material::Ptr mat);
+  std::string GetComp(cyclus::Material::Ptr mat);
 
   // And away we go!
 };
