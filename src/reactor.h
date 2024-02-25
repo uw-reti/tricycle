@@ -175,13 +175,14 @@ class Reactor : public cyclus::Facility  {
   #pragma cyclus var { \
     "default": 0.05, \
     "doc": "Percent of blanket that gets recycled every timestep", \
-    "tooltip": "Defaults to 5% (0.05)", \
+    "tooltip": "Defaults to 5% (0.05), must be between 0 and 15%", \
     "units": "%", \
     "uilabel": "Blanket Turnover Rate" \
   }
   double blanket_turnover_rate;
 
-  bool operational = false; 
+  bool operational = true; 
+  bool core_loaded = false;
 //-----------------------------------------------------------//
 //                     Materail Buffers                      //
 //-----------------------------------------------------------//
@@ -231,6 +232,7 @@ class Reactor : public cyclus::Facility  {
   void RecordEvent(std::string name, std::string val);
   void RecordStatus(std::string Status, double power);
   void RecordInventories(double core, double reserve, double storage, double blanket, double helium);
+  void RecordOperationalInfo(std::string name, std::string val);
   void DepleteBlanket(double bred_tritium_mass);
   cyclus::Material::Ptr BreedTritium(double fuel_usage, double TBR);
 
