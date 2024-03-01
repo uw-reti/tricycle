@@ -62,11 +62,6 @@ class Reactor : public cyclus::Facility  {
   /// @param time the time of the tock
   virtual void Tock();
 
-
-//-----------------------------------------------------------//
-//                     State Variables                       //
-//-----------------------------------------------------------//
-
   #pragma cyclus var { \
     "doc": "Nameplate fusion power of the reactor", \
     "tooltip": "Nameplate fusion power", \
@@ -183,46 +178,48 @@ class Reactor : public cyclus::Facility  {
 
   bool operational = true; 
   bool core_loaded = false;
-//-----------------------------------------------------------//
-//                     Materail Buffers                      //
-//-----------------------------------------------------------//
 
-/*These must be defined after member variables for some reason?*/
-
-  //Tritium stored in the core of the reactor
-  #pragma cyclus var {"capacity" : "1000"} //capacity set to 1000 arbitrarily
+  #pragma cyclus var {"tooltip":"Buffer for handling tritium kept in the core"}
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_core;
 
-  //Tritium reserve for the reactor:
-  #pragma cyclus var {"capacity" : "1000"}
+  #pragma cyclus var {"tooltip":"Buffer for handling tritium kept in reserve"}
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_reserve;
 
-  //Excess tritium in the reactor to be sold off:
-  #pragma cyclus var {"capacity" : "1000"}
+  #pragma cyclus var {"tooltip":"Buffer for handling excess tritium material to be sold"}
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_storage;
 
-  //helium-3 extracted from decayed tritium and stored by the reactor
-  #pragma cyclus var {"capacity" : "1000"}
+  #pragma cyclus var {"tooltip":"Buffer for handling helium-3 byproduct material"}
   cyclus::toolkit::ResBuf<cyclus::Material> helium_storage;
 
-  //blanket material
-  #pragma cyclus var {"capacity" : "100000"}
+  #pragma cyclus var {"tooltip":"Buffer for handling enriched lithium blanket material"}
   cyclus::toolkit::ResBuf<cyclus::Material> blanket;
 
-//-----------------------------------------------------------//
-//                   Buy and Sell Policies                   //
-//-----------------------------------------------------------//
+  #pragma cyclus var {"tooltip":"Tracker to handle on-hand tritium"}
+  cyclus::toolkit::TotalInvTracker fuel_tracker;
+
+  #pragma cyclus var {"tooltip":"Tracker to handle blanket material"}
+  cyclus::toolkit::TotalInvTracker blanket_tracker;
+  
+  #pragma cyclus var {"tooltip":"Tracker to handle excess tritium to be sold"}
+  cyclus::toolkit::TotalInvTracker excess_tritium_tracker;
+
+  #pragma cyclus var {"tooltip":"Tracker to handle on-hand helium"}
+  cyclus::toolkit::TotalInvTracker helium_tracker;
+
   cyclus::toolkit::MatlBuyPolicy fuel_startup_policy;
   cyclus::toolkit::MatlBuyPolicy fuel_refill_policy;
-  cyclus::toolkit::MatlBuyPolicy blanket_startup_policy;
-  cyclus::toolkit::MatlBuyPolicy blanket_refill_policy;
+
+  //These two may be redundant (only one may be needed)
+  //cyclus::toolkit::MatlBuyPolicy blanket_startup_policy;
+  cyclus::toolkit::MatlBuyPolicy blanket_fill_policy;
 
   cyclus::toolkit::MatlSellPolicy tritium_sell_policy;
   cyclus::toolkit::MatlSellPolicy helium_sell_policy;
 
-//-----------------------------------------------------------//
-//                     Fusion Functions                      //
-//-----------------------------------------------------------//
+  //For the schedule buy policy
+  //cyclus::IntDistribution::Ptr active_dist = NULL;
+  //cyclus::IntDistribution::Ptr dormant_dist = NULL;
+  //cyclus::IntDistribution::Ptr size_dist = NULL;
 
   void Startup();
   void OperateReactor(double TBR, double burn_rate=55.8);
@@ -235,12 +232,6 @@ class Reactor : public cyclus::Facility  {
   void RecordOperationalInfo(std::string name, std::string val);
   void DepleteBlanket(double bred_tritium_mass);
   cyclus::Material::Ptr BreedTritium(double fuel_usage, double TBR);
-
-
-
-//-----------------------------------------------------------//
-//                      Test Functions                       //
-//-----------------------------------------------------------//
   std::string GetComp(cyclus::Material::Ptr mat);
 
   // And away we go!

@@ -3,7 +3,14 @@
 
 namespace tricycle {
 
-Reactor::Reactor(cyclus::Context* ctx) : cyclus::Facility(ctx) {}
+Reactor::Reactor(cyclus::Context* ctx) : cyclus::Facility(ctx) {
+  //capacities set somewhat arbitrarily
+  fuel_tracker.Init({&tritium_reserve}, 1000.0);
+  blanket_tracker.Init({&blanket}, 100000.0);
+  excess_tritium_tracker.Init({&tritium_storage}, 1000.0);
+  helium_tracker.Init({&helium_storage}, 1000.0);
+
+}
 
 std::string Reactor::str() {
   return Facility::str();
@@ -12,7 +19,7 @@ std::string Reactor::str() {
 void Reactor::Tick() {
   if(core_loaded){
     OperateReactor(TBR);
-    blanket_refill_policy.Start();
+    blanket_fill_policy.Start();
     if(operational){
       Reactor::RecordStatus("Online", fusion_power);
     } else {
@@ -71,7 +78,7 @@ void Reactor::Tock() {
     try {
       Startup();
       fuel_startup_policy.Stop();
-      blanket_startup_policy.Stop();
+      //blanket_startup_policy.Stop();
       fuel_refill_policy.Start();
       core_loaded = true;
     }
@@ -94,42 +101,20 @@ void Reactor::Tock() {
 
 void Reactor::EnterNotify() {
   cyclus::Facility::EnterNotify();
-  
-  fuel_startup_policy.Init(this, \
-                          &tritium_reserve,\
-                          std::string("Tritium Storage"),\
-                          reserve_inventory+startup_inventory,\
-                          reserve_inventory+startup_inventory)\
-                          .Set(fuel_incommod).Start();
 
-  blanket_startup_policy.Init(this,\
-                              &blanket,\
-                              std::string("Blanket Startup"),\
-                              blanket_size,\
-                              blanket_size)\
-                              .Set(blanket_incommod).Start();
-
-  blanket_refill_policy.Init(this,\
-                            &blanket,\
-                            std::string("Blanket Refill"),\
-                            blanket_size, blanket_size)\
-                            .Set(blanket_incommod);
+  fuel_startup_policy.Init(this, &tritium_reserve, std::string("Tritium Storage"), &fuel_tracker, std::string("ss"), reserve_inventory+startup_inventory, reserve_inventory+startup_inventory).Set(fuel_incommod).Start();
+  blanket_fill_policy.Init(this, &blanket, std::string("Blanket Startup"), &blanket_tracker, std::string("ss"), blanket_size, blanket_size).Set(blanket_incommod).Start();
 
   //Tritium Buy Policy Selection:
   if(refuel_mode == "schedule"){
     //boost::shared_ptr<cyclus::random_number_generator::DoubleDistribution> quantity_dist = boost::shared_ptr<cyclus::random_number_generator::FixedDoubleDist>(new cyclus::random_number_generator::FixedDoubleDist(buy_quantity));
-    //boost::shared_ptr<cyclus::IntDistribution> active_dist = boost::shared_ptr<cyclus::FixedIntDist>(new cyclus::FixedIntDist(1));
-    //boost::shared_ptr<cyclus::IntDistribution> dormant_dist = boost::shared_ptr<cyclus::FixedIntDist>(new cyclus::FixedIntDist(buy_frequency-1));
-    //boost::shared_ptr<cyclus::IntDistribution> size_dist = boost::shared_ptr<cyclus::FixedIntDist>(new cyclus::FixedIntDist(1));
-    //fuel_refill_policy.Init(this, &tritium_reserve, std::string("Input"), quantity_dist, active_dist, dormant_dist, size_dist).Set(fuel_incommod);
+    cyclus::IntDistribution::Ptr active_dist = cyclus::FixedIntDist::Ptr (new cyclus::FixedIntDist(1));
+    cyclus::IntDistribution::Ptr dormant_dist= cyclus::FixedIntDist::Ptr (new cyclus::FixedIntDist(buy_frequency-1));
+    cyclus::DoubleDistribution::Ptr size_dist = cyclus::FixedDoubleDist::Ptr (new cyclus::FixedDoubleDist(1));
+    fuel_refill_policy.Init(this, &tritium_reserve, std::string("Input"), &fuel_tracker, buy_quantity, active_dist, dormant_dist, size_dist).Set(fuel_incommod);
   }
   else if(refuel_mode == "fill"){
-    fuel_refill_policy.Init(this,\
-                            &tritium_reserve,\
-                            std::string("Input"),\
-                            reserve_inventory,\
-                            reserve_inventory)\
-                            .Set(fuel_incommod);
+    fuel_refill_policy.Init(this, &tritium_reserve, std::string("Input"), &fuel_tracker, std::string("ss"), reserve_inventory, reserve_inventory).Set(fuel_incommod);
   }
   else{
     throw cyclus::KeyError("Refill mode " + refuel_mode + " not recognized! Try 'schedule' or 'fill'.");
@@ -337,10 +322,11 @@ void Reactor::OperateReactor(double TBR, double burn_rate){
 
     }
     else{
+      RecordOperationalInfo("Tritium Moved", std::to_string(core_fuel->quantity()) + "kg of T moved from core to reserve");
       reserve_fuel->Absorb(core_fuel);
       tritium_reserve.Push(reserve_fuel);
       fuel_refill_policy.Stop();
-      blanket_refill_policy.Stop();
+      blanket_fill_policy.Stop();
       fuel_startup_policy.Start();
       RecordEvent("Core Shut-down", "Not enough tritium to operate");
       core_loaded = false;
