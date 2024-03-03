@@ -851,7 +851,7 @@ TEST_F(ReactorTest, OperateReactorSustainingTBR) {
   double qr_1_rows = qr_1.rows.size();
 
   //Reactor always starts offline for initial fuel loading
-  EXPECT_EQ(9, qr_1_rows);
+  EXPECT_EQ(simdur-1, qr_1_rows);
 
   std::vector<Cond> conds_2;
   conds_2.push_back(Cond("Time", "==", std::string("9")));
@@ -997,6 +997,192 @@ TEST_F(ReactorTest, OperateReactorCoreSizeTooSmall) {
   EXPECT_EQ(expected_msg, msg);
 
 }
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+TEST_F(ReactorTest, EnterNotifyInitialFillDefault) {
+  // Test behaviors of the OperateReactor function here
+
+  std::string config =
+      "  <fusion_power>300</fusion_power> "
+      "  <TBR>1.00</TBR> "
+      "  <reserve_inventory>6</reserve_inventory>"
+      "  <startup_inventory>2.121</startup_inventory>"
+      "  <fuel_incommod>Tritium</fuel_incommod>"
+      "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
+      "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
+      "  <blanket_size>1000</blanket_size>"
+      "  <he3_outcommod>Helium_3</he3_outcommod>";
+
+  int simdur = 2;
+  cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:Reactor"), config, simdur);
+
+  sim.AddRecipe("tritium", tritium());
+  sim.AddRecipe("enriched_lithium", enriched_lithium());
+
+  sim.AddSource("Tritium").recipe("tritium").Finalize();
+
+  sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
+
+  int id = sim.Run();
+
+
+  std::vector<Cond> conds_1;
+  conds_1.push_back(Cond("Time", "==", std::string("0")));
+  conds_1.push_back(Cond("Commodity", "==", std::string("Tritium")));
+  QueryResult qr_1 = sim.db().Query("Transactions", &conds_1);
+  int resource_id_1 = qr_1.GetVal<int>("ResourceId");
+  
+  std::vector<Cond> conds_2;
+  conds_2.push_back(Cond("ResourceId", "==", std::to_string(resource_id_1)));
+  QueryResult qr_2 = sim.db().Query("Resources", &conds_2);
+  double quantity = qr_2.GetVal<double>("Quantity");
+
+  EXPECT_EQ(8.121, quantity);
+
+  std::vector<Cond> conds_3;
+  conds_3.push_back(Cond("Time", "==", std::string("1")));
+  conds_3.push_back(Cond("Commodity", "==", std::string("Tritium")));
+  QueryResult qr_3 = sim.db().Query("Transactions", &conds_3);
+  int resource_id_2 = qr_3.GetVal<int>("ResourceId");
+
+  std::vector<Cond> conds_4;
+  conds_4.push_back(Cond("ResourceId", "==", std::to_string(resource_id_2)));
+  QueryResult qr_4 = sim.db().Query("Resources", &conds_4);
+  double quantity_2 = qr_4.GetVal<double>("Quantity");
+
+  EXPECT_NEAR(0.0379868, quantity_2, 1e-7);
+
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+TEST_F(ReactorTest, EnterNotifyScheduleFill) {
+  // Test behaviors of the OperateReactor function here
+
+  std::string config =
+      "  <fusion_power>300</fusion_power> "
+      "  <TBR>1.00</TBR> "
+      "  <reserve_inventory>6</reserve_inventory>"
+      "  <startup_inventory>2.121</startup_inventory>"
+      "  <fuel_incommod>Tritium</fuel_incommod>"
+      "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
+      "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
+      "  <blanket_size>1000</blanket_size>"
+      "  <buy_quantity>0.1</buy_quantity>"
+      "  <buy_frequency>1</buy_frequency>"
+      "  <refuel_mode>schedule</refuel_mode>"
+      "  <he3_outcommod>Helium_3</he3_outcommod>";
+
+  int simdur = 2;
+  cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:Reactor"), config, simdur);
+
+  sim.AddRecipe("tritium", tritium());
+  sim.AddRecipe("enriched_lithium", enriched_lithium());
+
+  sim.AddSource("Tritium").recipe("tritium").Finalize();
+
+  sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
+
+  int id = sim.Run();
+
+
+  std::vector<Cond> conds_1;
+  conds_1.push_back(Cond("Time", "==", std::string("0")));
+  conds_1.push_back(Cond("Commodity", "==", std::string("Tritium")));
+  QueryResult qr_1 = sim.db().Query("Transactions", &conds_1);
+  int resource_id_1 = qr_1.GetVal<int>("ResourceId");
+  
+  std::vector<Cond> conds_2;
+  conds_2.push_back(Cond("ResourceId", "==", std::to_string(resource_id_1)));
+  QueryResult qr_2 = sim.db().Query("Resources", &conds_2);
+  double quantity = qr_2.GetVal<double>("Quantity");
+
+  EXPECT_EQ(8.121, quantity);
+
+  std::vector<Cond> conds_3;
+  conds_3.push_back(Cond("Time", "==", std::string("1")));
+  conds_3.push_back(Cond("Commodity", "==", std::string("Tritium")));
+  QueryResult qr_3 = sim.db().Query("Transactions", &conds_3);
+  int resource_id_2 = qr_3.GetVal<int>("ResourceId");
+
+  std::vector<Cond> conds_4;
+  conds_4.push_back(Cond("ResourceId", "==", std::to_string(resource_id_2)));
+  QueryResult qr_4 = sim.db().Query("Resources", &conds_4);
+  double quantity_2 = qr_4.GetVal<double>("Quantity");
+
+  EXPECT_EQ(0.1, quantity_2);
+
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+TEST_F(ReactorTest, EnterNotifyInvalidFill) {
+  // Test behaviors of the OperateReactor function here
+
+  std::string config =
+      "  <fusion_power>300</fusion_power> "
+      "  <TBR>1.00</TBR> "
+      "  <reserve_inventory>6</reserve_inventory>"
+      "  <startup_inventory>2.121</startup_inventory>"
+      "  <fuel_incommod>Tritium</fuel_incommod>"
+      "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
+      "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
+      "  <blanket_size>1000</blanket_size>"
+      "  <buy_quantity>0.1</buy_quantity>"
+      "  <buy_frequency>1</buy_frequency>"
+      "  <refuel_mode>kjnsfdhn</refuel_mode>"
+      "  <he3_outcommod>Helium_3</he3_outcommod>";
+
+  int simdur = 2;
+  cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:Reactor"), config, simdur);
+
+  sim.AddRecipe("tritium", tritium());
+  sim.AddRecipe("enriched_lithium", enriched_lithium());
+
+  sim.AddSource("Tritium").recipe("tritium").Finalize();
+
+  sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
+
+  EXPECT_THROW(int id = sim.Run(), cyclus::KeyError);
+
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+TEST_F(ReactorTest, EnterNotifySellPolicy) {
+  // Test behaviors of the OperateReactor function here
+
+  std::string config =
+      "  <fusion_power>300</fusion_power> "
+      "  <TBR>1.30</TBR> "
+      "  <reserve_inventory>6</reserve_inventory>"
+      "  <startup_inventory>2.121</startup_inventory>"
+      "  <fuel_incommod>Tritium</fuel_incommod>"
+      "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
+      "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
+      "  <blanket_size>1000</blanket_size>"
+      "  <he3_outcommod>Helium_3</he3_outcommod>";
+
+  int simdur = 10;
+  cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:Reactor"), config, simdur);
+
+  sim.AddRecipe("tritium", tritium());
+  sim.AddRecipe("enriched_lithium", enriched_lithium());
+
+  sim.AddSource("Tritium").capacity(100).recipe("tritium").Finalize();
+  sim.AddSink("Tritium").Finalize();
+
+  sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
+
+  int id = sim.Run();
+
+
+  std::vector<Cond> conds;
+  conds.push_back(Cond("TritiumStorage", "==", std::string("0")));
+  QueryResult qr = sim.db().Query("ReactorInventories", &conds);
+  double qr_rows = qr.rows.size();
+  
+  EXPECT_EQ(simdur, qr_rows);
+
+}
+
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
