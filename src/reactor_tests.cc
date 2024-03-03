@@ -67,7 +67,7 @@ TEST_F(ReactorTest, Print) {
 TEST_F(ReactorTest, TickCoreNotLoaded) {
   //  Test Reactor specific behaviors of the Tick function here
 
- std::string config =
+  std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
       "  <reserve_inventory>6</reserve_inventory>"
@@ -88,21 +88,19 @@ TEST_F(ReactorTest, TickCoreNotLoaded) {
 
   int id = sim.Run();
 
-  
   std::vector<Cond> conds;
   conds.push_back(Cond("Status", "==", std::string("Shut-down")));
   QueryResult qr = sim.db().Query("ReactorStatus", &conds);
   double qr_rows = qr.rows.size();
 
   EXPECT_EQ(simdur, qr_rows);
-
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(ReactorTest, TickNotOperational) {
   //  Test Reactor specific behaviors of the Tick function here
 
- std::string config =
+  std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
       "  <reserve_inventory>6</reserve_inventory>"
@@ -124,21 +122,19 @@ TEST_F(ReactorTest, TickNotOperational) {
 
   int id = sim.Run();
 
-  
   std::vector<Cond> conds;
   conds.push_back(Cond("Status", "==", std::string("Shut-down")));
   QueryResult qr = sim.db().Query("ReactorStatus", &conds);
   double qr_rows = qr.rows.size();
 
   EXPECT_EQ(simdur, qr_rows);
-
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(ReactorTest, TickCoreReplenish) {
   //  Test Reactor specific behaviors of the Tick function here
 
- std::string config =
+  std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
       "  <reserve_inventory>6</reserve_inventory>"
@@ -160,25 +156,23 @@ TEST_F(ReactorTest, TickCoreReplenish) {
 
   int id = sim.Run();
 
-  
   std::vector<Cond> conds;
   conds.push_back(Cond("TritiumCore", "==", std::string("2.121")));
   QueryResult qr = sim.db().Query("ReactorInventories", &conds);
   double qr_rows = qr.rows.size();
 
-  //If the core isn't replenished during tick it will report less than
-  //startup_inventory during some timestep. This checks that in every
-  //timestep it's what it should be
+  // If the core isn't replenished during tick it will report less than
+  // startup_inventory during some timestep. This checks that in every
+  // timestep it's what it should be
 
   EXPECT_EQ(simdur, qr_rows);
-
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(ReactorTest, TickBlanketCycle) {
   //  Test Reactor specific behaviors of the Tick function here
 
- std::string config =
+  std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
       "  <reserve_inventory>6</reserve_inventory>"
@@ -201,7 +195,6 @@ TEST_F(ReactorTest, TickBlanketCycle) {
 
   int id = sim.Run();
 
-  
   std::vector<Cond> conds;
   conds.push_back(Cond("Event", "==", std::string("Blanket Cycled")));
   QueryResult qr = sim.db().Query("ReactorOperationsLog", &conds);
@@ -209,14 +202,13 @@ TEST_F(ReactorTest, TickBlanketCycle) {
 
   std::string expected_msg = "30.000000kg of blanket removed";
   EXPECT_EQ(expected_msg, msg);
-
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(ReactorTest, TickBlanketOverCycle) {
   //  Test Reactor specific behaviors of the Tick function here
 
- std::string config =
+  std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
       "  <reserve_inventory>6</reserve_inventory>"
@@ -235,19 +227,22 @@ TEST_F(ReactorTest, TickBlanketOverCycle) {
   sim.AddRecipe("enriched_lithium", enriched_lithium());
 
   sim.AddSource("Tritium").recipe("tritium").Finalize();
-  sim.AddSource("Enriched_Lithium").capacity(500).recipe("enriched_lithium").Finalize();
+  sim.AddSource("Enriched_Lithium")
+      .capacity(500)
+      .recipe("enriched_lithium")
+      .Finalize();
 
   int id = sim.Run();
 
-  
   std::vector<Cond> conds;
   conds.push_back(Cond("Event", "==", std::string("Blanket Not Cycled")));
   QueryResult qr = sim.db().Query("ReactorOperationsLog", &conds);
   std::string msg = qr.GetVal<std::string>("Value");
 
-  std::string expected_msg = "Total blanket material (498.999548) insufficient to extract 650.000000kg!";
+  std::string expected_msg =
+      "Total blanket material (498.999548) insufficient to extract "
+      "650.000000kg!";
   EXPECT_EQ(expected_msg, msg);
-
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -256,7 +251,6 @@ TEST_F(ReactorTest, Tock) {
   // Note: All specific tock functionality tested in other places.
 
   EXPECT_NO_THROW(facility->Tock());
-  
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -844,23 +838,21 @@ TEST_F(ReactorTest, OperateReactorSustainingTBR) {
 
   int id = sim.Run();
 
-  
   std::vector<Cond> conds_1;
   conds_1.push_back(Cond("Status", "==", std::string("Online")));
   QueryResult qr_1 = sim.db().Query("ReactorStatus", &conds_1);
   double qr_1_rows = qr_1.rows.size();
 
-  //Reactor always starts offline for initial fuel loading
-  EXPECT_EQ(simdur-1, qr_1_rows);
+  // Reactor always starts offline for initial fuel loading
+  EXPECT_EQ(simdur - 1, qr_1_rows);
 
   std::vector<Cond> conds_2;
   conds_2.push_back(Cond("Time", "==", std::string("9")));
   QueryResult qr_2 = sim.db().Query("ReactorInventories", &conds_2);
   double storage_quantity = qr_2.GetVal<double>("TritiumStorage");
 
-  //We should have extra Tritium
+  // We should have extra Tritium
   EXPECT_LT(0, storage_quantity);
-
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -892,13 +884,12 @@ TEST_F(ReactorTest, OperateReactorNonSustainingTBR) {
 
   int id = sim.Run();
 
-  
   std::vector<Cond> conds_1;
   conds_1.push_back(Cond("Status", "==", std::string("Online")));
   QueryResult qr_1 = sim.db().Query("ReactorStatus", &conds_1);
   double qr_1_rows = qr_1.rows.size();
 
-  //Reactor always starts offline for initial fuel loading
+  // Reactor always starts offline for initial fuel loading
   EXPECT_EQ(9, qr_1_rows);
 
   std::vector<Cond> conds_2;
@@ -906,9 +897,8 @@ TEST_F(ReactorTest, OperateReactorNonSustainingTBR) {
   QueryResult qr_2 = sim.db().Query("ReactorInventories", &conds_2);
   double storage_quantity = qr_2.GetVal<double>("TritiumStorage");
 
-  //We should have extra Tritium
+  // We should have extra Tritium
   EXPECT_EQ(0, storage_quantity);
-
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -938,7 +928,6 @@ TEST_F(ReactorTest, OperateReactorShutdownLackOfTritium) {
 
   int id = sim.Run();
 
-  
   std::vector<Cond> conds;
   conds.push_back(Cond("Event", "==", std::string("Core Shut-down")));
   QueryResult qr = sim.db().Query("ReactorEvents", &conds);
@@ -946,7 +935,6 @@ TEST_F(ReactorTest, OperateReactorShutdownLackOfTritium) {
 
   std::string expected_msg = "Not enough tritium to operate";
   EXPECT_EQ(expected_msg, msg);
-
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -976,7 +964,6 @@ TEST_F(ReactorTest, OperateReactorCoreSizeTooSmall) {
 
   int id = sim.Run();
 
-  
   std::vector<Cond> conds_1;
   conds_1.push_back(Cond("Status", "==", std::string("Shut-down")));
   QueryResult qr_1 = sim.db().Query("ReactorStatus", &conds_1);
@@ -991,11 +978,12 @@ TEST_F(ReactorTest, OperateReactorCoreSizeTooSmall) {
   std::string msg = qr_2.GetVal<std::string>("Value");
 
   std::string expected_event = "Operational Error";
-  std::string expected_msg = "core startup_inventory of 0.100000 kg insufficient to support fuel_usage of 1.395980kg/timestep!";
-  
+  std::string expected_msg =
+      "core startup_inventory of 0.100000 kg insufficient to support "
+      "fuel_usage of 1.395980kg/timestep!";
+
   EXPECT_EQ(expected_event, event);
   EXPECT_EQ(expected_msg, msg);
-
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1025,13 +1013,12 @@ TEST_F(ReactorTest, EnterNotifyInitialFillDefault) {
 
   int id = sim.Run();
 
-
   std::vector<Cond> conds_1;
   conds_1.push_back(Cond("Time", "==", std::string("0")));
   conds_1.push_back(Cond("Commodity", "==", std::string("Tritium")));
   QueryResult qr_1 = sim.db().Query("Transactions", &conds_1);
   int resource_id_1 = qr_1.GetVal<int>("ResourceId");
-  
+
   std::vector<Cond> conds_2;
   conds_2.push_back(Cond("ResourceId", "==", std::to_string(resource_id_1)));
   QueryResult qr_2 = sim.db().Query("Resources", &conds_2);
@@ -1051,7 +1038,6 @@ TEST_F(ReactorTest, EnterNotifyInitialFillDefault) {
   double quantity_2 = qr_4.GetVal<double>("Quantity");
 
   EXPECT_NEAR(0.0379868, quantity_2, 1e-7);
-
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1084,13 +1070,12 @@ TEST_F(ReactorTest, EnterNotifyScheduleFill) {
 
   int id = sim.Run();
 
-
   std::vector<Cond> conds_1;
   conds_1.push_back(Cond("Time", "==", std::string("0")));
   conds_1.push_back(Cond("Commodity", "==", std::string("Tritium")));
   QueryResult qr_1 = sim.db().Query("Transactions", &conds_1);
   int resource_id_1 = qr_1.GetVal<int>("ResourceId");
-  
+
   std::vector<Cond> conds_2;
   conds_2.push_back(Cond("ResourceId", "==", std::to_string(resource_id_1)));
   QueryResult qr_2 = sim.db().Query("Resources", &conds_2);
@@ -1110,7 +1095,6 @@ TEST_F(ReactorTest, EnterNotifyScheduleFill) {
   double quantity_2 = qr_4.GetVal<double>("Quantity");
 
   EXPECT_EQ(0.1, quantity_2);
-
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1142,7 +1126,6 @@ TEST_F(ReactorTest, EnterNotifyInvalidFill) {
   sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
 
   EXPECT_THROW(int id = sim.Run(), cyclus::KeyError);
-
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1173,17 +1156,13 @@ TEST_F(ReactorTest, EnterNotifySellPolicy) {
 
   int id = sim.Run();
 
-
   std::vector<Cond> conds;
   conds.push_back(Cond("TritiumStorage", "==", std::string("0")));
   QueryResult qr = sim.db().Query("ReactorInventories", &conds);
   double qr_rows = qr.rows.size();
-  
+
   EXPECT_EQ(simdur, qr_rows);
-
 }
-
-
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Do Not Touch! Below section required for connection with Cyclus
