@@ -10,27 +10,71 @@ namespace tricycle {
 
 /// @class Reactor
 ///
-/// This Facility is intended
-/// as a skeleton to guide the implementation of new Facility
-/// agents.
 /// The Reactor class inherits from the Facility class and is
 /// dynamically loaded by the Agent class when requested.
 ///
 /// @section intro Introduction
-/// Place an introduction to the agent here.
+/// This agnet is designed to function as a basic representation of a fusion
+/// energy system with respect to tritium flows. This is currently the alpha
+/// version of the agent, and as such some simplifying assumptions were made.
 ///
 /// @section agentparams Agent Parameters
-/// Place a description of the required input parameters which define the
-/// agent implementation.
+/// Required Inputs:
+/// fusion_power - the fusion power of the fusion energy system. Analagous to
+/// thermal power. Typical values in the range of 100-5000 MW.
+/// TBR - Overall Trituim Breeding Ratio of the fusion energy system. 
+/// startup_inventory - total inventory of tritium required to start fusion
+/// energy system. Includes a reserve inventory. See Abdou 2023 for more
+/// details.
+/// fuel_incommod - input commodity for fuel. Currently required to be 100%
+/// tritium. Future implementations will change this.
+/// blanket_incommod - input commodity for tritium breeding blanket. Currently
+/// required to be pure enriched lithium.
+/// blanket_inrecipe - input recipe for tritium breeding blanket. Currently
+/// required to be pure enriched lithium. Enrichment level is not restricted.
+/// he-3_outcommod - output commodity for Helium-3 produced by decay of tritium.
+/// Required for the agent to offload this supply.
 ///
 /// @section optionalparams Optional Parameters
-/// Place a description of the optional input parameters to define the
-/// agent implementation.
-///
+/// refuel_mode - mode of refueling reactor. Two options, "schedule" and "fill"
+/// Default is fill, which tries to ensure that tritium_storage is greater than
+/// or equal to startup_inventory each timestep. Schedule allows a fixed amount
+/// of tritium to be purchased on a fixed schedule. See buy_quantity, and
+/// buy_frequency for more details.
+/// buy_quantity - quantity of tritium to buy each buy cycle for schedule buy
+/// purchase mode (in kg). Default is 0.1 kg.
+/// buy_frequency - frequency with which to order tritium in schedule buy mode.
+/// Delay (in timesteps) between orders is buy_frequency-1. Purchasing once per
+/// year, with 1 month timesteps would correspond to a buy frequency of 12. 
+/// Default is 1 (buy every time step).
+/// Li7_contribution - fraction of tritium which comes from the (n+Li7-->T+He+n)
+/// reaction. Default is 0.03 (3%).
+/// blanket_size - size of the blanket in kg of enriched lithium. Default is
+/// 1000 kg.
+/// blanket_turnover_rate - fraction of blanket which gets removed and replaced
+/// each timestep. Removed blanket is replaced with the original blanket recipe.
+/// Default is 0.05 (5%), but was set arbitrarily.
+/// 
 /// @section detailed Detailed Behavior
-/// Place a description of the detailed behavior of the agent. Consider
-/// describing the behavior at the tick and tock as well as the behavior
-/// upon sending and receiving materials and messages.
+/// Agent begins by checking if there is sufficient tritium in the system to
+/// operate. If there is, it burns tritium to achieve input fusion_power, then
+/// replenishes itself by breeding tritium based on TBR. If there is not
+/// sufficient tritum in the reactor initially, agent records that it did not
+/// produce power that timestep. Next, agent decays all inventories of tritium
+/// and extracts He-3 from those inventories. Agent then replaces lost mass
+/// from He-3 extraction with tritium from storage, and cycles the blanket.
+///
+/// Agent then enters the DRE, where it attempts to purchase more tritium should
+/// there be a deficit, or sell excess should there be a surplus, as well as to
+/// purchase blanket material required to refill blanket. Finally, excess He-3
+/// is offered to the market.
+///
+/// During tock, agent checks again whether there is enough tritium in the system
+/// and if not, tries to "startup", which entails loading the core with tritium.
+/// If it fails to do so, a note is made in the opearational log. Next, any newly
+/// purchased tritium is squashed within its resbuf, and a record is made of all
+/// inventory quantities.
+
 class Reactor : public cyclus::Facility  {
  public:
   /// Constructor for Reactor Class
@@ -164,16 +208,6 @@ class Reactor : public cyclus::Facility  {
     "uilabel": "Fuel input commodity" \
   }
   std::string blanket_inrecipe;
-
-  #pragma cyclus var { \
-    "default": 0.3, \
-    "doc": "Li-6 enrichment requirement percent as a decimal", \
-    "tooltip": "Defaults to 30% (0.3)", \
-    "units": "%", \
-    "uilabel": "Minimum Blanket Enrichment" \
-  }
-  double min_blanket_enrichment;
-
 
   //WARNING: The default on this is completely arbitrary!
   #pragma cyclus var { \
