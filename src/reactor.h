@@ -120,6 +120,8 @@ class Reactor : public cyclus::Facility  {
     "doc": "Achievable system tritium breeding ratio before decay", \
     "tooltip": "Achievable system tritium breeding ratio before decay", \
     "units": "non-dimensional", \
+    "uitype": "range", \
+    "range": [0, 1e299], \
     "uilabel": "Tritium Breeding Ratio" \
   }
   double TBR;
@@ -153,6 +155,8 @@ class Reactor : public cyclus::Facility  {
     "doc": "Quantity of fuel which reactor tries to purchase", \
     "tooltip": "Defaults to 100g/purchase", \
     "units": "kg", \
+    "uitype": "range", \
+    "range": [0, 1e299], \
     "uilabel": "Buy quantity" \
   }
   double buy_quantity;
@@ -162,9 +166,11 @@ class Reactor : public cyclus::Facility  {
     "doc": "Frequency which reactor tries to purchase new fuel", \
     "tooltip": "Reactor is active for 1 timestep, then dormant for buy_frequency-1 timesteps", \
     "units": "Timesteps", \
+    "uitype": "range", \
+    "range": [0, 1e299], \
     "uilabel": "Buy frequency" \
   }
-  double buy_frequency;
+  int buy_frequency;
 
   #pragma cyclus var { \
     "doc": "Fresh fuel commodity", \
@@ -185,6 +191,8 @@ class Reactor : public cyclus::Facility  {
     "doc": "Fraction of tritium that comes from the (n + Li-7 --> T + He + n) reaction", \
     "tooltip": "Fraction of tritium from Li-7 breeding", \
     "units": "dimensionless", \
+    "uitype": "range", \
+    "range": [0, 1], \
     "uilabel": "Li-7 Contribution" \
   }
   double Li7_contribution;
@@ -193,6 +201,8 @@ class Reactor : public cyclus::Facility  {
     "default": 1000.0, \
     "doc": "Initial mass of full blanket material", \
     "tooltip": "Only blanket material mass, not structural mass", \
+    "uitype": "range", \
+    "range": [0, 10000], \
     "uilabel": "Initial Mass of Blanket" \
   }
   double blanket_size;
@@ -215,8 +225,10 @@ class Reactor : public cyclus::Facility  {
   #pragma cyclus var { \
     "default": 0.05, \
     "doc": "Percent of blanket that gets recycled every timestep", \
-    "tooltip": "Defaults to 5% (0.05), must be between 0 and 15%", \
-    "units": "%", \
+    "tooltip": "Defaults to 0.05 (5%), must be between 0 and 15%", \
+    "units": "dimensionless", \
+    "uitype": "range", \
+    "range": [0, 0.15], \
     "uilabel": "Blanket Turnover Rate" \
   }
   double blanket_turnover_rate;
