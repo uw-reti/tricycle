@@ -268,17 +268,10 @@ class Reactor : public cyclus::Facility  {
   cyclus::toolkit::MatlBuyPolicy fuel_startup_policy;
   cyclus::toolkit::MatlBuyPolicy fuel_refill_policy;
 
-  //These two may be redundant (only one may be needed)
-  //cyclus::toolkit::MatlBuyPolicy blanket_startup_policy;
   cyclus::toolkit::MatlBuyPolicy blanket_fill_policy;
 
   cyclus::toolkit::MatlSellPolicy tritium_sell_policy;
   cyclus::toolkit::MatlSellPolicy helium_sell_policy;
-
-  //For the schedule buy policy
-  //cyclus::IntDistribution::Ptr active_dist = NULL;
-  //cyclus::IntDistribution::Ptr dormant_dist = NULL;
-  //cyclus::IntDistribution::Ptr size_dist = NULL;
 
   void Startup();
   void OperateReactor(double TBR, double burn_rate=55.8);
