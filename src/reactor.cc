@@ -92,7 +92,6 @@ void Reactor::Tock() {
     try {
       Startup();
       fuel_startup_policy.Stop();
-      // blanket_startup_policy.Stop();
       fuel_refill_policy.Start();
       core_loaded = true;
     } catch (const std::exception& e) {
@@ -297,9 +296,6 @@ void Reactor::DepleteBlanket(double bred_tritium_mass) {
 
   cyclus::CompMap b = blanket_mat->comp()->mass();
   cyclus::compmath::Normalize(&b, blanket_mat->quantity());
-
-  // Percent (as decimal) of T which comes from Li-7 instead of Li-6
-  double Li7_contribution = 0.15;
 
   cyclus::CompMap depleted_comp;
 

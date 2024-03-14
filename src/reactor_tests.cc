@@ -240,7 +240,7 @@ TEST_F(ReactorTest, TickBlanketOverCycle) {
   std::string msg = qr.GetVal<std::string>("Value");
 
   std::string expected_msg =
-      "Total blanket material (498.999548) insufficient to extract "
+      "Total blanket material (499.055387) insufficient to extract "
       "650.000000kg!";
   EXPECT_EQ(expected_msg, msg);
 }

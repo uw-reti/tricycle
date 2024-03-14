@@ -87,8 +87,8 @@ class Reactor : public cyclus::Facility  {
   double reserve_inventory;
 
   #pragma cyclus var { \
-    "doc": "Tritium core inventory required to start reactor", \
-    "tooltip": "Tritium core inventory required to start reactor", \
+    "doc": "Tritium required to start reactor, includes a reserve inventory", \
+    "tooltip": "Tritium inventory required to start reactor, includes reserve", \
     "units": "kg", \
     "uilabel": "Start-up Inventory" \
   }
@@ -133,6 +133,15 @@ class Reactor : public cyclus::Facility  {
     "uilabel": "Fuel input commodity" \
   }
   std::string he3_outcommod;
+
+  #pragma cyclus var { \
+    "default": 0.03, \
+    "doc": "Fraction of tritium that comes from the (n + Li-7 --> T + He + n) reaction", \
+    "tooltip": "Fraction of tritium from Li-7 breeding", \
+    "units": "dimensionless", \
+    "uilabel": "Li-7 Contribution" \
+  }
+  double Li7_contribution;
 
   #pragma cyclus var { \
     "default": 1000.0, \
