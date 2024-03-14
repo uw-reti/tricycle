@@ -1,0 +1,5 @@
+build
+cmake
+docker
+input
+*.sh
