@@ -146,6 +146,8 @@ class Reactor : public cyclus::Facility  {
     "default": 'fill', \
     "doc": "Method of refueling the reactor", \
     "tooltip": "Options: 'schedule' or 'fill'", \
+    "uitype": "combobox", \
+    "categorical": ['schedule', 'fill'], \
     "uilabel": "Refuel Mode" \
   }
   std::string refuel_mode;
