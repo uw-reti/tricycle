@@ -110,6 +110,8 @@ class Reactor : public cyclus::Facility  {
     "doc": "Nameplate fusion power of the reactor", \
     "tooltip": "Nameplate fusion power", \
     "units": "MW", \
+    "uitype": "range", \
+    "range": [0, 1e299], \
     "uilabel": "Fusion Power" \
   }
   double fusion_power;
