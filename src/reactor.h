@@ -127,20 +127,22 @@ class Reactor : public cyclus::Facility  {
   double TBR;
 
   #pragma cyclus var { \
+    "doc": "Tritium required to start reactor, includes a reserve inventory", \
+    "tooltip": "Tritium inventory required to start reactor, includes reserve", \
+    "units": "kg", \
+    "uitype": "range", \
+    "range": [0, 1e299], \
+    "uilabel": "Start-up Inventory" \
+  }
+  double startup_inventory;
+
+  #pragma cyclus var { \
     "doc": "Minimum tritium inventory to hold in reserve in case of tritium recovery system failure", \
     "tooltip": "Minimum tritium inventory to hold in reserve (excluding core invneotry)", \
     "units": "kg", \
     "uilabel": "Reserve Inventory" \
   }
-  double reserve_inventory;
-
-  #pragma cyclus var { \
-    "doc": "Tritium required to start reactor, includes a reserve inventory", \
-    "tooltip": "Tritium inventory required to start reactor, includes reserve", \
-    "units": "kg", \
-    "uilabel": "Start-up Inventory" \
-  }
-  double startup_inventory;
+  double reserve_inventory;  
 
   #pragma cyclus var { \
     "default": 'fill', \
@@ -226,7 +228,7 @@ class Reactor : public cyclus::Facility  {
   //WARNING: The default on this is completely arbitrary!
   #pragma cyclus var { \
     "default": 0.05, \
-    "doc": "Percent of blanket that gets recycled every timestep", \
+    "doc": "Percent of blanket that gets recycled every blanket turnover period", \
     "tooltip": "Defaults to 0.05 (5%), must be between 0 and 15%", \
     "units": "dimensionless", \
     "uitype": "range", \
@@ -235,17 +237,39 @@ class Reactor : public cyclus::Facility  {
   }
   double blanket_turnover_rate;
 
-  bool operational = true; 
-  bool core_loaded = false;
+  #pragma cyclus var { \
+    "default": 1, \
+    "doc": "number of timesteps between blanket recycles", \
+    "tooltip": "Defaults to 0.05 (5%), must be between 0 and 15%", \
+    "units": "dimensionless", \
+    "uitype": "range", \
+    "range": [0, 1000], \
+    "uilabel": "Blanket Turnover Rate" \
+  }
+  int blanket_turnover_frequency;
 
+  //bool operational = true; 
+  bool sufficient_tritium_for_operation = false;
+  int seconds_per_year = 31536000;
+  int MW_to_GW = 1000;
+  double fuel_usage;
+
+  // kg/GW-fusion-power-year (Abdou et al. 2021)
+  double burn_rate = 55.8;
+
+  /*
   #pragma cyclus var {"tooltip":"Buffer for handling tritium kept in the core"}
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_core;
 
   #pragma cyclus var {"tooltip":"Buffer for handling tritium kept in reserve"}
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_reserve;
+  */
+
+  #pragma cyclus var {"tooltip":"Buffer for handling tritium material to be used in reactor"}
+  cyclus::toolkit::ResBuf<cyclus::Material> tritium_storage;
 
   #pragma cyclus var {"tooltip":"Buffer for handling excess tritium material to be sold"}
-  cyclus::toolkit::ResBuf<cyclus::Material> tritium_storage;
+  cyclus::toolkit::ResBuf<cyclus::Material> tritium_excess;
 
   #pragma cyclus var {"tooltip":"Buffer for handling helium-3 byproduct material"}
   cyclus::toolkit::ResBuf<cyclus::Material> helium_storage;
@@ -259,11 +283,11 @@ class Reactor : public cyclus::Facility  {
   #pragma cyclus var {"tooltip":"Tracker to handle blanket material"}
   cyclus::toolkit::TotalInvTracker blanket_tracker;
   
-  #pragma cyclus var {"tooltip":"Tracker to handle excess tritium to be sold"}
-  cyclus::toolkit::TotalInvTracker excess_tritium_tracker;
+  //#pragma cyclus var {"tooltip":"Tracker to handle excess tritium to be sold"}
+  //cyclus::toolkit::TotalInvTracker excess_tritium_tracker;
 
-  #pragma cyclus var {"tooltip":"Tracker to handle on-hand helium"}
-  cyclus::toolkit::TotalInvTracker helium_tracker;
+  //#pragma cyclus var {"tooltip":"Tracker to handle on-hand helium"}
+  //cyclus::toolkit::TotalInvTracker helium_tracker;
 
   cyclus::toolkit::MatlBuyPolicy fuel_startup_policy;
   cyclus::toolkit::MatlBuyPolicy fuel_refill_policy;
@@ -274,13 +298,13 @@ class Reactor : public cyclus::Facility  {
   cyclus::toolkit::MatlSellPolicy helium_sell_policy;
 
   void Startup();
-  void OperateReactor(double TBR, double burn_rate=55.8);
+  void OperateReactor(double TBR);
   void DecayInventory(cyclus::toolkit::ResBuf<cyclus::Material> &inventory);
   void CombineInventory(cyclus::toolkit::ResBuf<cyclus::Material> &inventory);
   void ExtractHelium(cyclus::toolkit::ResBuf<cyclus::Material> &inventory);
   void RecordEvent(std::string name, std::string val);
   void RecordStatus(std::string Status, double power);
-  void RecordInventories(double core, double reserve, double storage, double blanket, double helium);
+  void RecordInventories(double storage, double excess, double blanket, double helium);
   void RecordOperationalInfo(std::string name, std::string val);
   void DepleteBlanket(double bred_tritium_mass);
   cyclus::Material::Ptr BreedTritium(double fuel_usage, double TBR);

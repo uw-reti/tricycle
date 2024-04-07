@@ -64,13 +64,15 @@ TEST_F(ReactorTest, Print) {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-TEST_F(ReactorTest, TickCoreNotLoaded) {
-  //  Test Reactor specific behaviors of the Tick function here
+TEST_F(ReactorTest, TickInsufficientTritium) {
+  // Test that the agent records "shut down" each timestep for which it has
+  // insufficient tritium to startup. This is achieved by not adding a tritium
+  // source to the mocksim.
 
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>6</reserve_inventory>"
+      "  <reserve_inventory>0</reserve_inventory>"
       "  <startup_inventory>2.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
@@ -92,90 +94,20 @@ TEST_F(ReactorTest, TickCoreNotLoaded) {
   conds.push_back(Cond("Status", "==", std::string("Shut-down")));
   QueryResult qr = sim.db().Query("ReactorStatus", &conds);
   double qr_rows = qr.rows.size();
-
-  EXPECT_EQ(simdur, qr_rows);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-TEST_F(ReactorTest, TickNotOperational) {
-  //  Test Reactor specific behaviors of the Tick function here
-
-  std::string config =
-      "  <fusion_power>300</fusion_power> "
-      "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>6</reserve_inventory>"
-      "  <startup_inventory>0.1</startup_inventory>"
-      "  <fuel_incommod>Tritium</fuel_incommod>"
-      "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
-      "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
-      "  <blanket_size>1000</blanket_size>"
-      "  <he3_outcommod>Helium_3</he3_outcommod>";
-
-  int simdur = 10;
-  cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:Reactor"), config, simdur);
-
-  sim.AddRecipe("tritium", tritium());
-  sim.AddRecipe("enriched_lithium", enriched_lithium());
-
-  sim.AddSource("Tritium").recipe("tritium").Finalize();
-  sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
-
-  int id = sim.Run();
-
-  std::vector<Cond> conds;
-  conds.push_back(Cond("Status", "==", std::string("Shut-down")));
-  QueryResult qr = sim.db().Query("ReactorStatus", &conds);
-  double qr_rows = qr.rows.size();
-
-  EXPECT_EQ(simdur, qr_rows);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-TEST_F(ReactorTest, TickCoreReplenish) {
-  //  Test Reactor specific behaviors of the Tick function here
-
-  std::string config =
-      "  <fusion_power>300</fusion_power> "
-      "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>6</reserve_inventory>"
-      "  <startup_inventory>2.121</startup_inventory>"
-      "  <fuel_incommod>Tritium</fuel_incommod>"
-      "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
-      "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
-      "  <blanket_size>1000</blanket_size>"
-      "  <he3_outcommod>Helium_3</he3_outcommod>";
-
-  int simdur = 4;
-  cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:Reactor"), config, simdur);
-
-  sim.AddRecipe("tritium", tritium());
-  sim.AddRecipe("enriched_lithium", enriched_lithium());
-
-  sim.AddSource("Tritium").recipe("tritium").Finalize();
-  sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
-
-  int id = sim.Run();
-
-  std::vector<Cond> conds;
-  conds.push_back(Cond("TritiumCore", "==", std::string("2.121")));
-  QueryResult qr = sim.db().Query("ReactorInventories", &conds);
-  double qr_rows = qr.rows.size();
-
-  // If the core isn't replenished during tick it will report less than
-  // startup_inventory during some timestep. This checks that in every
-  // timestep it's what it should be
 
   EXPECT_EQ(simdur, qr_rows);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(ReactorTest, TickBlanketCycle) {
-  //  Test Reactor specific behaviors of the Tick function here
+  // Test that the agent correctly removes and replaces a portion of the
+  // blanket every blanket turnover period. The default period is 1 timestep
+  // so it is left undefined here.
 
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>6</reserve_inventory>"
+      "  <reserve_inventory>0</reserve_inventory>"
       "  <startup_inventory>2.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
@@ -206,12 +138,14 @@ TEST_F(ReactorTest, TickBlanketCycle) {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(ReactorTest, TickBlanketOverCycle) {
-  //  Test Reactor specific behaviors of the Tick function here
+  // Test the catch for an overcycle of the blanket. The user should be
+  // notified of this occuring in the ReactorOperationsLog, and the
+  // simulation should not crash.
 
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>6</reserve_inventory>"
+      "  <reserve_inventory>0</reserve_inventory>"
       "  <startup_inventory>2.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
@@ -247,8 +181,8 @@ TEST_F(ReactorTest, TickBlanketOverCycle) {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(ReactorTest, Tock) {
-  // Test Reactor specific behaviors of the Tock function here
-  // Note: All specific tock functionality tested in other places.
+  // Test that the Tock function does not throw an error. More specific
+  // functionality is tested elsewhere.
 
   EXPECT_NO_THROW(facility->Tock());
 }
@@ -260,7 +194,7 @@ TEST_F(ReactorTest, NormalStartup) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>6</reserve_inventory>"
+      "  <reserve_inventory>0</reserve_inventory>"
       "  <startup_inventory>2.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
@@ -275,7 +209,6 @@ TEST_F(ReactorTest, NormalStartup) {
   sim.AddRecipe("enriched_lithium", enriched_lithium());
 
   sim.AddSource("Tritium").recipe("tritium").Finalize();
-
   sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
 
   int id = sim.Run();
@@ -297,7 +230,7 @@ TEST_F(ReactorTest, FuelConstrainedStartup) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>6</reserve_inventory>"
+      "  <reserve_inventory>0</reserve_inventory>"
       "  <startup_inventory>2.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
@@ -311,15 +244,14 @@ TEST_F(ReactorTest, FuelConstrainedStartup) {
   sim.AddRecipe("tritium", tritium());
   sim.AddRecipe("enriched_lithium", enriched_lithium());
 
-  sim.AddSource("Tritium").recipe("tritium").capacity(8.0).Finalize();
-
+  sim.AddSource("Tritium").recipe("tritium").capacity(2.0).Finalize();
   sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
 
   int id = sim.Run();
 
   // Under these conditions, we expect the reactor to be able to startup on
-  // timestep 1 but not before then (buys 8kg of T on each timestep, and
-  // needs 8.121kg to startup). NOTE: startup occurs after DRE.
+  // timestep 1 but not before then (buys 2kg of T on each timestep, and
+  // needs 2.121kg to startup). NOTE: startup occurs after DRE.
   std::vector<Cond> conds0;
   conds0.push_back(Cond("Time", "==", std::string("0")));
   QueryResult qr0 = sim.db().Query("ReactorOperationsLog", &conds0);
@@ -337,12 +269,14 @@ TEST_F(ReactorTest, FuelConstrainedStartup) {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(ReactorTest, NoFuelStartup) {
-  // Test no fuel startup behavior of the Startup function
+  // Test that the agent can handle never recieving any fuel, and appropriately
+  // does not start-up under these conditions. This is achieved by not adding
+  // a source of tritium to the mocksim.
 
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>6</reserve_inventory>"
+      "  <reserve_inventory>0</reserve_inventory>"
       "  <startup_inventory>2.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
@@ -372,12 +306,14 @@ TEST_F(ReactorTest, NoFuelStartup) {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(ReactorTest, WrongFuelStartup) {
-  // Test wrong fuel startup behavior of the Startup function
+  // Test that the agent can identify that it has not recieved the correct fuel
+  // to startup, and will appropriately notify the user, and not start-up under
+  // these conditions.
 
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>6</reserve_inventory>"
+      "  <reserve_inventory>0</reserve_inventory>"
       "  <startup_inventory>2.121</startup_inventory>"
       "  <fuel_incommod>Enriched_Lithium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
@@ -422,7 +358,7 @@ TEST_F(ReactorTest, WrongFuelStartup) {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(ReactorTest, DecayInventory) {
   // Test behaviors of the DecayInventory function here
-  EXPECT_NO_THROW(facility->DecayInventory(facility->tritium_core));
+  EXPECT_NO_THROW(facility->DecayInventory(facility->tritium_storage));
 
   // We use unintuitive values for reserve inventory and startup inventory here
   // because they were the values we were originally testing with, and we had
@@ -430,8 +366,8 @@ TEST_F(ReactorTest, DecayInventory) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>6</reserve_inventory>"
-      "  <startup_inventory>2.121</startup_inventory>"
+      "  <reserve_inventory>0</reserve_inventory>"
+      "  <startup_inventory>8.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
       "  <blanket_inrecipe>Lithium</blanket_inrecipe>"
@@ -445,7 +381,6 @@ TEST_F(ReactorTest, DecayInventory) {
   sim.AddRecipe("enriched_lithium", enriched_lithium());
 
   sim.AddSource("Tritium").recipe("tritium").Finalize();
-
   sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
 
   int id = sim.Run();
@@ -506,9 +441,6 @@ TEST_F(ReactorTest, CombineInventory) {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(ReactorTest, CombineInventoryOneElement) {
   // Test behaviors of the CombineInventory function here
-
-  // do I need the pragma here?
-  // #pragma cyclus var {"capacity" : "1000"} //capacity set to 1000 arbitrarily
   cyclus::toolkit::ResBuf<cyclus::Material> test_buf;
 
   cyclus::Material::Ptr T1 = cyclus::Material::CreateUntracked(2.5, tritium());
@@ -527,9 +459,6 @@ TEST_F(ReactorTest, CombineInventoryOneElement) {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(ReactorTest, CombineEmptyInventory) {
   // Test behaviors of the CombineInventory function here
-
-  // do I need the pragma here?
-  // #pragma cyclus var {"capacity" : "1000"} //capacity set to 1000 arbitrarily
   cyclus::toolkit::ResBuf<cyclus::Material> test_buf;
 
   EXPECT_NO_THROW(facility->CombineInventory(test_buf));
@@ -583,7 +512,7 @@ TEST_F(ReactorTest, RecordEvent) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>6</reserve_inventory>"
+      "  <reserve_inventory>0</reserve_inventory>"
       "  <startup_inventory>2.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
@@ -598,7 +527,6 @@ TEST_F(ReactorTest, RecordEvent) {
   sim.AddRecipe("enriched_lithium", enriched_lithium());
 
   sim.AddSource("Tritium").recipe("tritium").Finalize();
-
   sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
 
   int id = sim.Run();
@@ -618,7 +546,7 @@ TEST_F(ReactorTest, RecordInventories) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>6</reserve_inventory>"
+      "  <reserve_inventory>0</reserve_inventory>"
       "  <startup_inventory>2.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
@@ -633,7 +561,6 @@ TEST_F(ReactorTest, RecordInventories) {
   sim.AddRecipe("enriched_lithium", enriched_lithium());
 
   sim.AddSource("Tritium").recipe("tritium").Finalize();
-
   sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
 
   int id = sim.Run();
@@ -641,15 +568,14 @@ TEST_F(ReactorTest, RecordInventories) {
   std::vector<Cond> conds;
   conds.push_back(Cond("Time", "==", std::string("0")));
   QueryResult qr = sim.db().Query("ReactorInventories", &conds);
-  double tritium_core = qr.GetVal<double>("TritiumCore");
-  double tritium_reserve = qr.GetVal<double>("TritiumReserve");
   double tritium_storage = qr.GetVal<double>("TritiumStorage");
+  double tritium_excess = qr.GetVal<double>("TritiumExcess");
   double blanket = qr.GetVal<double>("LithiumBlanket");
   double helium_storage = qr.GetVal<double>("HeliumStorage");
 
-  EXPECT_EQ(2.121, tritium_core);
-  EXPECT_EQ(6.0, tritium_reserve);
-  EXPECT_EQ(0.0, tritium_storage);
+
+  EXPECT_EQ(2.121, tritium_storage);
+  EXPECT_EQ(0.0, tritium_excess);
   EXPECT_EQ(1000.0, blanket);
   EXPECT_EQ(0.0, helium_storage);
 }
@@ -661,7 +587,7 @@ TEST_F(ReactorTest, RecordStatus) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>6</reserve_inventory>"
+      "  <reserve_inventory>0</reserve_inventory>"
       "  <startup_inventory>2.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
@@ -676,7 +602,6 @@ TEST_F(ReactorTest, RecordStatus) {
   sim.AddRecipe("enriched_lithium", enriched_lithium());
 
   sim.AddSource("Tritium").recipe("tritium").Finalize();
-
   sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
 
   int id = sim.Run();
@@ -707,7 +632,7 @@ TEST_F(ReactorTest, DepleteBlanket) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>6</reserve_inventory>"
+      "  <reserve_inventory>0</reserve_inventory>"
       "  <startup_inventory>2.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
@@ -722,7 +647,6 @@ TEST_F(ReactorTest, DepleteBlanket) {
   sim.AddRecipe("enriched_lithium", enriched_lithium());
 
   sim.AddSource("Tritium").recipe("tritium").Finalize();
-
   sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
 
   int id = sim.Run();
@@ -742,7 +666,7 @@ TEST_F(ReactorTest, OverDepleteBlanket) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.50</TBR> "
-      "  <reserve_inventory>6</reserve_inventory>"
+      "  <reserve_inventory>0</reserve_inventory>"
       "  <startup_inventory>2.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
@@ -757,7 +681,6 @@ TEST_F(ReactorTest, OverDepleteBlanket) {
   sim.AddRecipe("enriched_lithium", enriched_lithium());
 
   sim.AddSource("Tritium").recipe("tritium").Finalize();
-
   sim.AddSource("Enriched_Lithium")
       .recipe("enriched_lithium")
       .capacity(10)
@@ -780,7 +703,7 @@ TEST_F(ReactorTest, BreedTritium) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.05</TBR> "
-      "  <reserve_inventory>6</reserve_inventory>"
+      "  <reserve_inventory>0</reserve_inventory>"
       "  <startup_inventory>2.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
@@ -795,7 +718,6 @@ TEST_F(ReactorTest, BreedTritium) {
   sim.AddRecipe("enriched_lithium", enriched_lithium());
 
   sim.AddSource("Tritium").recipe("tritium").Finalize();
-
   sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
 
   int id = sim.Run();
@@ -818,7 +740,7 @@ TEST_F(ReactorTest, OperateReactorSustainingTBR) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.05</TBR> "
-      "  <reserve_inventory>6</reserve_inventory>"
+      "  <reserve_inventory>0</reserve_inventory>"
       "  <startup_inventory>2.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
@@ -833,7 +755,6 @@ TEST_F(ReactorTest, OperateReactorSustainingTBR) {
   sim.AddRecipe("enriched_lithium", enriched_lithium());
 
   sim.AddSource("Tritium").recipe("tritium").Finalize();
-
   sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
 
   int id = sim.Run();
@@ -849,22 +770,22 @@ TEST_F(ReactorTest, OperateReactorSustainingTBR) {
   std::vector<Cond> conds_2;
   conds_2.push_back(Cond("Time", "==", std::string("9")));
   QueryResult qr_2 = sim.db().Query("ReactorInventories", &conds_2);
-  double storage_quantity = qr_2.GetVal<double>("TritiumStorage");
+  double excess_quantity = qr_2.GetVal<double>("TritiumExcess");
 
   // We should have extra Tritium
-  EXPECT_LT(0, storage_quantity);
+  EXPECT_LT(0, excess_quantity);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(ReactorTest, OperateReactorNonSustainingTBR) {
   // Test behaviors of the OperateReactor function here
   // Expect very similar behavior to Sustaining scenario
-  // except no tritium in storage.
+  // except no tritium in excess.
 
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>0.8</TBR> "
-      "  <reserve_inventory>6</reserve_inventory>"
+      "  <reserve_inventory>0</reserve_inventory>"
       "  <startup_inventory>2.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
@@ -879,7 +800,6 @@ TEST_F(ReactorTest, OperateReactorNonSustainingTBR) {
   sim.AddRecipe("enriched_lithium", enriched_lithium());
 
   sim.AddSource("Tritium").recipe("tritium").Finalize();
-
   sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
 
   int id = sim.Run();
@@ -895,10 +815,10 @@ TEST_F(ReactorTest, OperateReactorNonSustainingTBR) {
   std::vector<Cond> conds_2;
   conds_2.push_back(Cond("Time", "==", std::string("9")));
   QueryResult qr_2 = sim.db().Query("ReactorInventories", &conds_2);
-  double storage_quantity = qr_2.GetVal<double>("TritiumStorage");
+  double excess_quantity = qr_2.GetVal<double>("TritiumExcess");
 
   // We should have extra Tritium
-  EXPECT_EQ(0, storage_quantity);
+  EXPECT_EQ(0, excess_quantity);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -908,7 +828,7 @@ TEST_F(ReactorTest, OperateReactorShutdownLackOfTritium) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>0.0</TBR> "
-      "  <reserve_inventory>6</reserve_inventory>"
+      "  <reserve_inventory>0</reserve_inventory>"
       "  <startup_inventory>2.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
@@ -923,7 +843,6 @@ TEST_F(ReactorTest, OperateReactorShutdownLackOfTritium) {
   sim.AddRecipe("enriched_lithium", enriched_lithium());
 
   sim.AddSource("Tritium").recipe("tritium").capacity(1).Finalize();
-
   sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
 
   int id = sim.Run();
@@ -938,63 +857,15 @@ TEST_F(ReactorTest, OperateReactorShutdownLackOfTritium) {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-TEST_F(ReactorTest, OperateReactorCoreSizeTooSmall) {
-  // Test behaviors of the OperateReactor function here
-
-  std::string config =
-      "  <fusion_power>300</fusion_power> "
-      "  <TBR>1.05</TBR> "
-      "  <reserve_inventory>6</reserve_inventory>"
-      "  <startup_inventory>0.1</startup_inventory>"
-      "  <fuel_incommod>Tritium</fuel_incommod>"
-      "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
-      "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
-      "  <blanket_size>1000</blanket_size>"
-      "  <he3_outcommod>Helium_3</he3_outcommod>";
-
-  int simdur = 10;
-  cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:Reactor"), config, simdur);
-
-  sim.AddRecipe("tritium", tritium());
-  sim.AddRecipe("enriched_lithium", enriched_lithium());
-
-  sim.AddSource("Tritium").recipe("tritium").Finalize();
-
-  sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
-
-  int id = sim.Run();
-
-  std::vector<Cond> conds_1;
-  conds_1.push_back(Cond("Status", "==", std::string("Shut-down")));
-  QueryResult qr_1 = sim.db().Query("ReactorStatus", &conds_1);
-  double qr_1_rows = qr_1.rows.size();
-
-  EXPECT_EQ(simdur, qr_1_rows);
-
-  std::vector<Cond> conds_2;
-  conds_2.push_back(Cond("Time", "==", std::string("1")));
-  QueryResult qr_2 = sim.db().Query("ReactorOperationsLog", &conds_2);
-  std::string event = qr_2.GetVal<std::string>("Event");
-  std::string msg = qr_2.GetVal<std::string>("Value");
-
-  std::string expected_event = "Operational Error";
-  std::string expected_msg =
-      "core startup_inventory of 0.100000 kg insufficient to support "
-      "fuel_usage of 1.395980kg/timestep!";
-
-  EXPECT_EQ(expected_event, event);
-  EXPECT_EQ(expected_msg, msg);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(ReactorTest, EnterNotifyInitialFillDefault) {
-  // Test behaviors of the OperateReactor function here
+  // Test default fill behavior of EnterNotify. Specifically look that
+  // tritium is transacted in the appropriate amounts.
 
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>6</reserve_inventory>"
-      "  <startup_inventory>2.121</startup_inventory>"
+      "  <reserve_inventory>0</reserve_inventory>"
+      "  <startup_inventory>8.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
       "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
@@ -1008,7 +879,6 @@ TEST_F(ReactorTest, EnterNotifyInitialFillDefault) {
   sim.AddRecipe("enriched_lithium", enriched_lithium());
 
   sim.AddSource("Tritium").recipe("tritium").Finalize();
-
   sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
 
   int id = sim.Run();
@@ -1025,30 +895,17 @@ TEST_F(ReactorTest, EnterNotifyInitialFillDefault) {
   double quantity = qr_2.GetVal<double>("Quantity");
 
   EXPECT_EQ(8.121, quantity);
-
-  std::vector<Cond> conds_3;
-  conds_3.push_back(Cond("Time", "==", std::string("1")));
-  conds_3.push_back(Cond("Commodity", "==", std::string("Tritium")));
-  QueryResult qr_3 = sim.db().Query("Transactions", &conds_3);
-  int resource_id_2 = qr_3.GetVal<int>("ResourceId");
-
-  std::vector<Cond> conds_4;
-  conds_4.push_back(Cond("ResourceId", "==", std::to_string(resource_id_2)));
-  QueryResult qr_4 = sim.db().Query("Resources", &conds_4);
-  double quantity_2 = qr_4.GetVal<double>("Quantity");
-
-  EXPECT_NEAR(0.0379868, quantity_2, 1e-7);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(ReactorTest, EnterNotifyScheduleFill) {
-  // Test behaviors of the OperateReactor function here
+  // Test schedule fill behavior of EnterNotify.
 
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>6</reserve_inventory>"
-      "  <startup_inventory>2.121</startup_inventory>"
+      "  <reserve_inventory>0</reserve_inventory>"
+      "  <startup_inventory>8.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
       "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
@@ -1065,7 +922,6 @@ TEST_F(ReactorTest, EnterNotifyScheduleFill) {
   sim.AddRecipe("enriched_lithium", enriched_lithium());
 
   sim.AddSource("Tritium").recipe("tritium").Finalize();
-
   sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
 
   int id = sim.Run();
@@ -1099,12 +955,12 @@ TEST_F(ReactorTest, EnterNotifyScheduleFill) {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(ReactorTest, EnterNotifyInvalidFill) {
-  // Test behaviors of the OperateReactor function here
+  // Test catch for invalid fill behavior keyword in EnterNotify.
 
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>6</reserve_inventory>"
+      "  <reserve_inventory>0</reserve_inventory>"
       "  <startup_inventory>2.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
@@ -1122,7 +978,6 @@ TEST_F(ReactorTest, EnterNotifyInvalidFill) {
   sim.AddRecipe("enriched_lithium", enriched_lithium());
 
   sim.AddSource("Tritium").recipe("tritium").Finalize();
-
   sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
 
   EXPECT_THROW(int id = sim.Run(), cyclus::KeyError);
@@ -1130,12 +985,12 @@ TEST_F(ReactorTest, EnterNotifyInvalidFill) {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(ReactorTest, EnterNotifySellPolicy) {
-  // Test behaviors of the OperateReactor function here
+  // Test sell policy behavior of enter notify.
 
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.30</TBR> "
-      "  <reserve_inventory>6</reserve_inventory>"
+      "  <reserve_inventory>0</reserve_inventory>"
       "  <startup_inventory>2.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
@@ -1151,13 +1006,12 @@ TEST_F(ReactorTest, EnterNotifySellPolicy) {
 
   sim.AddSource("Tritium").capacity(100).recipe("tritium").Finalize();
   sim.AddSink("Tritium").Finalize();
-
   sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
 
   int id = sim.Run();
 
   std::vector<Cond> conds;
-  conds.push_back(Cond("TritiumStorage", "==", std::string("0")));
+  conds.push_back(Cond("TritiumExcess", "==", std::string("0")));
   QueryResult qr = sim.db().Query("ReactorInventories", &conds);
   double qr_rows = qr.rows.size();
 

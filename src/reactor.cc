@@ -6,10 +6,10 @@ namespace tricycle {
 
 Reactor::Reactor(cyclus::Context* ctx) : cyclus::Facility(ctx) {
   // capacities set somewhat arbitrarily
-  fuel_tracker.Init({&tritium_reserve}, 1000.0);
+  fuel_tracker.Init({&tritium_storage}, 1000.0);
   blanket_tracker.Init({&blanket}, 100000.0);
-  excess_tritium_tracker.Init({&tritium_storage}, 1000.0);
-  helium_tracker.Init({&helium_storage}, 1000.0);
+  //excess_tritium_tracker.Init({&tritium_excess}, 1000.0);
+  //helium_tracker.Init({&helium_storage}, 1000.0);
 }
 
 std::string Reactor::str() {
@@ -17,59 +17,69 @@ std::string Reactor::str() {
 }
 
 void Reactor::Tick() {
-  if (core_loaded) {
+  if (sufficient_tritium_for_operation) {
     OperateReactor(TBR);
     blanket_fill_policy.Start();
-    if (operational) {
-      Reactor::RecordStatus("Online", fusion_power);
-    } else {
-      Reactor::RecordStatus("Shut-down", 0);
-    }
+    //if (operational) {
+    Reactor::RecordStatus("Online", fusion_power);
+    //} else {
+    //  Reactor::RecordStatus("Shut-down", 0);
+    //}
   } else {
     Reactor::RecordStatus("Shut-down", 0);
   }
 
-  DecayInventory(tritium_core);
-  DecayInventory(tritium_reserve);
+  //DecayInventory(tritium_core);
+  //DecayInventory(tritium_reserve);
   DecayInventory(tritium_storage);
+  DecayInventory(tritium_excess);
 
-  ExtractHelium(tritium_core);
-  ExtractHelium(tritium_reserve);
+  //ExtractHelium(tritium_core);
+  //ExtractHelium(tritium_reserve);
   ExtractHelium(tritium_storage);
+  ExtractHelium(tritium_excess);
 
+
+
+//*****************************************************************************
+  // This is how we were selling tritium before, but we may need to think
+  // of a new way to do this
   // Pull excesss tritium out of reserve and put it into storage
   // Replenish core from Helium Extraction.
-  if (!tritium_reserve.empty() && core_loaded) {
-    double core_deficit = startup_inventory - tritium_core.quantity();
-
-    // Excess tritium will always be in tritium_reserve.
+  if (!tritium_storage.empty() && sufficient_tritium_for_operation) {
+    //double tritium_deficit = startup_inventory - tritium_core.quantity();
     double surplus = std::max(
-        tritium_reserve.quantity() - reserve_inventory - core_deficit, 0.0);
+        tritium_storage.quantity() - startup_inventory, 0.0);
 
-    cyclus::Material::Ptr reserve_fuel = tritium_reserve.Pop();
-    cyclus::Material::Ptr core_fuel = tritium_core.Pop();
+    cyclus::Material::Ptr storage_fuel = tritium_storage.Pop();
+    //cyclus::Material::Ptr core_fuel = tritium_core.Pop();
 
-    core_fuel->Absorb(reserve_fuel->ExtractQty(core_deficit));
-    tritium_storage.Push(reserve_fuel->ExtractQty(surplus));
+    //core_fuel->Absorb(reserve_fuel->ExtractQty(core_deficit));
+    tritium_excess.Push(storage_fuel->ExtractQty(surplus));
 
-    RecordOperationalInfo(
-        "Tritium Moved",
-        std::to_string(core_deficit) + "kg of T moved from reserve to core");
+    //RecordOperationalInfo(
+    //    "Tritium Moved",
+    //    std::to_string(core_deficit) + "kg of T moved from reserve to core");
     if (surplus > 0.0) {
       RecordOperationalInfo(
           "Tritium Moved",
-          std::to_string(surplus) + "kg of T moved from reserve to storage");
+          std::to_string(surplus) + "kg of T moved from storage to excess");
     }
-    tritium_reserve.Push(reserve_fuel);
-    tritium_core.Push(core_fuel);
+    //tritium_reserve.Push(reserve_fuel);
+    //tritium_core.Push(core_fuel);
+    tritium_storage.Push(storage_fuel);
 
-    CombineInventory(tritium_storage);
+    CombineInventory(tritium_excess);
   }
+
+//*****************************************************************************
+
 
   // This pulls out some of the blanket each timestep so that fresh blanket can
   // be added.
   if (!blanket.empty() &&
-      blanket.quantity() >= blanket_size * blanket_turnover_rate) {
+      blanket.quantity() >= blanket_size * blanket_turnover_rate &&
+      context()->time() % blanket_turnover_frequency == 0) {
     cyclus::Material::Ptr blanket_mat = blanket.Pop();
     cyclus::Material::Ptr spent_blanket =
         blanket_mat->ExtractQty(blanket_size * blanket_turnover_rate);
@@ -88,34 +98,34 @@ void Reactor::Tick() {
 }
 
 void Reactor::Tock() {
-  if (!core_loaded) {
+  if (!sufficient_tritium_for_operation) {
     try {
       Startup();
       fuel_startup_policy.Stop();
       fuel_refill_policy.Start();
-      core_loaded = true;
     } catch (const std::exception& e) {
       RecordOperationalInfo("Startup Error", e.what());
       LOG(cyclus::LEV_INFO2, "Reactor") << e.what();
     }
   }
 
-  CombineInventory(tritium_reserve);
+  CombineInventory(tritium_storage);
   CombineInventory(blanket);
 
-  RecordInventories(tritium_core.quantity(), tritium_reserve.quantity(),
-                    tritium_storage.quantity(), blanket.quantity(),
+  RecordInventories(tritium_storage.quantity(), tritium_excess.quantity(), blanket.quantity(),
                     helium_storage.quantity());
 }
 
 void Reactor::EnterNotify() {
   cyclus::Facility::EnterNotify();
 
+  fuel_usage = burn_rate * (fusion_power / MW_to_GW) / seconds_per_year * context()->dt();
+
   fuel_startup_policy
-      .Init(this, &tritium_reserve, std::string("Tritium Storage"),
+      .Init(this, &tritium_storage, std::string("Tritium Storage"),
             &fuel_tracker, std::string("ss"),
-            reserve_inventory + startup_inventory,
-            reserve_inventory + startup_inventory)
+            startup_inventory,
+            startup_inventory)
       .Set(fuel_incommod)
       .Start();
   blanket_fill_policy
@@ -133,12 +143,12 @@ void Reactor::EnterNotify() {
     cyclus::DoubleDistribution::Ptr size_dist =
         cyclus::FixedDoubleDist::Ptr(new cyclus::FixedDoubleDist(1));
     fuel_refill_policy
-        .Init(this, &tritium_reserve, std::string("Input"), &fuel_tracker,
+        .Init(this, &tritium_storage, std::string("Input"), &fuel_tracker,
               buy_quantity, active_dist, dormant_dist, size_dist)
         .Set(fuel_incommod);
   } else if (refuel_mode == "fill") {
     fuel_refill_policy
-        .Init(this, &tritium_reserve, std::string("Input"), &fuel_tracker,
+        .Init(this, &tritium_storage, std::string("Input"), &fuel_tracker,
               std::string("ss"), reserve_inventory, reserve_inventory)
         .Set(fuel_incommod);
   } else {
@@ -150,7 +160,7 @@ void Reactor::EnterNotify() {
   }
 
   tritium_sell_policy
-      .Init(this, &tritium_storage, std::string("Excess Tritium"))
+      .Init(this, &tritium_excess, std::string("Excess Tritium"))
       .Set(fuel_incommod)
       .Start();
   helium_sell_policy.Init(this, &helium_storage, std::string("Helium-3"))
@@ -173,33 +183,36 @@ std::string Reactor::GetComp(cyclus::Material::Ptr mat) {
 }
 
 void Reactor::Startup() {
-  double reserve_qty = tritium_reserve.quantity();
-  cyclus::Material::Ptr initial_reserve = tritium_reserve.Pop();
-  cyclus::CompMap c = initial_reserve->comp()->atom();
+  //double available_tritium = tritium_storage.quantity();
+  cyclus::Material::Ptr initial_storage = tritium_storage.Peek();
+  cyclus::CompMap c = initial_storage->comp()->atom();
   cyclus::compmath::Normalize(&c, 1);
 
-  if ((reserve_qty >= (startup_inventory + reserve_inventory)) &&
-      (GetComp(initial_reserve) == "{{10030000,1.000000}}")) {
-    cyclus::Material::Ptr initial_core =
-        initial_reserve->ExtractQty(startup_inventory);
-    tritium_core.Push(initial_core);
-    tritium_reserve.Push(initial_reserve);
-    RecordEvent("Startup", "Core Loaded with " +
-                               std::to_string(tritium_core.quantity()) +
-                               " kg of Tritium.");
-  } else if (GetComp(initial_reserve) != "{{10030000,1.000000}}") {
-    tritium_reserve.Push(initial_reserve);
+  if ((tritium_storage.quantity() >= (startup_inventory)) &&
+      (GetComp(initial_storage) == "{{10030000,1.000000}}") &&
+      startup_inventory >= fuel_usage) {
+    //cyclus::Material::Ptr initial_core =
+    //    initial_reserve->ExtractQty(startup_inventory);
+    //tritium_core.Push(initial_core);
+    //tritium_reserve.Push(initial_reserve);
+    RecordEvent("Startup", "Sufficient tritium in system to begin operation");
+    sufficient_tritium_for_operation = true;
+  } else if (startup_inventory < fuel_usage){
+    throw cyclus::ValueError("Startup Failed: Startup Inventory insufficient "+ 
+        std::string("to maintain reactor for full timestep!"));
+  } else if (GetComp(initial_storage) != "{{10030000,1.000000}}") {
+    //tritium_reserve.Push(initial_reserve);
     throw cyclus::ValueError(
         "Startup Failed: Fuel incommod not as expected. " +
         std::string("Expected Composition: {{10030000,1.000000}}. ") +
         std::string("Fuel Incommod Composition: ") +
-        std::string(GetComp(initial_reserve)));
+        std::string(GetComp(initial_storage)));
   } else {
-    tritium_reserve.Push(initial_reserve);
+    //tritium_reserve.Push(initial_reserve);
     throw cyclus::ValueError(
-        "Startup Failed: " + std::to_string(tritium_reserve.quantity()) +
-        " kg in reserve is less than required " +
-        std::to_string(startup_inventory + reserve_inventory) +
+        "Startup Failed: " + std::to_string(tritium_storage.quantity()) +
+        " kg in storage is less than required " +
+        std::to_string(startup_inventory) +
         " kg to start-up!");
   }
 }
@@ -277,15 +290,13 @@ void Reactor::RecordStatus(std::string status, double power) {
       ->Record();
 }
 
-void Reactor::RecordInventories(double core, double reserve, double storage,
-                                double blanket, double helium) {
+void Reactor::RecordInventories(double storage, double excess, double blanket, double helium) {
   context()
       ->NewDatum("ReactorInventories")
       ->AddVal("AgentId", id())
       ->AddVal("Time", context()->time())
-      ->AddVal("TritiumCore", core)
-      ->AddVal("TritiumReserve", reserve)
       ->AddVal("TritiumStorage", storage)
+      ->AddVal("TritiumExcess", excess)
       ->AddVal("LithiumBlanket", blanket)
       ->AddVal("HeliumStorage", helium)
       ->Record();
@@ -350,45 +361,55 @@ cyclus::Material::Ptr Reactor::BreedTritium(double fuel_usage, double TBR) {
   return bred_fuel;
 }
 
-void Reactor::OperateReactor(double TBR, double burn_rate) {
-  int seconds_per_year = 31536000;
-  double fuel_usage =
-      burn_rate * (fusion_power / 1000) / seconds_per_year * context()->dt();
+void Reactor::OperateReactor(double TBR) {
 
-  cyclus::Material::Ptr reserve_fuel = tritium_reserve.Pop();
-  cyclus::Material::Ptr core_fuel = tritium_core.Pop();
 
-  if (core_fuel->quantity() > fuel_usage) {
-    cyclus::Material::Ptr used_fuel = core_fuel->ExtractQty(fuel_usage);
-    core_fuel->Absorb(BreedTritium(fuel_usage, TBR));
+  cyclus::Material::Ptr fuel = tritium_storage.Pop();
+  //cyclus::Material::Ptr core_fuel = tritium_core.Pop();
 
-    if (((reserve_fuel->quantity() + core_fuel->quantity()) >=
-         startup_inventory)) {
-      reserve_fuel->Absorb(core_fuel);
-      tritium_core.Push(reserve_fuel->ExtractQty(startup_inventory));
+  if (fuel->quantity() > fuel_usage) {
+    cyclus::Material::Ptr used_fuel = fuel->ExtractQty(fuel_usage);
+    fuel->Absorb(BreedTritium(fuel_usage, TBR));
+    tritium_storage.Push(fuel);
+    //RecordOperationalInfo("Burned Tritium", std::to_string(fuel_usage) + "kg of tritium burned");
+
+
+                        
+
+    /*
+    if (((fuel->quantity()) >= reserve_inventory)) {
+      //reserve_fuel->Absorb(core_fuel);
+      //tritium_core.Push(reserve_fuel->ExtractQty(startup_inventory));
       tritium_reserve.Push(reserve_fuel);
-
+    
     } else {
       RecordOperationalInfo("Tritium Moved",
                             std::to_string(core_fuel->quantity()) +
                                 "kg of T moved from core to reserve");
-      reserve_fuel->Absorb(core_fuel);
-      tritium_reserve.Push(reserve_fuel);
+      //reserve_fuel->Absorb(core_fuel);
+      //tritium_reserve.Push(reserve_fuel);
       fuel_refill_policy.Stop();
       blanket_fill_policy.Stop();
       fuel_startup_policy.Start();
       RecordEvent("Core Shut-down", "Not enough tritium to operate");
-      core_loaded = false;
+      sufficient_tritium_for_operation = false;
     }
+    */
   } else {
-    operational = false;
+    fuel_refill_policy.Stop();
+    blanket_fill_policy.Stop();
+    fuel_startup_policy.Start();
+    RecordEvent("Core Shut-down", "Not enough tritium to operate");
+    sufficient_tritium_for_operation = false;
+    /*
     RecordOperationalInfo("Operational Error",
                           "core startup_inventory of " +
                               std::to_string(startup_inventory) +
                               " kg insufficient to support fuel_usage of " +
                               std::to_string(fuel_usage) + "kg/timestep!");
-    tritium_reserve.Push(reserve_fuel);
-    tritium_core.Push(core_fuel);
+    */
+    tritium_storage.Push(fuel);
+    //tritium_core.Push(core_fuel);
   }
 }
 
