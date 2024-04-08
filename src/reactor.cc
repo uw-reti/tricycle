@@ -50,13 +50,11 @@ void Reactor::Tick() {
   if (!blanket.empty() &&
       blanket.quantity() >= blanket_size * blanket_turnover_rate &&
       context()->time() % blanket_turnover_frequency == 0) {
-    cyclus::Material::Ptr blanket_mat = blanket.Pop();
     cyclus::Material::Ptr spent_blanket =
-        blanket_mat->ExtractQty(blanket_size * blanket_turnover_rate);
+        blanket.Pop(blanket_size * blanket_turnover_rate);
     RecordOperationalInfo(
         "Blanket Cycled",
         std::to_string(spent_blanket->quantity()) + "kg of blanket removed");
-    blanket.Push(blanket_mat);
   } else if (!blanket.empty() &&
              blanket.quantity() < blanket_size * blanket_turnover_rate) {
     RecordOperationalInfo(
