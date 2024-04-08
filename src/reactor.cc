@@ -47,21 +47,24 @@ void Reactor::Tick() {
 
   // This pulls out some of the blanket each timestep so that fresh blanket can
   // be added.
-  if (!blanket.empty() &&
-      blanket.quantity() >= blanket_size * blanket_turnover_rate &&
+  // NOTE: currently spent blanket dissapears into the ether. This needs to be
+  // changed in version 1 for materials tracking.
+
+  double blanket_turnover = blanket_size * blanket_turnover_rate;
+  if (!blanket.empty() && blanket.quantity() >= blanket_turnover && 
       context()->time() % blanket_turnover_frequency == 0) {
     cyclus::Material::Ptr spent_blanket =
-        blanket.Pop(blanket_size * blanket_turnover_rate);
+        blanket.Pop(blanket_turnover);
     RecordOperationalInfo(
         "Blanket Cycled",
         std::to_string(spent_blanket->quantity()) + "kg of blanket removed");
   } else if (!blanket.empty() &&
-             blanket.quantity() < blanket_size * blanket_turnover_rate) {
+             blanket.quantity() < blanket_turnover) {
     RecordOperationalInfo(
         "Blanket Not Cycled",
         "Total blanket material (" + std::to_string(blanket.quantity()) +
             ") insufficient to extract " +
-            std::to_string(blanket_size * blanket_turnover_rate) + "kg!");
+            std::to_string(blanket_turnover) + "kg!");
   }
 }
 

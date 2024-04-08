@@ -138,7 +138,7 @@ class Reactor : public cyclus::Facility  {
 
   #pragma cyclus var { \
     "doc": "Minimum tritium inventory to hold in reserve in case of tritium recovery system failure", \
-    "tooltip": "Minimum tritium inventory to hold in reserve (excluding core invneotry)", \
+    "tooltip": "Minimum tritium inventory to hold in reserve", \
     "units": "kg", \
     "uilabel": "Reserve Inventory" \
   }
