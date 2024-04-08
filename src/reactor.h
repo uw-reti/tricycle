@@ -248,7 +248,6 @@ class Reactor : public cyclus::Facility  {
   }
   int blanket_turnover_frequency;
 
-  //bool operational = true; 
   bool sufficient_tritium_for_operation = false;
   int seconds_per_year = 31536000;
   int MW_to_GW = 1000;
@@ -256,14 +255,6 @@ class Reactor : public cyclus::Facility  {
 
   // kg/GW-fusion-power-year (Abdou et al. 2021)
   double burn_rate = 55.8;
-
-  /*
-  #pragma cyclus var {"tooltip":"Buffer for handling tritium kept in the core"}
-  cyclus::toolkit::ResBuf<cyclus::Material> tritium_core;
-
-  #pragma cyclus var {"tooltip":"Buffer for handling tritium kept in reserve"}
-  cyclus::toolkit::ResBuf<cyclus::Material> tritium_reserve;
-  */
 
   #pragma cyclus var {"tooltip":"Buffer for handling tritium material to be used in reactor"}
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_storage;
@@ -282,12 +273,6 @@ class Reactor : public cyclus::Facility  {
 
   #pragma cyclus var {"tooltip":"Tracker to handle blanket material"}
   cyclus::toolkit::TotalInvTracker blanket_tracker;
-  
-  //#pragma cyclus var {"tooltip":"Tracker to handle excess tritium to be sold"}
-  //cyclus::toolkit::TotalInvTracker excess_tritium_tracker;
-
-  //#pragma cyclus var {"tooltip":"Tracker to handle on-hand helium"}
-  //cyclus::toolkit::TotalInvTracker helium_tracker;
 
   cyclus::toolkit::MatlBuyPolicy fuel_startup_policy;
   cyclus::toolkit::MatlBuyPolicy fuel_refill_policy;

@@ -660,6 +660,70 @@ TEST_F(ReactorTest, DepleteBlanket) {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+TEST_F(ReactorTest, DepleteBlanketLi7EdgeCases) {
+  // Test behaviors of the DepleteBlanket function here
+
+  std::string config_1 =
+      "  <fusion_power>300</fusion_power> "
+      "  <TBR>1.08</TBR> "
+      "  <reserve_inventory>0</reserve_inventory>"
+      "  <startup_inventory>8.121</startup_inventory>"
+      "  <fuel_incommod>Tritium</fuel_incommod>"
+      "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
+      "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
+      "  <blanket_size>1000</blanket_size>"
+      "  <he3_outcommod>Helium_3</he3_outcommod>"
+      "  <Li7_contribution>0.00</Li7_contribution>";
+
+  std::string config_2 =
+      "  <fusion_power>300</fusion_power> "
+      "  <TBR>1.08</TBR> "
+      "  <reserve_inventory>0</reserve_inventory>"
+      "  <startup_inventory>8.121</startup_inventory>"
+      "  <fuel_incommod>Tritium</fuel_incommod>"
+      "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
+      "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
+      "  <blanket_size>1000</blanket_size>"
+      "  <he3_outcommod>Helium_3</he3_outcommod>"
+      "  <Li7_contribution>1.00</Li7_contribution>";
+
+  int simdur = 2;
+  cyclus::MockSim sim_1(cyclus::AgentSpec(":tricycle:Reactor"), config_1, simdur);
+
+  sim_1.AddRecipe("tritium", tritium());
+  sim_1.AddRecipe("enriched_lithium", enriched_lithium());
+
+  sim_1.AddSource("Tritium").recipe("tritium").Finalize();
+  sim_1.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
+
+  int id_1 = sim_1.Run();
+
+
+  cyclus::MockSim sim_2(cyclus::AgentSpec(":tricycle:Reactor"), config_2, simdur);
+
+  sim_2.AddRecipe("tritium", tritium());
+  sim_2.AddRecipe("enriched_lithium", enriched_lithium());
+
+  sim_2.AddSource("Tritium").recipe("tritium").Finalize();
+  sim_2.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
+
+  int id_2 = sim_2.Run();
+
+  std::vector<Cond> conds_1;
+  conds_1.push_back(Cond("Time", "==", std::string("1")));
+  QueryResult qr_1 = sim_1.db().Query("ReactorInventories", &conds_1);
+  double excess_1 = qr_1.GetVal<double>("TritiumExcess");
+
+  std::vector<Cond> conds_2;
+  conds_2.push_back(Cond("Time", "==", std::string("1")));
+  QueryResult qr_2 = sim_2.db().Query("ReactorInventories", &conds_2);
+  double excess_2 = qr_2.GetVal<double>("TritiumExcess");
+
+  EXPECT_EQ(excess_1, excess_2);
+}
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(ReactorTest, OverDepleteBlanket) {
   // Test behaviors of the DepleteBlanket function here
 
