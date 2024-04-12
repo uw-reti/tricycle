@@ -248,14 +248,6 @@ class Reactor : public cyclus::Facility  {
   }
   int blanket_turnover_frequency;
 
-  bool sufficient_tritium_for_operation = false;
-  int seconds_per_year = 31536000;
-  int MW_to_GW = 1000;
-  double fuel_usage;
-
-  // kg/GW-fusion-power-year (Abdou et al. 2021)
-  double burn_rate = 55.8;
-
   #pragma cyclus var {"tooltip":"Buffer for handling tritium material to be used in reactor"}
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_storage;
 
@@ -295,6 +287,41 @@ class Reactor : public cyclus::Facility  {
   cyclus::Material::Ptr BreedTritium(double fuel_usage, double TBR);
   std::string GetComp(cyclus::Material::Ptr mat);
 
+
+  private: 
+    bool sufficient_tritium_for_operation = false;
+    const double seconds_per_year = 31536000.0;
+    const double MW_to_GW = 1000.0;
+    double fuel_usage;
+    std::string expected_fuel_comp = "{{10030000,1.000000}}";
+
+    //masses in kg/atom
+    const double Li7_atomic_mass = 1.16503478e-26;
+    const double Li6_atomic_mass = 9.9883465e-27;
+    const double tritium_atomic_mass = 5.00826766e-27;
+    const double He4_atomic_mass = 6.64647907e-27;
+    const double absorbed_neutron_mass = tritium_atomic_mass
+                 + He4_atomic_mass - Li6_atomic_mass;
+
+    const double Li6_tritium_ratio = Li6_atomic_mass/tritium_atomic_mass;
+    const double Li7_tritium_ratio = Li6_atomic_mass/tritium_atomic_mass;
+    const double He4_tritium_ratio = He4_atomic_mass/tritium_atomic_mass;
+    
+    //NucIDs for Pyne
+    const int tritium_id = 10030000;
+    const int He3_id = 20030000;
+    const int He4_id = 20040000;
+    const int Li6_id = 30060000;
+    const int Li7_id = 30070000;
+
+    // kg/GW-fusion-power-year (Abdou et al. 2021)
+    double burn_rate = 55.8;
+
+    //Compositions
+    const cyclus::CompMap He3 = {{He3_id, 1}};
+    const cyclus::CompMap T = {{tritium_id, 1}};
+    const cyclus::Composition::Ptr He3_comp = cyclus::Composition::CreateFromAtom(He3);
+    const cyclus::Composition::Ptr tritium_comp = cyclus::Composition::CreateFromAtom(T);
   // And away we go!
 };
 

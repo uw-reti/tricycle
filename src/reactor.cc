@@ -159,14 +159,14 @@ void Reactor::Startup() {
   cyclus::compmath::Normalize(&c, 1);
 
   if ((tritium_storage.quantity() >= (startup_inventory)) &&
-      (GetComp(initial_storage) == "{{10030000,1.000000}}") &&
+      (GetComp(initial_storage) == expected_fuel_comp) &&
       startup_inventory >= fuel_usage) {
     RecordEvent("Startup", "Sufficient tritium in system to begin operation");
     sufficient_tritium_for_operation = true;
   } else if (startup_inventory < fuel_usage){
     throw cyclus::ValueError("Startup Failed: Startup Inventory insufficient "+ 
         std::string("to maintain reactor for full timestep!"));
-  } else if (GetComp(initial_storage) != "{{10030000,1.000000}}") {
+  } else if (GetComp(initial_storage) != expected_fuel_comp) {
     throw cyclus::ValueError(
         "Startup Failed: Fuel incommod not as expected. " +
         std::string("Expected Composition: {{10030000,1.000000}}. ") +
@@ -211,13 +211,10 @@ void Reactor::ExtractHelium(
     cyclus::CompMap c = mat->comp()->atom();
     cyclus::compmath::Normalize(&c, mat->quantity());
 
-    cyclus::CompMap He3 = {{20030000, 1}};
-
     // A threshold of 1e-5 was set to allow tritium_reserve inventories up to
     // 1000kg. A 1 decade lower threshold prevents tritium_reserve inventories
     // above 33kg.
-    cyclus::Material::Ptr helium = mat->ExtractComp(
-        c[20030000], cyclus::Composition::CreateFromAtom(He3), 1e-5);
+    cyclus::Material::Ptr helium = mat->ExtractComp(c[He3_id], He3_comp, 1e-5);
 
     helium_storage.Push(helium);
     inventory.Push(mat);
@@ -274,20 +271,21 @@ void Reactor::DepleteBlanket(double bred_tritium_mass) {
 
   cyclus::CompMap depleted_comp;
 
+  double bred_tritium_atoms = bred_tritium_mass/tritium_atomic_mass;
+  
   // This is ALMOST the correct behavior, but "scraping the bottom of the
   // barrel" is a little too complex for this implementation.
-  if ((b[30060000] - (1 - Li7_contribution) * 2 * bred_tritium_mass > 0) &&
-      (b[30070000] - Li7_contribution * 7.0 / 3.0 * bred_tritium_mass > 0)) {
-    depleted_comp = {{30070000, b[30070000] - Li7_contribution * 7.0 / 3.0 *
-                                                  bred_tritium_mass},
-                     {30060000, b[30060000] - (1 - Li7_contribution) * 2 *
-                                                  bred_tritium_mass},
-                     {10030000, b[10030000] + bred_tritium_mass},
-                     {20040000, b[20040000] + 4.0 / 3.0 * bred_tritium_mass}};
+  if ((b[Li6_id] - (1 - Li7_contribution) * Li6_atomic_mass * bred_tritium_atoms > 0) &&
+      (b[Li7_id] - Li7_contribution * Li7_atomic_mass * bred_tritium_atoms > 0)) {
+    depleted_comp = {{Li7_id, b[Li7_id] - Li7_contribution * Li7_atomic_mass * bred_tritium_atoms},
+                     {Li6_id, b[Li6_id] - (1 - Li7_contribution) * Li6_atomic_mass * bred_tritium_atoms},
+                     {tritium_id, b[tritium_id] + bred_tritium_mass},
+                     {He4_id, b[He4_id] + He4_atomic_mass * bred_tritium_atoms}};
 
     // Account for the added mass of the absorbed neutrons
     double neutron_mass_correction =
-        1.0 / 3.0 * bred_tritium_mass * (1 - Li7_contribution);
+        absorbed_neutron_mass * (bred_tritium_mass/tritium_atomic_mass)
+         * (1 - Li7_contribution);
     cyclus::Material::Ptr additional_mass = cyclus::Material::Create(
         this, neutron_mass_correction,
         cyclus::Composition::CreateFromMass(depleted_comp));
@@ -313,10 +311,7 @@ cyclus::Material::Ptr Reactor::BreedTritium(double fuel_usage, double TBR) {
   cyclus::CompMap c = mat->comp()->mass();
   cyclus::compmath::Normalize(&c, mat->quantity());
 
-  cyclus::CompMap T = {{10030000, 1}};
-
-  cyclus::Material::Ptr bred_fuel =
-      mat->ExtractComp(c[10030000], cyclus::Composition::CreateFromAtom(T));
+  cyclus::Material::Ptr bred_fuel = mat->ExtractComp(c[tritium_id], tritium_comp);
   blanket.Push(mat);
 
   RecordOperationalInfo("Bred Tritium", std::to_string(bred_fuel->quantity()) +
