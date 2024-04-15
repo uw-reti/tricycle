@@ -145,6 +145,14 @@ class Reactor : public cyclus::Facility  {
   double reserve_inventory;  
 
   #pragma cyclus var { \
+    "doc": "Equilibrium quantity of tritium which is sequestered in the system and no longer accessable", \
+    "tooltip": "sequestered tritium equilibrium quantity, should be startup-reserve inventory", \
+    "units": "kg", \
+    "uilabel": "Equilibrium Quantity of Sequestered Tritium" \
+  }
+  double sequestered_equilibrium;  
+
+  #pragma cyclus var { \
     "default": 'fill', \
     "doc": "Method of refueling the reactor", \
     "tooltip": "Options: 'schedule' or 'fill'", \
@@ -254,6 +262,9 @@ class Reactor : public cyclus::Facility  {
   #pragma cyclus var {"tooltip":"Buffer for handling excess tritium material to be sold"}
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_excess;
 
+  #pragma cyclus var {"tooltip":"Buffer for handling tritium sequestered in the system"}
+  cyclus::toolkit::ResBuf<cyclus::Material> tritium_sequestered;
+
   #pragma cyclus var {"tooltip":"Buffer for handling helium-3 byproduct material"}
   cyclus::toolkit::ResBuf<cyclus::Material> helium_storage;
 
@@ -276,12 +287,13 @@ class Reactor : public cyclus::Facility  {
 
   void Startup();
   void OperateReactor(double TBR);
+  void SequesterTritium();
   void DecayInventory(cyclus::toolkit::ResBuf<cyclus::Material> &inventory);
   void CombineInventory(cyclus::toolkit::ResBuf<cyclus::Material> &inventory);
   void ExtractHelium(cyclus::toolkit::ResBuf<cyclus::Material> &inventory);
   void RecordEvent(std::string name, std::string val);
   void RecordStatus(std::string Status, double power);
-  void RecordInventories(double storage, double excess, double blanket, double helium);
+  void RecordInventories(double storage, double excess, double sequestered, double blanket, double helium);
   void RecordOperationalInfo(std::string name, std::string val);
   void DepleteBlanket(double bred_tritium_mass);
   cyclus::Material::Ptr BreedTritium(double fuel_usage, double TBR);

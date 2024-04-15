@@ -16,6 +16,7 @@ std::string Reactor::str() {
 
 void Reactor::Tick() {
   if (sufficient_tritium_for_operation) {
+    SequesterTritium();
     OperateReactor(TBR);
     blanket_fill_policy.Start();
     Reactor::RecordStatus("Online", fusion_power);
@@ -23,15 +24,17 @@ void Reactor::Tick() {
     Reactor::RecordStatus("Shut-down", 0);
   }
 
+
   DecayInventory(tritium_storage);
   DecayInventory(tritium_excess);
+  DecayInventory(tritium_sequestered);
 
   ExtractHelium(tritium_storage);
   ExtractHelium(tritium_excess);
 
   if (!tritium_storage.empty() && sufficient_tritium_for_operation) {
     double surplus = std::max(
-      tritium_storage.quantity() - startup_inventory, 0.0);
+      tritium_storage.quantity() - reserve_inventory, 0.0);
 
     cyclus::Material::Ptr storage_fuel = tritium_storage.Pop();
     tritium_excess.Push(storage_fuel->ExtractQty(surplus));
@@ -83,7 +86,8 @@ void Reactor::Tock() {
   CombineInventory(tritium_storage);
   CombineInventory(blanket);
 
-  RecordInventories(tritium_storage.quantity(), tritium_excess.quantity(), blanket.quantity(),
+
+  RecordInventories(tritium_storage.quantity(), tritium_excess.quantity(), tritium_sequestered.quantity(), blanket.quantity(),
                     helium_storage.quantity());
 }
 
@@ -151,6 +155,26 @@ std::string Reactor::GetComp(cyclus::Material::Ptr mat) {
   comp.pop_back();
   comp = comp + std::string("}");
   return comp;
+}
+
+void Reactor::SequesterTritium(){
+  if (!tritium_sequestered.empty()){
+    cyclus::Material::Ptr sequestered_mat = tritium_sequestered.Pop();
+    cyclus::CompMap c = sequestered_mat->comp()->atom();
+    cyclus::compmath::Normalize(&c, sequestered_mat->quantity());
+
+    double equilibrium_deficit = sequestered_equilibrium - c[tritium_id];
+
+    // Another catch might be good here...
+    sequestered_mat->Absorb(tritium_storage.Pop(equilibrium_deficit));
+
+    tritium_sequestered.Push(sequestered_mat);
+
+    
+  } else {
+    // Should I do a try/catch here, or is "user error" fine?
+    tritium_sequestered.Push(tritium_storage.Pop(sequestered_equilibrium));
+  }
 }
 
 void Reactor::Startup() {
@@ -251,13 +275,14 @@ void Reactor::RecordStatus(std::string status, double power) {
       ->Record();
 }
 
-void Reactor::RecordInventories(double storage, double excess, double blanket, double helium) {
+void Reactor::RecordInventories(double storage, double excess, double sequestered, double blanket, double helium) {
   context()
       ->NewDatum("ReactorInventories")
       ->AddVal("AgentId", id())
       ->AddVal("Time", context()->time())
       ->AddVal("TritiumStorage", storage)
       ->AddVal("TritiumExcess", excess)
+      ->AddVal("TritiumSequestered", sequestered)
       ->AddVal("LithiumBlanket", blanket)
       ->AddVal("HeliumStorage", helium)
       ->Record();

@@ -72,13 +72,14 @@ TEST_F(ReactorTest, TickInsufficientTritium) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>0</reserve_inventory>"
-      "  <startup_inventory>2.121</startup_inventory>"
+      "  <reserve_inventory>6.0</reserve_inventory>"
+      "  <startup_inventory>8.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
       "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
       "  <blanket_size>1000</blanket_size>"
-      "  <he3_outcommod>Helium_3</he3_outcommod>";
+      "  <he3_outcommod>Helium_3</he3_outcommod>"
+      "  <sequestered_equilibrium>2.121</sequestered_equilibrium>";
 
   int simdur = 10;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:Reactor"), config, simdur);
@@ -107,14 +108,15 @@ TEST_F(ReactorTest, TickBlanketCycle) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>0</reserve_inventory>"
-      "  <startup_inventory>2.121</startup_inventory>"
+      "  <reserve_inventory>6.0</reserve_inventory>"
+      "  <startup_inventory>8.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
       "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
       "  <blanket_size>1000</blanket_size>"
       "  <blanket_turnover_rate>0.03</blanket_turnover_rate>"
-      "  <he3_outcommod>Helium_3</he3_outcommod>";
+      "  <he3_outcommod>Helium_3</he3_outcommod>"
+      "  <sequestered_equilibrium>2.121</sequestered_equilibrium>";
 
   int simdur = 4;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:Reactor"), config, simdur);
@@ -145,14 +147,15 @@ TEST_F(ReactorTest, TickBlanketOverCycle) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>0</reserve_inventory>"
-      "  <startup_inventory>2.121</startup_inventory>"
+      "  <reserve_inventory>6.0</reserve_inventory>"
+      "  <startup_inventory>8.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
       "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
       "  <blanket_size>1000</blanket_size>"
       "  <blanket_turnover_rate>0.65</blanket_turnover_rate>"
-      "  <he3_outcommod>Helium_3</he3_outcommod>";
+      "  <he3_outcommod>Helium_3</he3_outcommod>"
+      "  <sequestered_equilibrium>2.121</sequestered_equilibrium>";
 
   int simdur = 2;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:Reactor"), config, simdur);
@@ -194,13 +197,14 @@ TEST_F(ReactorTest, NormalStartup) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>0</reserve_inventory>"
-      "  <startup_inventory>2.121</startup_inventory>"
+      "  <reserve_inventory>6.0</reserve_inventory>"
+      "  <startup_inventory>8.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
       "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
       "  <blanket_size>1000</blanket_size>"
-      "  <he3_outcommod>Helium_3</he3_outcommod>";
+      "  <he3_outcommod>Helium_3</he3_outcommod>"
+      "  <sequestered_equilibrium>2.121</sequestered_equilibrium>";
 
   int simdur = 1;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:Reactor"), config, simdur);
@@ -230,13 +234,14 @@ TEST_F(ReactorTest, FuelConstrainedStartup) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>0</reserve_inventory>"
-      "  <startup_inventory>2.121</startup_inventory>"
+      "  <reserve_inventory>6.0</reserve_inventory>"
+      "  <startup_inventory>8.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
       "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
       "  <blanket_size>1000</blanket_size>"
-      "  <he3_outcommod>Helium_3</he3_outcommod>";
+      "  <he3_outcommod>Helium_3</he3_outcommod>"
+      "  <sequestered_equilibrium>2.121</sequestered_equilibrium>";
 
   int simdur = 2;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:Reactor"), config, simdur);
@@ -244,14 +249,14 @@ TEST_F(ReactorTest, FuelConstrainedStartup) {
   sim.AddRecipe("tritium", tritium());
   sim.AddRecipe("enriched_lithium", enriched_lithium());
 
-  sim.AddSource("Tritium").recipe("tritium").capacity(2.0).Finalize();
+  sim.AddSource("Tritium").recipe("tritium").capacity(5.0).Finalize();
   sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
 
   int id = sim.Run();
 
   // Under these conditions, we expect the reactor to be able to startup on
-  // timestep 1 but not before then (buys 2kg of T on each timestep, and
-  // needs 2.121kg to startup). NOTE: startup occurs after DRE.
+  // timestep 1 but not before then (buys 5kg of T on each timestep, and
+  // needs 8.121kg to startup). NOTE: startup occurs after DRE.
   std::vector<Cond> conds0;
   conds0.push_back(Cond("Time", "==", std::string("0")));
   QueryResult qr0 = sim.db().Query("ReactorOperationsLog", &conds0);
@@ -276,13 +281,14 @@ TEST_F(ReactorTest, NoFuelStartup) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>0</reserve_inventory>"
-      "  <startup_inventory>2.121</startup_inventory>"
+      "  <reserve_inventory>6.0</reserve_inventory>"
+      "  <startup_inventory>8.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
       "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
       "  <blanket_size>1000</blanket_size>"
-      "  <he3_outcommod>Helium_3</he3_outcommod>";
+      "  <he3_outcommod>Helium_3</he3_outcommod>"
+      "  <sequestered_equilibrium>2.121</sequestered_equilibrium>";
 
   int simdur = 10;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:Reactor"), config, simdur);
@@ -313,13 +319,14 @@ TEST_F(ReactorTest, WrongFuelStartup) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>0</reserve_inventory>"
-      "  <startup_inventory>2.121</startup_inventory>"
+      "  <reserve_inventory>6.0</reserve_inventory>"
+      "  <startup_inventory>8.121</startup_inventory>"
       "  <fuel_incommod>Enriched_Lithium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
       "  <blanket_inrecipe>Lithium</blanket_inrecipe>"
       "  <blanket_size>1000</blanket_size>"
-      "  <he3_outcommod>Helium_3</he3_outcommod>";
+      "  <he3_outcommod>Helium_3</he3_outcommod>"
+      "  <sequestered_equilibrium>2.121</sequestered_equilibrium>";
 
   int simdur = 3;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:Reactor"), config, simdur);
@@ -366,13 +373,14 @@ TEST_F(ReactorTest, DecayInventory) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>0</reserve_inventory>"
+      "  <reserve_inventory>6.0</reserve_inventory>"
       "  <startup_inventory>8.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
       "  <blanket_inrecipe>Lithium</blanket_inrecipe>"
       "  <blanket_size>1000</blanket_size>"
-      "  <he3_outcommod>Helium_3</he3_outcommod>";
+      "  <he3_outcommod>Helium_3</he3_outcommod>"
+      "  <sequestered_equilibrium>2.121</sequestered_equilibrium>";
 
   int simdur = 2;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:Reactor"), config, simdur);
@@ -390,9 +398,10 @@ TEST_F(ReactorTest, DecayInventory) {
   QueryResult qr = sim.db().Query("ReactorInventories", &conds);
   double he3 = qr.GetVal<double>("HeliumStorage");
 
-  // calculator only gave me 7 decimals, otherwise this should probably
-  // be 1e-10.
-  EXPECT_NEAR(0.0379868, he3, 1e-7);
+  // this is "reserve_inventory - reserve_inventory * 2^(-2.57208504984001213e-09*2629846)"
+  double expected_decay = 0.028065619;
+
+  EXPECT_NEAR(expected_decay, he3, 1e-7);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -512,13 +521,14 @@ TEST_F(ReactorTest, RecordEvent) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>0</reserve_inventory>"
-      "  <startup_inventory>2.121</startup_inventory>"
+      "  <reserve_inventory>6.0</reserve_inventory>"
+      "  <startup_inventory>8.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
       "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
       "  <blanket_size>1000</blanket_size>"
-      "  <he3_outcommod>Helium_3</he3_outcommod>";
+      "  <he3_outcommod>Helium_3</he3_outcommod>"
+      "  <sequestered_equilibrium>2.121</sequestered_equilibrium>";
 
   int simdur = 1;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:Reactor"), config, simdur);
@@ -546,13 +556,14 @@ TEST_F(ReactorTest, RecordInventories) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>0</reserve_inventory>"
-      "  <startup_inventory>2.121</startup_inventory>"
+      "  <reserve_inventory>6.0</reserve_inventory>"
+      "  <startup_inventory>8.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
       "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
       "  <blanket_size>1000</blanket_size>"
-      "  <he3_outcommod>Helium_3</he3_outcommod>";
+      "  <he3_outcommod>Helium_3</he3_outcommod>"
+      "  <sequestered_equilibrium>2.121</sequestered_equilibrium>";
 
   int simdur = 1;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:Reactor"), config, simdur);
@@ -574,7 +585,7 @@ TEST_F(ReactorTest, RecordInventories) {
   double helium_storage = qr.GetVal<double>("HeliumStorage");
 
 
-  EXPECT_EQ(2.121, tritium_storage);
+  EXPECT_EQ(8.121, tritium_storage);
   EXPECT_EQ(0.0, tritium_excess);
   EXPECT_EQ(1000.0, blanket);
   EXPECT_EQ(0.0, helium_storage);
@@ -587,13 +598,14 @@ TEST_F(ReactorTest, RecordStatus) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>0</reserve_inventory>"
-      "  <startup_inventory>2.121</startup_inventory>"
+      "  <reserve_inventory>6.0</reserve_inventory>"
+      "  <startup_inventory>8.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
       "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
       "  <blanket_size>1000</blanket_size>"
-      "  <he3_outcommod>Helium_3</he3_outcommod>";
+      "  <he3_outcommod>Helium_3</he3_outcommod>"
+      "  <sequestered_equilibrium>2.121</sequestered_equilibrium>";
 
   int simdur = 2;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:Reactor"), config, simdur);
@@ -632,13 +644,14 @@ TEST_F(ReactorTest, DepleteBlanket) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>0</reserve_inventory>"
-      "  <startup_inventory>2.121</startup_inventory>"
+      "  <reserve_inventory>6.0</reserve_inventory>"
+      "  <startup_inventory>8.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
       "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
       "  <blanket_size>1000</blanket_size>"
-      "  <he3_outcommod>Helium_3</he3_outcommod>";
+      "  <he3_outcommod>Helium_3</he3_outcommod>"
+      "  <sequestered_equilibrium>2.121</sequestered_equilibrium>";
 
   int simdur = 2;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:Reactor"), config, simdur);
@@ -666,26 +679,28 @@ TEST_F(ReactorTest, DepleteBlanketLi7EdgeCases) {
   std::string config_1 =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.08</TBR> "
-      "  <reserve_inventory>0</reserve_inventory>"
+      "  <reserve_inventory>6.0</reserve_inventory>"
       "  <startup_inventory>8.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
       "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
       "  <blanket_size>1000</blanket_size>"
       "  <he3_outcommod>Helium_3</he3_outcommod>"
-      "  <Li7_contribution>0.00</Li7_contribution>";
+      "  <Li7_contribution>0.00</Li7_contribution>"
+      "  <sequestered_equilibrium>2.121</sequestered_equilibrium>";
 
   std::string config_2 =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.08</TBR> "
-      "  <reserve_inventory>0</reserve_inventory>"
+      "  <reserve_inventory>6.0</reserve_inventory>"
       "  <startup_inventory>8.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
       "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
       "  <blanket_size>1000</blanket_size>"
       "  <he3_outcommod>Helium_3</he3_outcommod>"
-      "  <Li7_contribution>1.00</Li7_contribution>";
+      "  <Li7_contribution>1.00</Li7_contribution>"
+      "  <sequestered_equilibrium>2.121</sequestered_equilibrium>";
 
   int simdur = 2;
   cyclus::MockSim sim_1(cyclus::AgentSpec(":tricycle:Reactor"), config_1, simdur);
@@ -730,13 +745,14 @@ TEST_F(ReactorTest, OverDepleteBlanket) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.50</TBR> "
-      "  <reserve_inventory>0</reserve_inventory>"
-      "  <startup_inventory>2.121</startup_inventory>"
+      "  <reserve_inventory>6.0</reserve_inventory>"
+      "  <startup_inventory>8.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
       "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
       "  <blanket_size>1000</blanket_size>"
-      "  <he3_outcommod>Helium_3</he3_outcommod>";
+      "  <he3_outcommod>Helium_3</he3_outcommod>"
+      "  <sequestered_equilibrium>2.121</sequestered_equilibrium>";
 
   int simdur = 2;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:Reactor"), config, simdur);
@@ -767,13 +783,14 @@ TEST_F(ReactorTest, BreedTritium) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.05</TBR> "
-      "  <reserve_inventory>0</reserve_inventory>"
-      "  <startup_inventory>2.121</startup_inventory>"
+      "  <reserve_inventory>6.0</reserve_inventory>"
+      "  <startup_inventory>8.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
       "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
       "  <blanket_size>1000</blanket_size>"
-      "  <he3_outcommod>Helium_3</he3_outcommod>";
+      "  <he3_outcommod>Helium_3</he3_outcommod>"
+      "  <sequestered_equilibrium>2.121</sequestered_equilibrium>";
 
   int simdur = 2;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:Reactor"), config, simdur);
@@ -808,13 +825,14 @@ TEST_F(ReactorTest, OperateReactorSustainingTBR) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.05</TBR> "
-      "  <reserve_inventory>0</reserve_inventory>"
-      "  <startup_inventory>2.121</startup_inventory>"
+      "  <reserve_inventory>6.0</reserve_inventory>"
+      "  <startup_inventory>8.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
       "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
       "  <blanket_size>1000</blanket_size>"
-      "  <he3_outcommod>Helium_3</he3_outcommod>";
+      "  <he3_outcommod>Helium_3</he3_outcommod>"
+      "  <sequestered_equilibrium>2.121</sequestered_equilibrium>";
 
   int simdur = 10;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:Reactor"), config, simdur);
@@ -853,13 +871,14 @@ TEST_F(ReactorTest, OperateReactorNonSustainingTBR) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>0.8</TBR> "
-      "  <reserve_inventory>0</reserve_inventory>"
-      "  <startup_inventory>2.121</startup_inventory>"
+      "  <reserve_inventory>6.0</reserve_inventory>"
+      "  <startup_inventory>8.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
       "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
       "  <blanket_size>1000</blanket_size>"
-      "  <he3_outcommod>Helium_3</he3_outcommod>";
+      "  <he3_outcommod>Helium_3</he3_outcommod>"
+      "  <sequestered_equilibrium>2.121</sequestered_equilibrium>";
 
   int simdur = 10;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:Reactor"), config, simdur);
@@ -896,13 +915,14 @@ TEST_F(ReactorTest, OperateReactorShutdownLackOfTritium) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>0.0</TBR> "
-      "  <reserve_inventory>0</reserve_inventory>"
-      "  <startup_inventory>2.121</startup_inventory>"
+      "  <reserve_inventory>6.0</reserve_inventory>"
+      "  <startup_inventory>8.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
       "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
       "  <blanket_size>1000</blanket_size>"
-      "  <he3_outcommod>Helium_3</he3_outcommod>";
+      "  <he3_outcommod>Helium_3</he3_outcommod>"
+      "  <sequestered_equilibrium>2.121</sequestered_equilibrium>";
 
   int simdur = 25;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:Reactor"), config, simdur);
@@ -932,13 +952,14 @@ TEST_F(ReactorTest, EnterNotifyInitialFillDefault) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>0</reserve_inventory>"
+      "  <reserve_inventory>6.0</reserve_inventory>"
       "  <startup_inventory>8.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
       "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
       "  <blanket_size>1000</blanket_size>"
-      "  <he3_outcommod>Helium_3</he3_outcommod>";
+      "  <he3_outcommod>Helium_3</he3_outcommod>"
+      "  <sequestered_equilibrium>2.121</sequestered_equilibrium>";
 
   int simdur = 2;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:Reactor"), config, simdur);
@@ -972,7 +993,7 @@ TEST_F(ReactorTest, EnterNotifyScheduleFill) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>0</reserve_inventory>"
+      "  <reserve_inventory>6.0</reserve_inventory>"
       "  <startup_inventory>8.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
@@ -981,7 +1002,8 @@ TEST_F(ReactorTest, EnterNotifyScheduleFill) {
       "  <buy_quantity>0.1</buy_quantity>"
       "  <buy_frequency>1</buy_frequency>"
       "  <refuel_mode>schedule</refuel_mode>"
-      "  <he3_outcommod>Helium_3</he3_outcommod>";
+      "  <he3_outcommod>Helium_3</he3_outcommod>"
+      "  <sequestered_equilibrium>2.121</sequestered_equilibrium>";
 
   int simdur = 2;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:Reactor"), config, simdur);
@@ -1028,8 +1050,8 @@ TEST_F(ReactorTest, EnterNotifyInvalidFill) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.00</TBR> "
-      "  <reserve_inventory>0</reserve_inventory>"
-      "  <startup_inventory>2.121</startup_inventory>"
+      "  <reserve_inventory>6.0</reserve_inventory>"
+      "  <startup_inventory>8.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
       "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
@@ -1037,7 +1059,8 @@ TEST_F(ReactorTest, EnterNotifyInvalidFill) {
       "  <buy_quantity>0.1</buy_quantity>"
       "  <buy_frequency>1</buy_frequency>"
       "  <refuel_mode>kjnsfdhn</refuel_mode>"
-      "  <he3_outcommod>Helium_3</he3_outcommod>";
+      "  <he3_outcommod>Helium_3</he3_outcommod>"
+      "  <sequestered_equilibrium>2.121</sequestered_equilibrium>";
 
   int simdur = 2;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:Reactor"), config, simdur);
@@ -1058,13 +1081,14 @@ TEST_F(ReactorTest, EnterNotifySellPolicy) {
   std::string config =
       "  <fusion_power>300</fusion_power> "
       "  <TBR>1.30</TBR> "
-      "  <reserve_inventory>0</reserve_inventory>"
-      "  <startup_inventory>2.121</startup_inventory>"
+      "  <reserve_inventory>6.0</reserve_inventory>"
+      "  <startup_inventory>8.121</startup_inventory>"
       "  <fuel_incommod>Tritium</fuel_incommod>"
       "  <blanket_incommod>Enriched_Lithium</blanket_incommod>"
       "  <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
       "  <blanket_size>1000</blanket_size>"
-      "  <he3_outcommod>Helium_3</he3_outcommod>";
+      "  <he3_outcommod>Helium_3</he3_outcommod>"
+      "  <sequestered_equilibrium>2.121</sequestered_equilibrium>";
 
   int simdur = 10;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:Reactor"), config, simdur);
