@@ -179,7 +179,7 @@ void Reactor::Startup() {
   cyclus::CompMap c = initial_storage->comp()->atom();
   cyclus::compmath::Normalize(&c, 1);
 
-  if ((tritium_storage.quantity() >= (startup_inventory)) &&
+  if ((tritium_storage.quantity() >= startup_inventory) &&
       (cyclus::compmath::AlmostEq(c, T, 1e-7)) &&
       startup_inventory >= fuel_usage) {
     RecordEvent("Startup", "Sufficient tritium in system to begin operation");
