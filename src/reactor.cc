@@ -24,7 +24,6 @@ void Reactor::Tick() {
     Reactor::RecordStatus("Shut-down", 0);
   }
 
-
   DecayInventory(tritium_storage);
   DecayInventory(tritium_excess);
   DecayInventory(tritium_sequestered);

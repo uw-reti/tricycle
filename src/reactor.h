@@ -5,6 +5,7 @@
 
 #include "cyclus.h"
 #include "boost/shared_ptr.hpp"
+#include "pyne.h"
 
 namespace tricycle {
 
@@ -310,24 +311,25 @@ class Reactor : public cyclus::Facility  {
     double fuel_usage;
     std::string expected_fuel_comp = "{{10030000,1.000000}}";
 
+        //NucIDs for Pyne
+    const int tritium_id = 10030000;
+    const int He3_id = 20030000;
+    const int He4_id = 20040000;
+    const int Li6_id = 30060000;
+    const int Li7_id = 30070000;
+
     //masses in kg/atom
-    const double Li7_atomic_mass = 1.16503478e-26;
-    const double Li6_atomic_mass = 9.9883465e-27;
-    const double tritium_atomic_mass = 5.00826766e-27;
-    const double He4_atomic_mass = 6.64647907e-27;
+    const double amu_to_kg = 1.66054e-27;
+    const double Li7_atomic_mass = pyne::atomic_mass(Li7_id) * amu_to_kg;
+    const double Li6_atomic_mass = pyne::atomic_mass(Li6_id) * amu_to_kg;
+    const double tritium_atomic_mass = pyne::atomic_mass(tritium_id) * amu_to_kg;
+    const double He4_atomic_mass = pyne::atomic_mass(He4_id) * amu_to_kg;
     const double absorbed_neutron_mass = tritium_atomic_mass
                  + He4_atomic_mass - Li6_atomic_mass;
 
     const double Li6_tritium_ratio = Li6_atomic_mass/tritium_atomic_mass;
     const double Li7_tritium_ratio = Li6_atomic_mass/tritium_atomic_mass;
     const double He4_tritium_ratio = He4_atomic_mass/tritium_atomic_mass;
-    
-    //NucIDs for Pyne
-    const int tritium_id = 10030000;
-    const int He3_id = 20030000;
-    const int He4_id = 20040000;
-    const int Li6_id = 30060000;
-    const int Li7_id = 30070000;
 
     // kg/GW-fusion-power-year (Abdou et al. 2021)
     double burn_rate = 55.8;
