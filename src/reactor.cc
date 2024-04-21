@@ -50,20 +50,21 @@ void Reactor::Tick() {
   // This pulls out some of the blanket each timestep so that fresh blanket can
   // be added.
   double blanket_turnover = blanket_size * blanket_turnover_rate;
-  if (!blanket.empty() && blanket.quantity() >= blanket_turnover && 
-      context()->time() % blanket_turnover_frequency == 0) {
-    blanket_excess.Push(blanket.Pop(blanket_turnover));
-    CombineInventory(blanket_excess);
-    RecordOperationalInfo(
-        "Blanket Cycled",
-        std::to_string(blanket_turnover) + "kg of blanket removed");
-  } else if (!blanket.empty() &&
-             blanket.quantity() < blanket_turnover) {
-    RecordOperationalInfo(
-        "Blanket Not Cycled",
-        "Total blanket material (" + std::to_string(blanket.quantity()) +
-            ") insufficient to extract " +
-            std::to_string(blanket_turnover) + "kg!");
+  if (context()->time() % blanket_turnover_frequency == 0) {
+    if (!blanket.empty() && blanket.quantity() >= blanket_turnover) {
+      blanket_excess.Push(blanket.Pop(blanket_turnover));
+      CombineInventory(blanket_excess);
+      RecordOperationalInfo(
+          "Blanket Cycled",
+          std::to_string(blanket_turnover) + "kg of blanket removed");
+    } else if (!blanket.empty() &&
+              blanket.quantity() < blanket_turnover) {
+      RecordOperationalInfo(
+          "Blanket Not Cycled",
+          "Total blanket material (" + std::to_string(blanket.quantity()) +
+              ") insufficient to extract " +
+              std::to_string(blanket_turnover) + "kg!");
+    }
   }
 }
 
