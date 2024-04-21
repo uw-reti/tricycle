@@ -36,16 +36,15 @@ void Reactor::Tick() {
     double surplus = std::max(
       tritium_storage.quantity() - reserve_inventory, 0.0);
 
-    cyclus::Material::Ptr storage_fuel = tritium_storage.Pop();
-    tritium_excess.Push(storage_fuel->ExtractQty(surplus));
-
     if (surplus > 0.0) {
+
+      tritium_excess.Push(tritium_storage.Pop(surplus));
+      CombineInventory(tritium_excess);
+
       RecordOperationalInfo(
           "Tritium Moved",
           std::to_string(surplus) + "kg of T moved from storage to excess");
     }
-    tritium_storage.Push(storage_fuel);
-    CombineInventory(tritium_excess);
   }
 
   // This pulls out some of the blanket each timestep so that fresh blanket can
