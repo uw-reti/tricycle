@@ -180,7 +180,6 @@ void Reactor::Startup() {
   cyclus::CompMap c = initial_storage->comp()->atom();
   cyclus::compmath::Normalize(&c, 1);
 
-<<<<<<< HEAD
   if (tritium_storage.quantity() < startup_inventory){
     throw cyclus::ValueError(
       "Startup Failed: " + std::to_string(tritium_storage.quantity()) +
@@ -188,14 +187,6 @@ void Reactor::Startup() {
       std::to_string(startup_inventory) +
       " kg to start-up!");
   } else if (startup_inventory < fuel_usage) {
-=======
-  if ((tritium_storage.quantity() >= startup_inventory) &&
-      (cyclus::compmath::AlmostEq(c, T, 1e-7)) &&
-      startup_inventory >= fuel_usage) {
-    RecordEvent("Startup", "Sufficient tritium in system to begin operation");
-    sufficient_tritium_for_operation = true;
-  } else if (startup_inventory < fuel_usage){
->>>>>>> d0e5f3ef678c27fd70a54992bf30cfa92bdc6ac2
     throw cyclus::ValueError("Startup Failed: Startup Inventory insufficient "+ 
         std::string("to maintain reactor for full timestep!"));
   } else if (!cyclus::compmath::AlmostEq(c, T, 1e-7)) {
