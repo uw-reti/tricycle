@@ -160,7 +160,8 @@ void Reactor::SequesterTritium(){
     cyclus::CompMap c = sequestered_mat->comp()->atom();
     cyclus::compmath::Normalize(&c, sequestered_mat->quantity());
 
-    double equilibrium_deficit = sequestered_equilibrium - c[tritium_id];
+    double equilibrium_deficit = std::max(sequestered_equilibrium - 
+                                        c[tritium_id],0.0);
 
     // Another catch might be good here...
     sequestered_mat->Absorb(tritium_storage.Pop(equilibrium_deficit));
@@ -179,12 +180,13 @@ void Reactor::Startup() {
   cyclus::CompMap c = initial_storage->comp()->atom();
   cyclus::compmath::Normalize(&c, 1);
 
-  if ((tritium_storage.quantity() >= (startup_inventory)) &&
-      (cyclus::compmath::AlmostEq(c, T, 1e-7)) &&
-      startup_inventory >= fuel_usage) {
-    RecordEvent("Startup", "Sufficient tritium in system to begin operation");
-    sufficient_tritium_for_operation = true;
-  } else if (startup_inventory < fuel_usage){
+  if (tritium_storage.quantity() < startup_inventory){
+    throw cyclus::ValueError(
+      "Startup Failed: " + std::to_string(tritium_storage.quantity()) +
+      " kg in storage is less than required " +
+      std::to_string(startup_inventory) +
+      " kg to start-up!");
+  } else if (startup_inventory < fuel_usage) {
     throw cyclus::ValueError("Startup Failed: Startup Inventory insufficient "+ 
         std::string("to maintain reactor for full timestep!"));
   } else if (!cyclus::compmath::AlmostEq(c, T, 1e-7)) {
@@ -194,11 +196,8 @@ void Reactor::Startup() {
         std::string("Fuel Incommod Composition: ") +
         std::string(GetComp(initial_storage)));
   } else {
-    throw cyclus::ValueError(
-        "Startup Failed: " + std::to_string(tritium_storage.quantity()) +
-        " kg in storage is less than required " +
-        std::to_string(startup_inventory) +
-        " kg to start-up!");
+    RecordEvent("Startup", "Sufficient tritium in system to begin operation");
+    sufficient_tritium_for_operation = true;
   }
 }
 
