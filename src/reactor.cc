@@ -49,17 +49,14 @@ void Reactor::Tick() {
 
   // This pulls out some of the blanket each timestep so that fresh blanket can
   // be added.
-  // NOTE: currently spent blanket dissapears into the ether. This needs to be
-  // changed in version 1 for materials tracking.
-
   double blanket_turnover = blanket_size * blanket_turnover_rate;
   if (!blanket.empty() && blanket.quantity() >= blanket_turnover && 
       context()->time() % blanket_turnover_frequency == 0) {
-    cyclus::Material::Ptr spent_blanket =
-        blanket.Pop(blanket_turnover);
+    blanket_excess.Push(blanket.Pop(blanket_turnover));
+    CombineInventory(blanket_excess);
     RecordOperationalInfo(
         "Blanket Cycled",
-        std::to_string(spent_blanket->quantity()) + "kg of blanket removed");
+        std::to_string(blanket_turnover) + "kg of blanket removed");
   } else if (!blanket.empty() &&
              blanket.quantity() < blanket_turnover) {
     RecordOperationalInfo(
@@ -86,8 +83,9 @@ void Reactor::Tock() {
   CombineInventory(blanket);
 
 
-  RecordInventories(tritium_storage.quantity(), tritium_excess.quantity(), tritium_sequestered.quantity(), blanket.quantity(),
-                    helium_storage.quantity());
+  RecordInventories(tritium_storage.quantity(), tritium_excess.quantity(), 
+                    tritium_sequestered.quantity(), blanket.quantity(),
+                    blanket_excess.quantity(), helium_storage.quantity());
 }
 
 void Reactor::EnterNotify() {
@@ -274,7 +272,8 @@ void Reactor::RecordStatus(std::string status, double power) {
       ->Record();
 }
 
-void Reactor::RecordInventories(double storage, double excess, double sequestered, double blanket, double helium) {
+void Reactor::RecordInventories(double storage, double excess, double sequestered, 
+                            double blanket, double blanket_excess, double helium) {
   context()
       ->NewDatum("ReactorInventories")
       ->AddVal("AgentId", id())
@@ -283,6 +282,7 @@ void Reactor::RecordInventories(double storage, double excess, double sequestere
       ->AddVal("TritiumExcess", excess)
       ->AddVal("TritiumSequestered", sequestered)
       ->AddVal("LithiumBlanket", blanket)
+      ->AddVal("BlanketExcess", blanket_excess)
       ->AddVal("HeliumStorage", helium)
       ->Record();
 }

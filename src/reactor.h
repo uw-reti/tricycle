@@ -271,6 +271,9 @@ class Reactor : public cyclus::Facility  {
   #pragma cyclus var {"tooltip":"Buffer for handling enriched lithium blanket material"}
   cyclus::toolkit::ResBuf<cyclus::Material> blanket;
 
+  #pragma cyclus var {"tooltip":"Buffer for handling enriched lithium blanket material"}
+  cyclus::toolkit::ResBuf<cyclus::Material> blanket_excess;
+
   #pragma cyclus var {"tooltip":"Tracker to handle on-hand tritium"}
   cyclus::toolkit::TotalInvTracker fuel_tracker;
 
@@ -293,7 +296,7 @@ class Reactor : public cyclus::Facility  {
   void ExtractHelium(cyclus::toolkit::ResBuf<cyclus::Material> &inventory);
   void RecordEvent(std::string name, std::string val);
   void RecordStatus(std::string Status, double power);
-  void RecordInventories(double storage, double excess, double sequestered, double blanket, double helium);
+  void RecordInventories(double storage, double excess, double sequestered, double blanket, double blanket_excess, double helium);
   void RecordOperationalInfo(std::string name, std::string val);
   void DepleteBlanket(double bred_tritium_mass);
   cyclus::Material::Ptr BreedTritium(double fuel_usage, double TBR);
