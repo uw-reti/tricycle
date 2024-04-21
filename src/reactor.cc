@@ -180,14 +180,14 @@ void Reactor::Startup() {
   cyclus::compmath::Normalize(&c, 1);
 
   if ((tritium_storage.quantity() >= (startup_inventory)) &&
-      (GetComp(initial_storage) == expected_fuel_comp) &&
+      (cyclus::compmath::AlmostEq(c, T, 1e-7)) &&
       startup_inventory >= fuel_usage) {
     RecordEvent("Startup", "Sufficient tritium in system to begin operation");
     sufficient_tritium_for_operation = true;
   } else if (startup_inventory < fuel_usage){
     throw cyclus::ValueError("Startup Failed: Startup Inventory insufficient "+ 
         std::string("to maintain reactor for full timestep!"));
-  } else if (GetComp(initial_storage) != expected_fuel_comp) {
+  } else if (!cyclus::compmath::AlmostEq(c, T, 1e-7)) {
     throw cyclus::ValueError(
         "Startup Failed: Fuel incommod not as expected. " +
         std::string("Expected Composition: {{10030000,1.000000}}. ") +
