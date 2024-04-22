@@ -306,7 +306,7 @@ class Reactor : public cyclus::Facility  {
 
   private: 
     bool sufficient_tritium_for_operation = false;
-    const double seconds_per_year = 31536000.0;
+    const double seconds_per_year = 2629846*12;
     const double MW_to_GW = 1000.0;
     double fuel_usage;
     std::string expected_fuel_comp = "{{10030000,1.000000}}";
