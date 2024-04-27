@@ -306,9 +306,12 @@ class Reactor : public cyclus::Facility  {
     bool sufficient_tritium_for_operation = false;
     const double seconds_per_year = 2629846*12;
     const double MW_to_GW = 1000.0;
-    double fuel_usage;
+    double fuel_usage_atoms;
+    double fuel_usage_mass;
+    double avagadros_number = 6.022e23;
     double fuel_limit = 1000.0;
     double blanket_limit = 100000.0;
+    double Li6_contribution = 1.0-Li7_contribution;
 
     //NucIDs for Pyne
     const int tritium_id = 10030000;
@@ -324,12 +327,6 @@ class Reactor : public cyclus::Facility  {
     const double tritium_atomic_mass = pyne::atomic_mass(tritium_id) 
                  * amu_to_kg;
     const double He4_atomic_mass = pyne::atomic_mass(He4_id) * amu_to_kg;
-    const double absorbed_neutron_mass = tritium_atomic_mass
-                 + He4_atomic_mass - Li6_atomic_mass;
-
-    const double Li6_tritium_ratio = Li6_atomic_mass/tritium_atomic_mass;
-    const double Li7_tritium_ratio = Li6_atomic_mass/tritium_atomic_mass;
-    const double He4_tritium_ratio = He4_atomic_mass/tritium_atomic_mass;
 
     // kg/GW-fusion-power-year (Abdou et al. 2021)
     double burn_rate = 55.8;

@@ -81,8 +81,9 @@ void Reactor::Tock() {
 
 void Reactor::EnterNotify() {
   cyclus::Facility::EnterNotify();
-
-  fuel_usage = burn_rate * (fusion_power / MW_to_GW) / seconds_per_year * context()->dt();
+  
+  fuel_usage_mass = (burn_rate * (fusion_power / MW_to_GW) / seconds_per_year * context()->dt());
+  fuel_usage_atoms = fuel_usage_mass / tritium_atomic_mass;
 
   fuel_startup_policy
       .Init(this, &tritium_storage, std::string("Tritium Storage"),
@@ -153,7 +154,7 @@ void Reactor::Startup() {
       " kg in storage is less than required " +
       std::to_string(startup_inventory) +
       " kg to start-up!");
-  } else if (startup_inventory < fuel_usage) {
+  } else if (startup_inventory < fuel_usage_mass) {
     throw cyclus::ValueError("Startup Failed: Startup Inventory insufficient "+ 
         std::string("to maintain reactor for full timestep!"));
   } else if (!cyclus::compmath::AlmostEq(c, T, 1e-7)) {
@@ -246,35 +247,36 @@ void Reactor::RecordInventories(double storage, double excess, double sequestere
       ->Record();
 }
 
-void Reactor::DepleteBlanket(double bred_tritium_mass) {
+void Reactor::DepleteBlanket(double bred_tritium_atoms) {
   cyclus::Material::Ptr blanket_mat = blanket.Pop();
-
-  cyclus::CompMap b = blanket_mat->comp()->mass();
-  cyclus::compmath::Normalize(&b, blanket_mat->quantity());
-
+  cyclus::toolkit::MatQuery b(blanket_mat);
   cyclus::CompMap depleted_comp;
 
-  double bred_tritium_atoms = bred_tritium_mass/tritium_atomic_mass;
+  double converted_Li6 = Li6_contribution * bred_tritium_atoms;
+  double converted_Li7 = Li7_contribution * bred_tritium_atoms;
+  double bred_He4 = bred_tritium_atoms;
+  double blanket_Li6 = b.moles(Li6_id)*avagadros_number;
+  double blanket_Li7 = b.moles(Li7_id)*avagadros_number;
+  double blanket_tritium = b.moles(tritium_id)*avagadros_number;
+  double blanket_He4 = b.moles(He4_id)*avagadros_number;
   
-  // This is ALMOST the correct behavior, but "scraping the bottom of the
-  // barrel" is a little too complex for this implementation.
-  if ((b[Li6_id] - (1 - Li7_contribution) * Li6_atomic_mass * bred_tritium_atoms > 0) &&
-      (b[Li7_id] - Li7_contribution * Li7_atomic_mass * bred_tritium_atoms > 0)) {
-    depleted_comp = {{Li7_id, b[Li7_id] - Li7_contribution * Li7_atomic_mass * bred_tritium_atoms},
-                     {Li6_id, b[Li6_id] - (1 - Li7_contribution) * Li6_atomic_mass * bred_tritium_atoms},
-                     {tritium_id, b[tritium_id] + bred_tritium_mass},
-                     {He4_id, b[He4_id] + He4_atomic_mass * bred_tritium_atoms}};
+  // This is ALMOST the right behavior, not "scraping the bottom of the barrel
+  if ((blanket_Li6 - converted_Li6 > 0) && (blanket_Li7 - converted_Li7 > 0)) {
+    depleted_comp = {{Li7_id, blanket_Li7 - converted_Li7},
+                     {Li6_id, blanket_Li6 - converted_Li6},
+                     {tritium_id, blanket_tritium + bred_tritium_atoms},
+                     {He4_id, blanket_He4 + bred_He4}};
 
-    // Account for the added mass of the absorbed neutrons
-    double neutron_mass_correction =
-        absorbed_neutron_mass * (bred_tritium_mass/tritium_atomic_mass)
-         * (1 - Li7_contribution);
-    cyclus::Material::Ptr additional_mass = cyclus::Material::Create(
-        this, neutron_mass_correction,
-        cyclus::Composition::CreateFromMass(depleted_comp));
+    cyclus::compmath::Normalize(&depleted_comp, 1);
 
-    blanket_mat->Transmute(cyclus::Composition::CreateFromMass(depleted_comp));
-    blanket_mat->Absorb(additional_mass);
+    // Because there's a mass difference between T+He and Li we need a new mass
+    double new_mass = (blanket_Li7 - converted_Li7) * Li7_atomic_mass
+                    + (blanket_Li6 - converted_Li6) * Li6_atomic_mass
+                    + (blanket_tritium + bred_tritium_atoms) * tritium_atomic_mass
+                    + (blanket_He4 + bred_He4) * He4_atomic_mass;
+
+    blanket_mat = cyclus::Material::Create(this, new_mass,
+                    cyclus::Composition::CreateFromAtom(depleted_comp));
 
     RecordOperationalInfo("Blanket Depletion",
                           "Tritium bred at perscribed rate");
@@ -287,11 +289,10 @@ void Reactor::DepleteBlanket(double bred_tritium_mass) {
   blanket.Push(blanket_mat);
 }
 
-cyclus::Material::Ptr Reactor::BreedTritium(double fuel_usage, double TBR) {
-  DepleteBlanket(fuel_usage * TBR);
+cyclus::Material::Ptr Reactor::BreedTritium(double atoms_burned, double TBR) {
+  DepleteBlanket(atoms_burned * TBR);
   cyclus::Material::Ptr mat = blanket.Pop();
   cyclus::toolkit::MatQuery mq(mat);
-
   cyclus::Material::Ptr bred_fuel = mat->ExtractComp(mq.mass(tritium_id), tritium_comp);
   blanket.Push(mat);
 
@@ -305,9 +306,9 @@ void Reactor::OperateReactor(double TBR) {
 
   cyclus::Material::Ptr fuel = tritium_storage.Pop();
 
-  if (fuel->quantity() > fuel_usage) {
-    cyclus::Material::Ptr used_fuel = fuel->ExtractQty(fuel_usage);
-    fuel->Absorb(BreedTritium(fuel_usage, TBR));
+  if (fuel->quantity() > fuel_usage_mass) {
+    cyclus::Material::Ptr used_fuel = fuel->ExtractQty(fuel_usage_mass);
+    fuel->Absorb(BreedTritium(fuel_usage_atoms, TBR));
     tritium_storage.Push(fuel);
 
   } else {

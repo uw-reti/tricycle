@@ -177,7 +177,7 @@ TEST_F(ReactorTest, TickBlanketOverCycle) {
   std::string msg = qr.GetVal<std::string>("Value");
 
   std::string expected_msg =
-      "Total blanket material (499.055234) insufficient to extract "
+      "Total blanket material (498.960400) insufficient to extract "
       "650.000000kg!";
   EXPECT_EQ(expected_msg, msg);
 }
@@ -784,7 +784,7 @@ TEST_F(ReactorTest, BreedTritium) {
   QueryResult qr = sim.db().Query("ReactorOperationsLog", &conds);
   std::string msg = qr.GetVal<std::string>("Value");
 
-  double val = (55.8 * (300.0 / 1000.0) / (2629846*12) * 2629846.0) * 1.05;
+  double val = (55.8 * (300.0 / 1000.0) / 12.0) * 1.05;
   
   std::stringstream ss(msg);
   double bred_tritium;
