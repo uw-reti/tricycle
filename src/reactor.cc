@@ -5,9 +5,8 @@
 namespace tricycle {
 
 Reactor::Reactor(cyclus::Context* ctx) : cyclus::Facility(ctx) {
-  // capacities set somewhat arbitrarily
-  fuel_tracker.Init({&tritium_storage}, 1000.0);
-  blanket_tracker.Init({&blanket}, 100000.0);
+  fuel_tracker.Init({&tritium_storage}, fuel_limit);
+  blanket_tracker.Init({&blanket}, blanket_limit);
 }
 
 void Reactor::Tick() {
@@ -22,7 +21,7 @@ void Reactor::Tick() {
 
   DecayInventory(tritium_storage);
   DecayInventory(tritium_excess);
-  DecayInventory(tritium_sequestered);
+  sequestered_tritium->Decay(context()->time());
 
   ExtractHelium(tritium_storage);
   ExtractHelium(tritium_excess);
@@ -42,8 +41,6 @@ void Reactor::Tick() {
     }
   }
 
-  // This pulls out some of the blanket each timestep so that fresh blanket can
-  // be added.
   double blanket_turnover = blanket_size * blanket_turnover_rate;
   if (context()->time() % blanket_turnover_frequency == 0 && !blanket.empty()) {
     if (blanket.quantity() >= blanket_turnover) {
@@ -77,9 +74,8 @@ void Reactor::Tock() {
   CombineInventory(tritium_storage);
   CombineInventory(blanket);
 
-
   RecordInventories(tritium_storage.quantity(), tritium_excess.quantity(), 
-                    tritium_sequestered.quantity(), blanket.quantity(),
+                    sequestered_tritium->quantity(), blanket.quantity(),
                     blanket_excess.quantity(), helium_storage.quantity());
 }
 
@@ -135,6 +131,7 @@ void Reactor::EnterNotify() {
       .Start();
 }
 
+
 std::string Reactor::GetComp(cyclus::Material::Ptr mat) {
   std::string comp = "{";
   cyclus::CompMap c = mat->comp()->atom();
@@ -149,24 +146,15 @@ std::string Reactor::GetComp(cyclus::Material::Ptr mat) {
   return comp;
 }
 
+
 void Reactor::SequesterTritium(){
-  if (!tritium_sequestered.empty()){
-    cyclus::Material::Ptr sequestered_mat = tritium_sequestered.Pop();
-    cyclus::CompMap c = sequestered_mat->comp()->atom();
-    cyclus::compmath::Normalize(&c, sequestered_mat->quantity());
-
-    double equilibrium_deficit = std::max(sequestered_equilibrium - 
-                                        c[tritium_id],0.0);
-
-    // Another catch might be good here...
-    sequestered_mat->Absorb(tritium_storage.Pop(equilibrium_deficit));
-
-    tritium_sequestered.Push(sequestered_mat);
-
-    
+  if (sequestered_tritium->quantity() == 0.0){
+    sequestered_tritium = tritium_storage.Pop(sequestered_equilibrium);
   } else {
-    // Should I do a try/catch here, or is "user error" fine?
-    tritium_sequestered.Push(tritium_storage.Pop(sequestered_equilibrium));
+    cyclus::toolkit::MatQuery mq(sequestered_tritium);
+    double equilibrium_deficit = std::max(sequestered_equilibrium - 
+                                          mq.mass(tritium_id), 0.0);
+    sequestered_tritium->Absorb(tritium_storage.Pop(equilibrium_deficit));
   }
 }
 
@@ -188,8 +176,7 @@ void Reactor::Startup() {
     throw cyclus::ValueError(
         "Startup Failed: Fuel incommod not as expected. " +
         std::string("Expected Composition: {{10030000,1.000000}}. ") +
-        std::string("Fuel Incommod Composition: ") +
-        std::string(GetComp(initial_storage)));
+        std::string("Fuel Incommod Composition: "));
   } else {
     RecordEvent("Startup", "Sufficient tritium in system to begin operation");
     sufficient_tritium_for_operation = true;

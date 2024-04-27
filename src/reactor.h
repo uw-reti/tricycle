@@ -211,6 +211,7 @@ class Reactor : public cyclus::Facility  {
     "default": 1000.0, \
     "doc": "Initial mass of full blanket material", \
     "tooltip": "Only blanket material mass, not structural mass", \
+    "units": "kg", \
     "uitype": "range", \
     "range": [0, 10000], \
     "uilabel": "Initial Mass of Blanket" \
@@ -260,8 +261,9 @@ class Reactor : public cyclus::Facility  {
   #pragma cyclus var {"tooltip":"Buffer for handling excess tritium material to be sold"}
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_excess;
 
-  #pragma cyclus var {"tooltip":"Buffer for handling tritium sequestered in the system"}
-  cyclus::toolkit::ResBuf<cyclus::Material> tritium_sequestered;
+  //Convert to Material
+  //#pragma cyclus var {"tooltip":"Buffer for handling tritium sequestered in the system"}
+  //cyclus::toolkit::ResBuf<cyclus::Material> tritium_sequestered;
 
   #pragma cyclus var {"tooltip":"Buffer for handling helium-3 byproduct material"}
   cyclus::toolkit::ResBuf<cyclus::Material> helium_storage;
@@ -294,7 +296,8 @@ class Reactor : public cyclus::Facility  {
   void ExtractHelium(cyclus::toolkit::ResBuf<cyclus::Material> &inventory);
   void RecordEvent(std::string name, std::string val);
   void RecordStatus(std::string Status, double power);
-  void RecordInventories(double storage, double excess, double sequestered, double blanket, double blanket_excess, double helium);
+  void RecordInventories(double storage, double excess, double sequestered, 
+                      double blanket, double blanket_excess, double helium);
   void RecordOperationalInfo(std::string name, std::string val);
   void DepleteBlanket(double bred_tritium_mass);
   cyclus::Material::Ptr BreedTritium(double fuel_usage, double TBR);
@@ -306,9 +309,10 @@ class Reactor : public cyclus::Facility  {
     const double seconds_per_year = 2629846*12;
     const double MW_to_GW = 1000.0;
     double fuel_usage;
-    std::string expected_fuel_comp = "{{10030000,1.000000}}";
+    double fuel_limit = 1000.0;
+    double blanket_limit = 100000.0;
 
-        //NucIDs for Pyne
+    //NucIDs for Pyne
     const int tritium_id = 10030000;
     const int He3_id = 20030000;
     const int He4_id = 20040000;
@@ -319,7 +323,8 @@ class Reactor : public cyclus::Facility  {
     const double amu_to_kg = 1.66054e-27;
     const double Li7_atomic_mass = pyne::atomic_mass(Li7_id) * amu_to_kg;
     const double Li6_atomic_mass = pyne::atomic_mass(Li6_id) * amu_to_kg;
-    const double tritium_atomic_mass = pyne::atomic_mass(tritium_id) * amu_to_kg;
+    const double tritium_atomic_mass = pyne::atomic_mass(tritium_id) 
+                 * amu_to_kg;
     const double He4_atomic_mass = pyne::atomic_mass(He4_id) * amu_to_kg;
     const double absorbed_neutron_mass = tritium_atomic_mass
                  + He4_atomic_mass - Li6_atomic_mass;
@@ -336,6 +341,10 @@ class Reactor : public cyclus::Facility  {
     const cyclus::CompMap T = {{tritium_id, 1}};
     const cyclus::Composition::Ptr He3_comp = cyclus::Composition::CreateFromAtom(He3);
     const cyclus::Composition::Ptr tritium_comp = cyclus::Composition::CreateFromAtom(T);
+
+    //Materials
+    cyclus::Material::Ptr sequestered_tritium = cyclus::Material::CreateUntracked(0.0, tritium_comp);
+
   // And away we go!
 };
 
