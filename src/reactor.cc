@@ -10,10 +10,6 @@ Reactor::Reactor(cyclus::Context* ctx) : cyclus::Facility(ctx) {
   blanket_tracker.Init({&blanket}, 100000.0);
 }
 
-std::string Reactor::str() {
-  return Facility::str();
-}
-
 void Reactor::Tick() {
   if (sufficient_tritium_for_operation) {
     SequesterTritium();
@@ -49,15 +45,14 @@ void Reactor::Tick() {
   // This pulls out some of the blanket each timestep so that fresh blanket can
   // be added.
   double blanket_turnover = blanket_size * blanket_turnover_rate;
-  if (context()->time() % blanket_turnover_frequency == 0) {
-    if (!blanket.empty() && blanket.quantity() >= blanket_turnover) {
+  if (context()->time() % blanket_turnover_frequency == 0 && !blanket.empty()) {
+    if (blanket.quantity() >= blanket_turnover) {
       blanket_excess.Push(blanket.Pop(blanket_turnover));
       CombineInventory(blanket_excess);
       RecordOperationalInfo(
           "Blanket Cycled",
           std::to_string(blanket_turnover) + "kg of blanket removed");
-    } else if (!blanket.empty() &&
-              blanket.quantity() < blanket_turnover) {
+    } else if (blanket.quantity() < blanket_turnover) {
       RecordOperationalInfo(
           "Blanket Not Cycled",
           "Total blanket material (" + std::to_string(blanket.quantity()) +

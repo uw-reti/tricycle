@@ -93,9 +93,6 @@ class Reactor : public cyclus::Facility  {
   #pragma cyclus note {"doc": "A facility to model basic operation of a" \
                               "fusion energy system."}
 
-  /// A verbose printer for the Reactor
-  virtual std::string str();
-
   /// Set up policies and buffers:
   virtual void EnterNotify();
 
