@@ -81,7 +81,7 @@ void Reactor::Tock() {
 
 void Reactor::EnterNotify() {
   cyclus::Facility::EnterNotify();
-  
+
   fuel_usage_mass = (burn_rate * (fusion_power / MW_to_GW) / seconds_per_year * context()->dt());
   fuel_usage_atoms = fuel_usage_mass / tritium_atomic_mass;
 

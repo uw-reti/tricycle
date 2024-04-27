@@ -232,7 +232,7 @@ class Reactor : public cyclus::Facility  {
   }
   std::string blanket_inrecipe;
 
-  //WARNING: The default on this is completely arbitrary!
+  //WARNING: The default on this is arbitrary!
   #pragma cyclus var { \
     "default": 0.05, \
     "doc": "Percent of blanket that gets recycled every blanket turnover period", \
@@ -260,10 +260,6 @@ class Reactor : public cyclus::Facility  {
 
   #pragma cyclus var {"tooltip":"Buffer for handling excess tritium material to be sold"}
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_excess;
-
-  //Convert to Material
-  //#pragma cyclus var {"tooltip":"Buffer for handling tritium sequestered in the system"}
-  //cyclus::toolkit::ResBuf<cyclus::Material> tritium_sequestered;
 
   #pragma cyclus var {"tooltip":"Buffer for handling helium-3 byproduct material"}
   cyclus::toolkit::ResBuf<cyclus::Material> helium_storage;
