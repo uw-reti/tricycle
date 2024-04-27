@@ -131,22 +131,6 @@ void Reactor::EnterNotify() {
       .Start();
 }
 
-
-std::string Reactor::GetComp(cyclus::Material::Ptr mat) {
-  std::string comp = "{";
-  cyclus::CompMap c = mat->comp()->atom();
-  cyclus::compmath::Normalize(&c, 1);
-  for (std::map<const int, double>::const_iterator it = c.begin();
-       it != c.end(); ++it) {
-    comp = comp + std::string("{") + std::to_string(it->first) +
-           std::string(",") + std::to_string(it->second) + std::string("},");
-  }
-  comp.pop_back();
-  comp = comp + std::string("}");
-  return comp;
-}
-
-
 void Reactor::SequesterTritium(){
   if (sequestered_tritium->quantity() == 0.0){
     sequestered_tritium = tritium_storage.Pop(sequestered_equilibrium);

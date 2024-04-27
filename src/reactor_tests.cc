@@ -403,20 +403,6 @@ TEST_F(ReactorTest, DecayInventory) {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-TEST_F(ReactorTest, GetComp) {
-  // Test behaviors of the GetComp function here
-
-  cyclus::Material::Ptr Li =
-      cyclus::Material::CreateUntracked(1, enriched_lithium());
-  cyclus::Material::Ptr T = cyclus::Material::CreateUntracked(1, tritium());
-  std::string comp_Li = facility->GetComp(Li);
-  std::string comp_T = facility->GetComp(T);
-
-  EXPECT_EQ("{{30060000,0.300000},{30070000,0.700000}}", comp_Li);
-  EXPECT_EQ("{{10030000,1.000000}}", comp_T);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(ReactorTest, CombineInventory) {
   // Test behaviors of the CombineInventory function here
 
@@ -479,16 +465,12 @@ TEST_F(ReactorTest, ExtractHelium) {
   cyclus::Material::Ptr test_mat =
       cyclus::Material::CreateUntracked(1.0, decayed_tritium());
 
-  std::string comp_original = facility->GetComp(test_mat);
-
-  EXPECT_EQ("{{10030000,0.900000},{20030000,0.100000}}", comp_original);
-
   test_buf.Push(test_mat);
   facility->ExtractHelium(test_buf);
   cyclus::Material::Ptr extracted_mat = test_buf.Pop();
 
-  std::string comp_extracted = facility->GetComp(extracted_mat);
-  EXPECT_EQ("{{10030000,1.000000}}", comp_extracted);
+  double qty_after_extraction = extracted_mat->quantity();
+  EXPECT_NEAR(0.9, qty_after_extraction, 1e-5);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -499,16 +481,12 @@ TEST_F(ReactorTest, ExtractNoHelium) {
   cyclus::Material::Ptr test_mat =
       cyclus::Material::CreateUntracked(1.0, tritium());
 
-  std::string comp_original = facility->GetComp(test_mat);
-
-  EXPECT_EQ("{{10030000,1.000000}}", comp_original);
-
   test_buf.Push(test_mat);
   facility->ExtractHelium(test_buf);
   cyclus::Material::Ptr extracted_mat = test_buf.Pop();
 
-  std::string comp_extracted = facility->GetComp(extracted_mat);
-  EXPECT_EQ("{{10030000,1.000000}}", comp_extracted);
+  double qty_after_extraction = extracted_mat->quantity() ;
+  EXPECT_EQ(1.0, qty_after_extraction);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

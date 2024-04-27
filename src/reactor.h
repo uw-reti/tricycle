@@ -301,8 +301,6 @@ class Reactor : public cyclus::Facility  {
   void RecordOperationalInfo(std::string name, std::string val);
   void DepleteBlanket(double bred_tritium_mass);
   cyclus::Material::Ptr BreedTritium(double fuel_usage, double TBR);
-  std::string GetComp(cyclus::Material::Ptr mat);
-
 
   private: 
     bool sufficient_tritium_for_operation = false;
