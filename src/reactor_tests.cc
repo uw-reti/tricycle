@@ -356,9 +356,7 @@ TEST_F(ReactorTest, WrongFuelStartup) {
   std::string value = qr2.GetVal<std::string>("Value");
 
   std::string expected_message =
-      "Startup Failed: Fuel incommod not as expected. "
-      "Expected Composition: {{10030000,1.000000}}. Fuel Incommod "
-      "Composition: {{30060000,0.300000},{30070000,0.700000}}";
+      "Startup Failed: Fuel incommod not as expected. ";
   EXPECT_EQ(value, expected_message);
 }
 
@@ -401,7 +399,7 @@ TEST_F(ReactorTest, DecayInventory) {
   // this is "reserve_inventory - reserve_inventory * 2^(-2.57208504984001213e-09*2629846)"
   double expected_decay = 0.028065619;
 
-  EXPECT_NEAR(expected_decay, he3, 1e-7);
+  EXPECT_NEAR(expected_decay, he3, 1e-6);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

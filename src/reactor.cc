@@ -174,9 +174,7 @@ void Reactor::Startup() {
         std::string("to maintain reactor for full timestep!"));
   } else if (!cyclus::compmath::AlmostEq(c, T, 1e-7)) {
     throw cyclus::ValueError(
-        "Startup Failed: Fuel incommod not as expected. " +
-        std::string("Expected Composition: {{10030000,1.000000}}. ") +
-        std::string("Fuel Incommod Composition: "));
+        "Startup Failed: Fuel incommod not as expected. ");
   } else {
     RecordEvent("Startup", "Sufficient tritium in system to begin operation");
     sufficient_tritium_for_operation = true;
@@ -210,13 +208,9 @@ void Reactor::ExtractHelium(
     cyclus::toolkit::ResBuf<cyclus::Material>& inventory) {
   if (!inventory.empty()) {
     cyclus::Material::Ptr mat = inventory.Pop();
-    cyclus::CompMap c = mat->comp()->atom();
-    cyclus::compmath::Normalize(&c, mat->quantity());
-
-    // A threshold of 1e-5 was set to allow tritium_reserve inventories up to
-    // 1000kg. A 1 decade lower threshold prevents tritium_reserve inventories
-    // above 33kg.
-    cyclus::Material::Ptr helium = mat->ExtractComp(c[He3_id], He3_comp, 1e-5);
+    cyclus::toolkit::MatQuery mq(mat);
+    
+    cyclus::Material::Ptr helium = mat->ExtractComp(mq.mass(He3_id), He3_comp);
 
     helium_storage.Push(helium);
     inventory.Push(mat);
@@ -312,11 +306,9 @@ void Reactor::DepleteBlanket(double bred_tritium_mass) {
 cyclus::Material::Ptr Reactor::BreedTritium(double fuel_usage, double TBR) {
   DepleteBlanket(fuel_usage * TBR);
   cyclus::Material::Ptr mat = blanket.Pop();
+  cyclus::toolkit::MatQuery mq(mat);
 
-  cyclus::CompMap c = mat->comp()->mass();
-  cyclus::compmath::Normalize(&c, mat->quantity());
-
-  cyclus::Material::Ptr bred_fuel = mat->ExtractComp(c[tritium_id], tritium_comp);
+  cyclus::Material::Ptr bred_fuel = mat->ExtractComp(mq.mass(tritium_id), tritium_comp);
   blanket.Push(mat);
 
   RecordOperationalInfo("Bred Tritium", std::to_string(bred_fuel->quantity()) +
