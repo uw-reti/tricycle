@@ -308,6 +308,7 @@ class Reactor : public cyclus::Facility  {
     double fuel_limit = 1000.0;
     double blanket_limit = 100000.0;
     double Li6_contribution = 1.0-Li7_contribution;
+    double blanket_turnover;
 
     //NucIDs for Pyne
     const int tritium_id = 10030000;

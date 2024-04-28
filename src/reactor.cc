@@ -41,7 +41,6 @@ void Reactor::Tick() {
     }
   }
 
-  double blanket_turnover = blanket_size * blanket_turnover_rate;
   if (context()->time() % blanket_turnover_frequency == 0 && !blanket.empty()) {
     if (blanket.quantity() >= blanket_turnover) {
       blanket_excess.Push(blanket.Pop(blanket_turnover));
@@ -49,7 +48,7 @@ void Reactor::Tick() {
       RecordOperationalInfo(
           "Blanket Cycled",
           std::to_string(blanket_turnover) + "kg of blanket removed");
-    } else if (blanket.quantity() < blanket_turnover) {
+    } else {
       RecordOperationalInfo(
           "Blanket Not Cycled",
           "Total blanket material (" + std::to_string(blanket.quantity()) +
@@ -84,6 +83,7 @@ void Reactor::EnterNotify() {
 
   fuel_usage_mass = (burn_rate * (fusion_power / MW_to_GW) / seconds_per_year * context()->dt());
   fuel_usage_atoms = fuel_usage_mass / tritium_atomic_mass;
+  blanket_turnover = blanket_size * blanket_turnover_rate;
 
   fuel_startup_policy
       .Init(this, &tritium_storage, std::string("Tritium Storage"),
@@ -247,33 +247,34 @@ void Reactor::RecordInventories(double storage, double excess, double sequestere
       ->Record();
 }
 
-void Reactor::DepleteBlanket(double bred_tritium_atoms) {
+void Reactor::DepleteBlanket(double bred_tritium_moles) {
   cyclus::Material::Ptr blanket_mat = blanket.Pop();
   cyclus::toolkit::MatQuery b(blanket_mat);
   cyclus::CompMap depleted_comp;
 
-  double converted_Li6 = Li6_contribution * bred_tritium_atoms;
-  double converted_Li7 = Li7_contribution * bred_tritium_atoms;
-  double bred_He4 = bred_tritium_atoms;
-  double blanket_Li6 = b.moles(Li6_id)*avagadros_number;
-  double blanket_Li7 = b.moles(Li7_id)*avagadros_number;
-  double blanket_tritium = b.moles(tritium_id)*avagadros_number;
-  double blanket_He4 = b.moles(He4_id)*avagadros_number;
-  
+
+  double bred_He4 = bred_tritium_moles;
+  double blanket_tritium = b.moles(tritium_id);
+  double blanket_He4 = b.moles(He4_id);
+  double remaining_Li6 = b.moles(Li6_id) - Li6_contribution 
+                          * bred_tritium_moles;
+  double remaining_Li7 = b.moles(Li7_id) - Li7_contribution 
+                          * bred_tritium_moles;
+
   // This is ALMOST the right behavior, not "scraping the bottom of the barrel
-  if ((blanket_Li6 - converted_Li6 > 0) && (blanket_Li7 - converted_Li7 > 0)) {
-    depleted_comp = {{Li7_id, blanket_Li7 - converted_Li7},
-                     {Li6_id, blanket_Li6 - converted_Li6},
-                     {tritium_id, blanket_tritium + bred_tritium_atoms},
+  if ((remaining_Li6 > 0) && (remaining_Li7 > 0)) {
+    depleted_comp = {{Li7_id, remaining_Li7},
+                     {Li6_id, remaining_Li6},
+                     {tritium_id, blanket_tritium + bred_tritium_moles},
                      {He4_id, blanket_He4 + bred_He4}};
 
     cyclus::compmath::Normalize(&depleted_comp, 1);
 
     // Because there's a mass difference between T+He and Li we need a new mass
-    double new_mass = (blanket_Li7 - converted_Li7) * Li7_atomic_mass
-                    + (blanket_Li6 - converted_Li6) * Li6_atomic_mass
-                    + (blanket_tritium + bred_tritium_atoms) * tritium_atomic_mass
-                    + (blanket_He4 + bred_He4) * He4_atomic_mass;
+    double new_mass = ((remaining_Li7) * Li7_atomic_mass
+                    + (remaining_Li6) * Li6_atomic_mass
+                    + (blanket_tritium + bred_tritium_moles) * tritium_atomic_mass
+                    + (blanket_He4 + bred_He4) * He4_atomic_mass)*avagadros_number;
 
     blanket_mat = cyclus::Material::Create(this, new_mass,
                     cyclus::Composition::CreateFromAtom(depleted_comp));
@@ -290,7 +291,7 @@ void Reactor::DepleteBlanket(double bred_tritium_atoms) {
 }
 
 cyclus::Material::Ptr Reactor::BreedTritium(double atoms_burned, double TBR) {
-  DepleteBlanket(atoms_burned * TBR);
+  DepleteBlanket(atoms_burned/avagadros_number * TBR);
   cyclus::Material::Ptr mat = blanket.Pop();
   cyclus::toolkit::MatQuery mq(mat);
   cyclus::Material::Ptr bred_fuel = mat->ExtractComp(mq.mass(tritium_id), tritium_comp);
