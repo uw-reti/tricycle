@@ -270,15 +270,26 @@ void Reactor::DepleteBlanket(double bred_tritium_moles) {
 
     cyclus::compmath::Normalize(&depleted_comp, 1);
 
-    // Because there's a mass difference between T+He and Li we need a new mass
-    double new_mass = ((remaining_Li7) * Li7_atomic_mass
-                    + (remaining_Li6) * Li6_atomic_mass
-                    + (blanket_tritium + bred_tritium_moles) * tritium_atomic_mass
-                    + (blanket_He4 + bred_He4) * He4_atomic_mass)*avagadros_number;
+    // There's a mass difference between T+He and Li, blanket will change mass
+    double mass_difference = ((remaining_Li7) * Li7_atomic_mass
+              + (remaining_Li6) * Li6_atomic_mass
+              + (blanket_tritium + bred_tritium_moles) * tritium_atomic_mass
+              + (blanket_He4 + bred_He4) * He4_atomic_mass)*avagadros_number
+              -blanket_mat->quantity();
 
-    blanket_mat = cyclus::Material::Create(this, new_mass,
-                    cyclus::Composition::CreateFromAtom(depleted_comp));
-
+    // Account for the mass difference after depletion, then transmute to new comp
+    if (mass_difference > 0){
+      blanket_mat->Absorb(cyclus::Material::Create(this, mass_difference,
+            cyclus::Composition::CreateFromAtom(blanket_mat->comp()->mass())));
+      blanket_mat->Transmute(cyclus::Composition::CreateFromAtom(depleted_comp));
+    } else if (mass_difference < 0){
+      std::cout<<mass_difference<<std::endl;
+      blanket_mat->ExtractQty(std::abs(mass_difference));
+      blanket_mat->Transmute(cyclus::Composition::CreateFromAtom(depleted_comp));
+    } else {
+      blanket_mat->Transmute(cyclus::Composition::CreateFromAtom(depleted_comp));
+    }
+    
     RecordOperationalInfo("Blanket Depletion",
                           "Tritium bred at perscribed rate");
   } else {
