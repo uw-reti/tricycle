@@ -283,7 +283,6 @@ void Reactor::DepleteBlanket(double bred_tritium_moles) {
             cyclus::Composition::CreateFromAtom(blanket_mat->comp()->mass())));
       blanket_mat->Transmute(cyclus::Composition::CreateFromAtom(depleted_comp));
     } else if (mass_difference < 0){
-      std::cout<<mass_difference<<std::endl;
       blanket_mat->ExtractQty(std::abs(mass_difference));
       blanket_mat->Transmute(cyclus::Composition::CreateFromAtom(depleted_comp));
     } else {
