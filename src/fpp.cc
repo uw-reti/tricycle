@@ -11,10 +11,15 @@ std::string fpp::str() {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void fpp::Tick() {}
+void fpp::Tick() {
+  std::cout<<"Hello"<<std::endl;
+
+}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void fpp::Tock() {}
+void fpp::Tock() {
+  std::cout<<"World!"<<std::endl;
+}
 
 // WARNING! Do not change the following this function!!! This enables your
 // archetype to be dynamically loaded and any alterations will cause your
