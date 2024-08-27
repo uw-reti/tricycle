@@ -12,7 +12,7 @@ namespace tricycle {
 /// dynamically loaded by the Agent class when requested.
 ///
 /// @section intro Introduction
-/// This agnet is designed to function as a basic representation of a fusion
+/// This agent is designed to function as a basic representation of a fusion
 /// power plant with respect to tritium flows. This is currently the alpha
 /// version of the agent, and as such some simplifying assumptions were made.
 ///
