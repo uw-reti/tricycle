@@ -11,10 +11,14 @@ std::string FusionPowerPlant::str() {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FusionPowerPlant::Tick() {}
+void FusionPowerPlant::Tick() {
+  std::cout<<"Hello"<<std::endl;
+}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FusionPowerPlant::Tock() {}
+void FusionPowerPlant::Tock() {
+  std::cout<<"There!"<<std::endl;
+}
 
 // WARNING! Do not change the following this function!!! This enables your
 // archetype to be dynamically loaded and any alterations will cause your
