@@ -1,5 +1,5 @@
-#ifndef CYCLUS_TRICYCLE_FPP_H_
-#define CYCLUS_TRICYCLE_FPP_H_
+#ifndef CYCLUS_TRICYCLE_FUSION_POWER_PLANT_H_
+#define CYCLUS_TRICYCLE_FUSION_POWER_PLANT_H_
 
 #include <string>
 
@@ -7,35 +7,34 @@
 
 namespace tricycle {
 
-/// @class fpp
+/// @class FusionPowerPlant
 ///
-/// The Reactor class inherits from the Facility class and is
+/// This Facility is intended
+/// as a skeleton to guide the implementation of new Facility
+/// agents.
+/// The FusionPowerPlant class inherits from the Facility class and is
 /// dynamically loaded by the Agent class when requested.
 ///
 /// @section intro Introduction
-/// This agnet is designed to function as a basic representation of a fusion
-/// energy system with respect to tritium flows. This is currently the alpha
-/// version of the agent, and as such some simplifying assumptions were made.
+/// Place an introduction to the agent here.
 ///
 /// @section agentparams Agent Parameters
 /// Place a description of the required input parameters which define the
-/// agent implementation. None so far.
+/// agent implementation.
 ///
 /// @section optionalparams Optional Parameters
 /// Place a description of the optional input parameters to define the
-/// agent implementation. None so far.
+/// agent implementation.
 ///
 /// @section detailed Detailed Behavior
 /// Place a description of the detailed behavior of the agent. Consider
 /// describing the behavior at the tick and tock as well as the behavior
 /// upon sending and receiving materials and messages.
-/// This has not yet been defined.
-///
-class fpp : public cyclus::Facility  {
+class FusionPowerPlant : public cyclus::Facility  {
  public:
-  /// Constructor for fpp Class
+  /// Constructor for FusionPowerPlant Class
   /// @param ctx the cyclus context for access to simulation-wide parameters
-  explicit fpp(cyclus::Context* ctx);
+  explicit FusionPowerPlant(cyclus::Context* ctx);
 
   /// The Prime Directive
   /// Generates code that handles all input file reading and restart operations
@@ -48,27 +47,20 @@ class fpp : public cyclus::Facility  {
   #pragma cyclus note {"doc": "A stub facility is provided as a skeleton " \
                               "for the design of new facility agents."}
 
-  /// A verbose printer for the fpp
+  /// A verbose printer for the FusionPowerPlant
   virtual std::string str();
 
-  /// The handleTick function specific to the fpp.
+  /// The handleTick function specific to the FusionPowerPlant.
   /// @param time the time of the tick
   virtual void Tick();
 
-  /// The handleTick function specific to the fpp.
+  /// The handleTick function specific to the FusionPowerPlant.
   /// @param time the time of the tock
   virtual void Tock();
-
-  //Resource Buffers:
-  cyclus::toolkit::ResBuf<cyclus::Material> tritium_core;
-  cyclus::toolkit::ResBuf<cyclus::Material> tritium_reserve;
-  cyclus::toolkit::ResBuf<cyclus::Material> tritium_excess;
-  cyclus::toolkit::ResBuf<cyclus::Material> helium_storage;
-  cyclus::toolkit::ResBuf<cyclus::Material> blanket;
 
   // And away we go!
 };
 
 }  // namespace tricycle
 
-#endif  // CYCLUS_TRICYCLE_FPP_H_
+#endif  // CYCLUS_TRICYCLE_FUSION_POWER_PLANT_H_

@@ -1,5 +1,5 @@
 ### DO NOT DELETE THIS COMMENT: INSERT_ARCHETYPES_HERE ###
-USE_CYCLUS("tricycle" "fpp")
+USE_CYCLUS("tricycle" "fusion_power_plant")
 
 INSTALL_CYCLUS_MODULE("tricycle" "")
 
