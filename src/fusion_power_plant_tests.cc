@@ -1,23 +1,23 @@
 #include <gtest/gtest.h>
 
-#include "fpp.h"
+#include "fusion_power_plant.h"
 
 #include "agent_tests.h"
 #include "context.h"
 #include "facility_tests.h"
 #include "pyhooks.h"
 
-using tricycle::fpp;
+using tricycle::FusionPowerPlant;
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-class fppTest : public ::testing::Test {
+class FusionPowerPlantTest : public ::testing::Test {
  protected:
   cyclus::TestContext tc;
-  fpp* facility;
+  FusionPowerPlant* facility;
 
   virtual void SetUp() {
     cyclus::PyStart();
-    facility = new fpp(tc.get());
+    facility = new FusionPowerPlant(tc.get());
   }
 
   virtual void TearDown() {
@@ -27,33 +27,33 @@ class fppTest : public ::testing::Test {
 };
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-TEST_F(fppTest, InitialState) {
+TEST_F(FusionPowerPlantTest, InitialState) {
   // Test things about the initial state of the facility here
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-TEST_F(fppTest, Print) {
+TEST_F(FusionPowerPlantTest, Print) {
   EXPECT_NO_THROW(std::string s = facility->str());
-  // Test fpp specific aspects of the print method here
+  // Test FusionPowerPlant specific aspects of the print method here
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-TEST_F(fppTest, Tick) {
+TEST_F(FusionPowerPlantTest, Tick) {
   ASSERT_NO_THROW(facility->Tick());
-  // Test fpp specific behaviors of the Tick function here
+  // Test FusionPowerPlant specific behaviors of the Tick function here
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-TEST_F(fppTest, Tock) {
+TEST_F(FusionPowerPlantTest, Tock) {
   EXPECT_NO_THROW(facility->Tock());
-  // Test fpp specific behaviors of the Tock function here
+  // Test FusionPowerPlant specific behaviors of the Tock function here
 }
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Do Not Touch! Below section required for connection with Cyclus
-cyclus::Agent* fppConstructor(cyclus::Context* ctx) {
-  return new fpp(ctx);
+cyclus::Agent* FusionPowerPlantConstructor(cyclus::Context* ctx) {
+  return new FusionPowerPlant(ctx);
 }
 // Required to get functionality in cyclus agent unit tests library
 #ifndef CYCLUS_AGENT_TESTS_CONNECTED
@@ -61,8 +61,8 @@ int ConnectAgentTests();
 static int cyclus_agent_tests_connected = ConnectAgentTests();
 #define CYCLUS_AGENT_TESTS_CONNECTED cyclus_agent_tests_connected
 #endif  // CYCLUS_AGENT_TESTS_CONNECTED
-INSTANTIATE_TEST_CASE_P(fpp, FacilityTests,
-                        ::testing::Values(&fppConstructor));
-INSTANTIATE_TEST_CASE_P(fpp, AgentTests,
-                        ::testing::Values(&fppConstructor));
+INSTANTIATE_TEST_CASE_P(FusionPowerPlant, FacilityTests,
+                        ::testing::Values(&FusionPowerPlantConstructor));
+INSTANTIATE_TEST_CASE_P(FusionPowerPlant, AgentTests,
+                        ::testing::Values(&FusionPowerPlantConstructor));
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
