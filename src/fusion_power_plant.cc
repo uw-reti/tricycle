@@ -51,17 +51,9 @@ void FusionPowerPlant::Tick() {
     OperateReactor();
   }
 
-  //I think somehow combining all these would be nice...
-  DecayInventory(tritium_storage);
-  ExtractHelium(tritium_storage);
-
-  DecayInventory(tritium_excess);
-  ExtractHelium(tritium_excess);
-
-  sequestered_tritium->Decay(context()->time());
-
-  //This was a bunch of free-floating code earlier, but i've truncated it 
-  //because it's mostly for DRE stuff.
+ 
+  DecayInventories();
+  ExtractHelium();
   MoveExcessTritiumToSellBuffer();
 
   //This maybe belongs in its own function?
