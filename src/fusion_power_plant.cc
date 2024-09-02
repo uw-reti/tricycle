@@ -26,9 +26,17 @@ void FusionPowerPlant::EnterNotify() {
 
   //Tritium Buy Policy Section:
   if (refuel_mode == "schedule") {
-    //Set up a schedule fill policy with Katie's active/dormant policy code
-    //(not shown here). Do not start the policy yet.
-    fuel_refill_policy.Init(&tritium_storage).Set(fuel_incommod);
+    IntDistribution::Ptr active_dist =
+        FixedIntDist::Ptr(new FixedIntDist(1));
+    IntDistribution::Ptr dormant_dist =
+        FixedIntDist::Ptr(new FixedIntDist(buy_frequency - 1));
+    DoubleDistribution::Ptr size_dist =
+        FixedDoubleDist::Ptr(new FixedDoubleDist(1));
+    //Do not start the policy yet.
+    fuel_refill_policy
+        .Init(&tritium_storage, &fuel_tracker,
+              buy_quantity, active_dist, dormant_dist, size_dis)
+        .Set(fuel_incommod);
   } else if (refuel_mode == "fill") {
     //otherwise we just do it normally, but still don't start it.
     fuel_refill_policy.Init(&tritium_storage).Set(fuel_incommod);
@@ -46,9 +54,14 @@ void FusionPowerPlant::EnterNotify() {
 void FusionPowerPlant::Tick() {
   //pseudocode implementation of Tick():
   
-  if (can_operate) {
+  if (CheckOperatingConditions()) {
+    fuel_startup_policy.Stop();
+    fuel_refill_policy.Start();
     SequesterTritium();
     OperateReactor();
+  } else {
+    //Some way of leaving a record of what is going wrong is helpful info I think
+    Record(Error);
   }
 
  
@@ -57,7 +70,7 @@ void FusionPowerPlant::Tick() {
   MoveExcessTritiumToSellBuffer();
 
   //This maybe belongs in its own function?
-  if (context()->time() % blanket_turnover_frequency == 0 && !blanket.empty()) {
+  if (BlanketCycleTime()) {
     if (blanket.quantity() >= blanket_turnover) {
       blanket_excess.Push(blanket.Pop(blanket_turnover));
       CombineInventory(blanket_excess);
@@ -72,24 +85,8 @@ void FusionPowerPlant::Tick() {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FusionPowerPlant::Tock() {
-  //pseudocode implementation of Tock():
-  
-  if(!can_operate) {
-    try { 
-      CheckOperatingConditions(); //Previously "Startup()"
-      fuel_startup_policy.Stop();
-      fuel_refill_policy.Start();
-    } catch (const std::exception& e) {
-      RecordError("Startup Error", e.what());
-      LOG(cyclus::LEV_INFO2, "FusionPowerPlant") << e.what();
-    }
-  }
-
-  //I think this behavior got added to cyclus earlier, but am not sure what the
-  //overall functionality of it is at the moment. Now may be a good time to fold
-  //that new behavior in, though, if it's functional. 
-  CombineInventory(tritium_storage);
-  CombineInventory(blanket);
+  //This is where we used to squash tritium_storage and blanket, but that's no
+  //longer needed. Leaving a comment to remind myself about that.
 
   //Again, not sure about the recording:
   RecordInventories(all_of_them.quantity());
