@@ -73,7 +73,6 @@ void FusionPowerPlant::Tick() {
   if (BlanketCycleTime()) {
     if (blanket.quantity() >= blanket_turnover) {
       blanket_excess.Push(blanket.Pop(blanket_turnover));
-      CombineInventory(blanket_excess);
       RecordOperationalInfo("Blanket Cycled");
     } else {
       RecordOperationalInfo("Blanket Not Cycled");
