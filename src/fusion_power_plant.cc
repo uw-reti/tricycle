@@ -69,10 +69,21 @@ void FusionPowerPlant::Tick() {
   ExtractHelium();
   MoveExcessTritiumToSellBuffer();
 
-  //This maybe belongs in its own function?
+  //Redone blanket implementation:
   if (BlanketCycleTime()) {
-    if (blanket.quantity() >= blanket_turnover) {
-      blanket_excess.Push(blanket.Pop(blanket_turnover));
+    if (blanket->quantity() >= blanket_turnover) {
+      blanket_excess.Push(blanket->ExtractQty(blanket_turnover));
+      
+      //Temporary comment:
+      //Refill the in-core blanket. Blanket storage might be empty, though,
+      //which I think breaks the sim, so I've incuded try/catch to stop that
+      try {
+        blanket->Absorb(blanket_storage.Pop(blanket_turnover));
+      } catch (const std::exception& e) {
+        Record("Blanket Refill Error", e.what());
+        LOG(cyclus::LEV_INFO2, "Reactor") << e.what();
+      }
+
       RecordOperationalInfo("Blanket Cycled");
     } else {
       RecordOperationalInfo("Blanket Not Cycled");
