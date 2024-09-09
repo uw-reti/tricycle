@@ -68,6 +68,22 @@ class FusionPowerPlant : public cyclus::Facility  {
   cyclus::toolkit::ResBuf<cyclus::Material> blanket_storage;
   cyclus::toolkit::ResBuf<cyclus::Material> blanket_excess;
 
+  //PyneIDs
+  const int tritium_id = 10030000;
+
+  //Compositions:
+  const cyclus::CompMap T = {{tritium_id, 1}};
+  //something like this... Not sure if this will work here though...
+  const cyclus::Composition::Ptr enriched_li = context->GetRecipe(blanket_inrecipe);
+  const cyclus::Composition::Ptr tritium_comp = cyclus::Composition::CreateFromAtom(T);
+
+  //Materials:
+  cyclus::Material::Ptr sequestered_tritium = cyclus::Material::CreateUntracked(0.0, tritium_comp);
+  
+  //This might make more sense to do in EnterNotify()? I'll have to see how it
+  //works outside of pesudocode.
+  cyclus::Material::Ptr blanket = cyclus::Composition::CreateFromAtom(0.0, enriched_li);
+
   // And away we go!
 };
 
