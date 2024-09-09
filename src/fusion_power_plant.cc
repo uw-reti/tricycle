@@ -59,37 +59,31 @@ void FusionPowerPlant::Tick() {
     fuel_refill_policy.Start();
     SequesterTritium();
     OperateReactor();
+
+
+    //Maybe make this a function called CycleBlanket() or something.
+    //Leaving it in like this for traceability
+    if (BlanketCycleTime()) {
+      if (blanket->quantity() >= blanket_turnover) {
+        blanket_excess.Push(blanket->ExtractQty(blanket_turnover));
+
+        //guarantee blanket has enough material in CheckOperatingConditions()
+        blanket->Absorb(blanket_storage.Pop(blanket_turnover));
+
+        RecordOperationalInfo("Blanket Cycled");
+      } else {
+        RecordOperationalInfo("Blanket Not Cycled");
+    }
+  }
+
   } else {
     //Some way of leaving a record of what is going wrong is helpful info I think
     Record(Error);
   }
 
- 
   DecayInventories();
   ExtractHelium();
   MoveExcessTritiumToSellBuffer();
-
-  //Redone blanket implementation:
-  if (BlanketCycleTime()) {
-    if (blanket->quantity() >= blanket_turnover) {
-      blanket_excess.Push(blanket->ExtractQty(blanket_turnover));
-      
-      //Temporary comment:
-      //Refill the in-core blanket. Blanket storage might be empty, though,
-      //which I think breaks the sim, so I've incuded try/catch to stop that
-      try {
-        blanket->Absorb(blanket_storage.Pop(blanket_turnover));
-      } catch (const std::exception& e) {
-        Record("Blanket Refill Error", e.what());
-        LOG(cyclus::LEV_INFO2, "Reactor") << e.what();
-      }
-
-      RecordOperationalInfo("Blanket Cycled");
-    } else {
-      RecordOperationalInfo("Blanket Not Cycled");
-    }
-  }
-  
 
 }
 
