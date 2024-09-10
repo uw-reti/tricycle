@@ -18,6 +18,10 @@ void FusionPowerPlant::EnterNotify() {
   fuel_usage_atoms = fuel_usage_mass / tritium_atomic_mass;
   blanket_turnover = blanket_size * blanket_turnover_rate;
 
+  //Create the blanket material for use in the core
+  const cyclus::Composition::Ptr enriched_li = context->GetRecipe(blanket_inrecipe);
+  cyclus::Material::Ptr blanket = cyclus::Composition::CreateFromAtom(0.0, enriched_li);
+
   //Truncated for readability. It goes on Tritium Storage and gets started, though.
   fuel_startup_policy.Init(&tritium_storage).Set(fuel_incommod).Start();
   
