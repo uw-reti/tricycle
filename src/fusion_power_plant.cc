@@ -65,10 +65,10 @@ void FusionPowerPlant::Tick() {
     //Leaving it in like this for traceability
     if (BlanketCycleTime()) {
       if (blanket->quantity() >= blanket_turnover) {
-        blanket_excess.Push(blanket->ExtractQty(blanket_turnover));
+        blanket_waste.Push(blanket->ExtractQty(blanket_turnover));
 
         //guarantee blanket has enough material in CheckOperatingConditions()
-        blanket->Absorb(blanket_storage.Pop(blanket_turnover));
+        blanket->Absorb(blanket_feed.Pop(blanket_turnover));
 
         RecordOperationalInfo("Blanket Cycled");
       } else {

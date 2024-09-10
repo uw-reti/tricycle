@@ -65,8 +65,8 @@ class FusionPowerPlant : public cyclus::Facility  {
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_storage;
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_excess;
   cyclus::toolkit::ResBuf<cyclus::Material> helium_excess;
-  cyclus::toolkit::ResBuf<cyclus::Material> blanket_storage;
-  cyclus::toolkit::ResBuf<cyclus::Material> blanket_excess;
+  cyclus::toolkit::ResBuf<cyclus::Material> blanket_feed;
+  cyclus::toolkit::ResBuf<cyclus::Material> blanket_waste;
 
   //PyneIDs
   const int tritium_id = 10030000;
