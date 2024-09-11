@@ -61,12 +61,25 @@ class FusionPowerPlant : public cyclus::Facility  {
 
   //Member Variables:
 
+  //Functions:
+  void CycleBlanket();
+
   //Resource Buffers:
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_storage;
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_excess;
   cyclus::toolkit::ResBuf<cyclus::Material> helium_excess;
-  cyclus::toolkit::ResBuf<cyclus::Material> blanket_storage;
-  cyclus::toolkit::ResBuf<cyclus::Material> blanket_excess;
+  cyclus::toolkit::ResBuf<cyclus::Material> blanket_feed;
+  cyclus::toolkit::ResBuf<cyclus::Material> blanket_waste;
+
+  //PyneIDs
+  const int tritium_id = 10030000;
+
+  //Compositions:
+  const cyclus::CompMap T = {{tritium_id, 1}};
+  const cyclus::Composition::Ptr tritium_comp = cyclus::Composition::CreateFromAtom(T);
+
+  //Materials:
+  cyclus::Material::Ptr sequestered_tritium = cyclus::Material::CreateUntracked(0.0, tritium_comp);
 
   // And away we go!
 };
