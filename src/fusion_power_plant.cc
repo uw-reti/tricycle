@@ -10,6 +10,10 @@ std::string FusionPowerPlant::str() {
   return Facility::str();
 }
 
+
+//-----------------------------------------------------------//
+//                      Initialization                       //
+//-----------------------------------------------------------//
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FusionPowerPlant::EnterNotify() {
   //Pseudocode implementation of EnterNotify()
@@ -58,18 +62,40 @@ void FusionPowerPlant::EnterNotify() {
 void FusionPowerPlant::Tick() {
   //pseudocode implementation of Tick():
   
+  //-----------------------------------------------------------//
+  //               Check Operational Conditions                //
+  //-----------------------------------------------------------//
   if (CheckOperatingConditions()) {
+
+    //-----------------------------------------------------------//
+    //                Set Operational Buy Policy                 //
+    //-----------------------------------------------------------//
     fuel_startup_policy.Stop();
     fuel_refill_policy.Start();
+
+    //-----------------------------------------------------------//
+    //                  Tritium Sequestration                    //
+    //-----------------------------------------------------------//
     SequesterTritium();
+
+    //-----------------------------------------------------------//
+    //                        Operation                          //
+    //-----------------------------------------------------------//
     OperateReactor();
     CycleBlanket();
 
   } else {
     //Some way of leaving a record of what is going wrong is helpful info I think
+
+    //-----------------------------------------------------------//
+    //                    Failure to Operate                     //
+    //-----------------------------------------------------------//
     Record(Error);
   }
 
+  //-----------------------------------------------------------//
+  //                     Buffer Cleanup                        //
+  //-----------------------------------------------------------//
   DecayInventories();
   ExtractHelium();
   MoveExcessTritiumToSellBuffer();
@@ -82,6 +108,10 @@ void FusionPowerPlant::Tock() {
   //longer needed. Leaving a comment to remind myself about that.
 
   //Again, not sure about the recording:
+
+  //-----------------------------------------------------------//
+  //                      Take Inventory                       //
+  //-----------------------------------------------------------//
   RecordInventories(all_of_them.quantity());
   
 }
