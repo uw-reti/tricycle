@@ -11,9 +11,9 @@ std::string FusionPowerPlant::str() {
 }
 
 
-//-----------------------------------------------------------//
-//                      Initialization                       //
-//-----------------------------------------------------------//
+//State Boundary
+//Changes from "Unbuilt" to "Newly Built"
+//Conditions: Enter Time = timestep (institution side)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FusionPowerPlant::EnterNotify() {
   //Pseudocode implementation of EnterNotify()
@@ -61,41 +61,43 @@ void FusionPowerPlant::EnterNotify() {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FusionPowerPlant::Tick() {
   //pseudocode implementation of Tick():
-  
-  //-----------------------------------------------------------//
-  //               Check Operational Conditions                //
-  //-----------------------------------------------------------//
-  if (CheckOperatingConditions()) {
 
-    //-----------------------------------------------------------//
-    //                Set Operational Buy Policy                 //
-    //-----------------------------------------------------------//
+
+  //State boundary
+  //Changes from "Newly Built" to "Shut Down"
+  //Conditions: initial_startup_condition_met == True
+  //Requirements:
+  //tritium_storage.quantity() >= startup_inventory_requirement (state variable)
+  //Fuel is of correct composition
+  if (!initial_startup_condition_met) { 
+    CheckInitialStartupCondition()
+  }
+
+  //State boundary
+  //Changes from "Shut Down" to "Operating"
+  //Conditions: CheckOperatingConditions && startup_condition_met == True
+  //Requirements (operating conditions):
+  //Enough fuel in storage to operate for one full timestep
+  //Enough blanket material to operate for one full timestep
+  //Fuel is of correct composition
+  if (CheckOperatingConditions() && initial_startup_condition_met) {
     fuel_startup_policy.Stop();
     fuel_refill_policy.Start();
-
-    //-----------------------------------------------------------//
-    //                  Tritium Sequestration                    //
-    //-----------------------------------------------------------//
     SequesterTritium();
-
-    //-----------------------------------------------------------//
-    //                        Operation                          //
-    //-----------------------------------------------------------//
     OperateReactor();
     CycleBlanket();
 
   } else {
-    //Some way of leaving a record of what is going wrong is helpful info I think
 
-    //-----------------------------------------------------------//
-    //                    Failure to Operate                     //
-    //-----------------------------------------------------------//
-    Record(Error);
+    //State Boundary
+    //Potentially changes from "Operating" to "Shut Down"
+    //Note: Could also go from "Shut Down" to "Shut Down" (no change of state)
+    //Conditions: CheckOpeartingConditions == False
+    //Some way of leaving a record of what is going wrong is helpful info I think
+    Log(Error);
   }
 
-  //-----------------------------------------------------------//
-  //                     Buffer Cleanup                        //
-  //-----------------------------------------------------------//
+  //Happens regardless of state
   DecayInventories();
   ExtractHelium();
   MoveExcessTritiumToSellBuffer();
@@ -107,11 +109,8 @@ void FusionPowerPlant::Tock() {
   //This is where we used to squash tritium_storage and blanket, but that's no
   //longer needed. Leaving a comment to remind myself about that.
 
-  //Again, not sure about the recording:
-
-  //-----------------------------------------------------------//
-  //                      Take Inventory                       //
-  //-----------------------------------------------------------//
+  //Happens regardless of state
+  //Chagne this to the ExplicitInventory tables (left alone while in pseudo code)
   RecordInventories(all_of_them.quantity());
   
 }
