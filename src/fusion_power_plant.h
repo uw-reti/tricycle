@@ -56,6 +56,9 @@ class FusionPowerPlant : public cyclus::Facility  {
   /// @param time the time of the tock
   virtual void Tock();
 
+  /// A verbose printer for the FusionPowerPlant
+  virtual std::string str();
+
   //State Variables:
   #pragma cyclus var { \
     "doc": "Nameplate fusion power of the reactor", \
@@ -191,9 +194,9 @@ class FusionPowerPlant : public cyclus::Facility  {
     double fuel_usage_mass;
     const double seconds_per_year = 2629846*12;
     const double MW_to_GW = 1000.0;
-    double avagadros_number = 6.022e23;
+    double avogadros_number = pyne::N_A; //6.022e23;
     double fuel_limit = 1000.0;
-    double blanket_limit = 100000.0;
+    double blanket_limit = 100000.0; 
 
 
     //NucIDs for Pyne
