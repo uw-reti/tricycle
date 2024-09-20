@@ -207,6 +207,7 @@ class FusionPowerPlant : public cyclus::Facility  {
     const int Li7_id = 30070000;
 
     //masses in kg/atom
+    //Maybe make pyne do some of this...
     const double amu_to_kg = 1.66054e-27;
     const double Li7_atomic_mass = pyne::atomic_mass(Li7_id) * amu_to_kg;
     const double Li6_atomic_mass = pyne::atomic_mass(Li6_id) * amu_to_kg;
