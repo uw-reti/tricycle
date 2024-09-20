@@ -189,7 +189,6 @@ class FusionPowerPlant : public cyclus::Facility  {
   void MoveExcessTritiumToSellBuffer();
 
   private:
-    bool initial_startup_condition_met = false;
     double fuel_usage_atoms;
     double fuel_usage_mass;
     const double seconds_per_year = 2629846*12;
