@@ -61,34 +61,6 @@ class FusionPowerPlant : public cyclus::Facility  {
 
   //State Variables:
   #pragma cyclus var { \
-    "doc": "Nameplate fusion power of the reactor", \
-    "tooltip": "Nameplate fusion power", \
-    "units": "MW", \
-    "uitype": "range", \
-    "range": [0, 1e299], \
-    "uilabel": "Fusion Power" \
-  }
-  double fusion_power;
-
-  #pragma cyclus var { \
-    "doc": "Tritium required to start reactor, includes a reserve inventory", \
-    "tooltip": "Tritium inventory required to start reactor, includes reserve", \
-    "units": "kg", \
-    "uitype": "range", \
-    "range": [0, 1e299], \
-    "uilabel": "Start-up Inventory" \
-  }
-  double startup_inventory;
-
-  #pragma cyclus var { \
-    "doc": "Minimum tritium inventory to hold in reserve in case of tritium recovery system failure", \
-    "tooltip": "Minimum tritium inventory to hold in reserve", \
-    "units": "kg", \
-    "uilabel": "Reserve Inventory" \
-  }
-  double reserve_inventory;
-
-  #pragma cyclus var { \
     "doc": "Fresh fuel commodity", \
     "tooltip": "Name of fuel commodity requested", \
     "uilabel": "Fuel input commodity" \
@@ -137,28 +109,6 @@ class FusionPowerPlant : public cyclus::Facility  {
   }
   std::string blanket_outcommod;
 
-  #pragma cyclus var { \
-    "default": 1000.0, \
-    "doc": "Initial mass of full blanket material", \
-    "tooltip": "Only blanket material mass, not structural mass", \
-    "units": "kg", \
-    "uitype": "range", \
-    "range": [0, 10000], \
-    "uilabel": "Initial Mass of Blanket" \
-  }
-  double blanket_size;
-
-  #pragma cyclus var { \
-    "default": 0.05, \
-    "doc": "Percent of blanket that gets recycled every blanket turnover period", \
-    "tooltip": "Defaults to 0.05 (5%), must be between 0 and 15%", \
-    "units": "dimensionless", \
-    "uitype": "range", \
-    "range": [0, 0.15], \
-    "uilabel": "Blanket Turnover Rate" \
-  }
-  double blanket_turnover_rate;
-
   //Resource Buffers and Trackers:
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_storage;
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_excess;
@@ -189,33 +139,13 @@ class FusionPowerPlant : public cyclus::Facility  {
   void MoveExcessTritiumToSellBuffer();
 
   private:
-    double fuel_usage_atoms;
-    double fuel_usage_mass;
-    const double seconds_per_year = 2629846*12;
-    const double MW_to_GW = 1000.0;
-    double avogadros_number = pyne::N_A; //6.022e23;
+    //This is to correctly instantiate the TotalInvTracker(s)
     double fuel_limit = 1000.0;
     double blanket_limit = 100000.0; 
 
 
     //NucIDs for Pyne
     const int tritium_id = 10030000;
-    const int He3_id = 20030000;
-    const int He4_id = 20040000;
-    const int Li6_id = 30060000;
-    const int Li7_id = 30070000;
-
-    //masses in kg/atom
-    //Maybe make pyne do some of this...
-    const double amu_to_kg = 1.66054e-27;
-    const double Li7_atomic_mass = pyne::atomic_mass(Li7_id) * amu_to_kg;
-    const double Li6_atomic_mass = pyne::atomic_mass(Li6_id) * amu_to_kg;
-    const double tritium_atomic_mass = pyne::atomic_mass(tritium_id) 
-                 * amu_to_kg;
-    const double He4_atomic_mass = pyne::atomic_mass(He4_id) * amu_to_kg;
-
-    // kg/GW-fusion-power-year (Abdou et al. 2021)
-    double burn_rate = 55.8;
 
     //Compositions:
     const cyclus::CompMap T = {{tritium_id, 1}};
