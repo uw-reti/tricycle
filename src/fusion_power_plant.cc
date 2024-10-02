@@ -21,7 +21,7 @@ void FusionPowerPlant::EnterNotify() {
 
   //Create the blanket material for use in the core, no idea if this works...
   const Composition::Ptr enriched_li = context->GetRecipe(blanket_inrecipe);
-  Material::Ptr blanket = Composition::CreateFromAtom(0.0, enriched_li);
+  blanket = Composition::CreateFromAtom(0.0, enriched_li);
 
   fuel_startup_policy
       .Init(this, &tritium_storage, std::string("Tritium Storage"),
