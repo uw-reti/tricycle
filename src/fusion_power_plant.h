@@ -142,6 +142,7 @@ class FusionPowerPlant : public cyclus::Facility  {
     //This is to correctly instantiate the TotalInvTracker(s)
     double fuel_limit = 1000.0;
     double blanket_limit = 100000.0; 
+    Material:Ptr blanket;
 
 
     //NucIDs for Pyne
