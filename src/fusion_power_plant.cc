@@ -1,9 +1,23 @@
 #include "fusion_power_plant.h"
 
+using cyclus::Material;
+using cyclus::Composition;
+using cyclus::IntDistribution;
+using cyclus::DoubleDistribution;
+using cyclus::FixedIntDist;
+using cyclus::FixedDoubleDist;
+using cyclus::KeyError;
+
+
+
 namespace tricycle {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-FusionPowerPlant::FusionPowerPlant(cyclus::Context* ctx) : cyclus::Facility(ctx) {}
+FusionPowerPlant::FusionPowerPlant(cyclus::Context* ctx) : cyclus::Facility(ctx) {
+  fuel_tracker.Init({&tritium_storage}, fuel_limit);
+  blanket_tracker.Init({&blanket_feed}, blanket_limit);
+
+}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 std::string FusionPowerPlant::str() {
@@ -17,11 +31,11 @@ void FusionPowerPlant::EnterNotify() {
   //fuel_usage_mass = (burn_rate * (fusion_power / MW_to_GW) / 
   //  seconds_per_year * context()->dt());
   //fuel_usage_atoms = fuel_usage_mass / tritium_atomic_mass;
-  //blanket_turnover = blanket_size * blanket_turnover_rate;
+  blanket_turnover = blanket_size * blanket_turnover_quantity;
 
   //Create the blanket material for use in the core, no idea if this works...
-  const Composition::Ptr enriched_li = context->GetRecipe(blanket_inrecipe);
-  blanket = Composition::CreateFromAtom(0.0, enriched_li);
+  blanket = Material::Create(this, 0.0, 
+      context()->GetRecipe(blanket_inrecipe));
 
   fuel_startup_policy
       .Init(this, &tritium_storage, std::string("Tritium Storage"),
@@ -66,7 +80,7 @@ void FusionPowerPlant::EnterNotify() {
       .Set(fuel_incommod)
       .Start();
 
-  helium_sell_policy.Init(this, &helium_storage, std::string("Helium-3"))
+  helium_sell_policy.Init(this, &helium_excess, std::string("Helium-3"))
       .Set(he3_outcommod)
       .Start();
 
@@ -93,7 +107,7 @@ void FusionPowerPlant::Tick() {
 
   } else {
     //Some way of leaving a record of what is going wrong is helpful info I think
-    Record(Error);
+    //Record(Error);
   }
 
   DecayInventories();
@@ -108,7 +122,43 @@ void FusionPowerPlant::Tock() {
   //longer needed. Leaving a comment to remind myself about that.
 
   //Again, not sure about the recording:
-  RecordInventories(all_of_them.quantity());
+  //RecordInventories(all_of_them.quantity());
+  
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+bool FusionPowerPlant::CheckOperatingConditions() {
+  //Left empty to quickly check if code builds
+  return false;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void FusionPowerPlant::SequesterTritium() {
+  //Left empty to quickly check if code builds
+  
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void FusionPowerPlant::OperateReactor() {
+  //Left empty to quickly check if code builds
+  
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void FusionPowerPlant::DecayInventories() {
+  //Left empty to quickly check if code builds
+  
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void FusionPowerPlant::ExtractHelium() {
+  //Left empty to quickly check if code builds
+  
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void FusionPowerPlant::MoveExcessTritiumToSellBuffer() {
+  //Left empty to quickly check if code builds
   
 }
 
@@ -121,11 +171,13 @@ void FusionPowerPlant::CycleBlanket() {
       //guarantee blanket has enough material in CheckOperatingConditions()
       blanket->Absorb(blanket_feed.Pop(blanket_turnover));
 
-      RecordOperationalInfo("Blanket Cycled");
-    } else {
-      RecordOperationalInfo("Blanket Not Cycled");
     }
   }
+}
+
+bool FusionPowerPlant::BlanketCycleTime(){
+  return (context()->time() % blanket_turnover_frequency == 0 
+          && !blanket_feed.empty());
 }
 
 // WARNING! Do not change the following this function!!! This enables your
