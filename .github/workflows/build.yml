@@ -6,7 +6,8 @@ on:
 
 jobs:
   build:
-    runs-on: ghcr.io/cyclus/cycamore_24.04_apt/cycamore:latest
+    runs-on: ubuntu-latest
+    container: ghcr.io/cyclus/cycamore_24.04_apt/cycamore:latest
 
     steps:
       - name: Checkout Tricycle
