@@ -14,5 +14,5 @@ jobs:
 
       - name: Build Tricycle
         run: |
-          install.py 
+          python3 install.py --allow-milps
           
