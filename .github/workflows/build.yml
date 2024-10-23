@@ -16,5 +16,5 @@ jobs:
       - name: Build Tricycle
         run: |
           echo HOME=/root >> "$GITHUB_ENV"
-          python3 install.py
+          CYCLUS_ROOT_DIR=/root/.local python3 install.py
           
