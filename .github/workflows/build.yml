@@ -15,5 +15,5 @@ jobs:
 
       - name: Build Tricycle
         run: |
-          python3 install.py
+          CYCLUS_ROOT_DIR=/root/.local python3 install.py
           
