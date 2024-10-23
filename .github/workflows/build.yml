@@ -10,11 +10,14 @@ jobs:
     container: ghcr.io/cyclus/cycamore_24.04_apt/cycamore:latest
 
     steps:
+steps:
+      - name: Preserve $HOME set in the container
+        run: echo HOME=/root >> "$GITHUB_ENV"
+
       - name: Checkout Tricycle
         uses: actions/checkout@v4
 
       - name: Build Tricycle
         run: |
-          echo HOME=/root >> "$GITHUB_ENV"
-          CYCLUS_ROOT_DIR=/root/.local python3 install.py
+          python3 install.py
           
