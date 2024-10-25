@@ -154,7 +154,7 @@ class FusionPowerPlant : public cyclus::Facility  {
     "range": [0, 0.15], \
     "uilabel": "Blanket Turnover Rate" \
   }
-  double blanket_turnover_quantity;
+  double blanket_turnover_fraction;
 
   #pragma cyclus var { \
     "default": 1, \

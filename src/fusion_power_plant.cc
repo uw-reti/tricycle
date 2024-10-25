@@ -31,7 +31,7 @@ void FusionPowerPlant::EnterNotify() {
   //fuel_usage_mass = (burn_rate * (fusion_power / MW_to_GW) / 
   //  seconds_per_year * context()->dt());
   //fuel_usage_atoms = fuel_usage_mass / tritium_atomic_mass;
-  blanket_turnover = blanket_size * blanket_turnover_quantity;
+  blanket_turnover = blanket_size * blanket_turnover_fraction;
 
   //Create the blanket material for use in the core, no idea if this works...
   blanket = Material::Create(this, 0.0, 
