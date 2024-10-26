@@ -68,6 +68,32 @@ class FusionPowerPlant : public cyclus::Facility  {
 
   //State Variables:
   #pragma cyclus var { \
+    "doc": "Nameplate fusion power of the reactor", \
+    "tooltip": "Nameplate fusion power", \
+    "units": "MW", \
+    "uitype": "range", \
+    "range": [0, 1e299], \
+    "uilabel": "Fusion Power" \
+  }
+  double fusion_power;
+
+  #pragma cyclus var { \
+    "doc": "Minimum tritium inventory to hold in reserve in excess of operational quantity in case of tritium recovery system failure", \
+    "tooltip": "Minimum tritium inventory to hold in reserve", \
+    "units": "kg", \
+    "uilabel": "Reserve Inventory" \
+  }
+  double reserve_inventory;  
+
+  #pragma cyclus var { \
+    "doc": "Equilibrium quantity of tritium which is sequestered in the system and no longer accessable", \
+    "tooltip": "sequestered tritium equilibrium quantity, should be startup-reserve inventory", \
+    "units": "kg", \
+    "uilabel": "Equilibrium Quantity of Sequestered Tritium" \
+  }
+  double sequestered_equilibrium; 
+
+  #pragma cyclus var { \
     "doc": "Fresh fuel commodity", \
     "tooltip": "Name of fuel commodity requested", \
     "uilabel": "Fuel input commodity" \
@@ -170,12 +196,14 @@ class FusionPowerPlant : public cyclus::Facility  {
   //Functions:
   void CycleBlanket();
   bool BlanketCycleTime();
-  bool CheckOperatingConditions();
+  bool ReadyToOperate();
   void SequesterTritium();
   void OperateReactor();
   void DecayInventories();
   void ExtractHelium();
   void MoveExcessTritiumToSellBuffer();
+  double SequesteredTritiumGap();
+  bool TritiumStorageClean();
 
 
  private:
@@ -202,6 +230,8 @@ class FusionPowerPlant : public cyclus::Facility  {
   double blanket_limit = 100000.0; 
   Material::Ptr blanket;
   double blanket_turnover;
+  double fuel_usage_mass;
+  static const double burn_rate; // kg/GW-y
 
 
   //NucIDs for Pyne

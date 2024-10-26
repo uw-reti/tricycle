@@ -12,10 +12,20 @@ using cyclus::KeyError;
 
 namespace tricycle {
 
+const double FusionPowerPlant::burn_rate = 55.8;
+
+const double MW_to_GW = 1000;
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 FusionPowerPlant::FusionPowerPlant(cyclus::Context* ctx) : cyclus::Facility(ctx) {
   fuel_tracker.Init({&tritium_storage}, fuel_limit);
   blanket_tracker.Init({&blanket_feed}, blanket_limit);
+
+  tritium_storage = cyclus::toolkit::ResBuf<cyclus::Material>(true);
+  tritium_excess = cyclus::toolkit::ResBuf<cyclus::Material>(true);
+  helium_excess = cyclus::toolkit::ResBuf<cyclus::Material>(true);
+  blanket_feed = cyclus::toolkit::ResBuf<cyclus::Material>(true);
+  blanket_waste = cyclus::toolkit::ResBuf<cyclus::Material>(true);
 
 }
 
@@ -28,8 +38,8 @@ std::string FusionPowerPlant::str() {
 void FusionPowerPlant::EnterNotify() {
   cyclus::Facility::EnterNotify();
 
-  //fuel_usage_mass = (burn_rate * (fusion_power / MW_to_GW) / 
-  //  seconds_per_year * context()->dt());
+  fuel_usage_mass = (burn_rate * (fusion_power / MW_to_GW) / 
+    (kDefaultTimeStepDur * 12) * context()->dt());
   //fuel_usage_atoms = fuel_usage_mass / tritium_atomic_mass;
   blanket_turnover = blanket_size * blanket_turnover_fraction;
 
@@ -40,7 +50,7 @@ void FusionPowerPlant::EnterNotify() {
   fuel_startup_policy
       .Init(this, &tritium_storage, std::string("Tritium Storage"),
             &fuel_tracker)
-      .Set(fuel_incommod)
+      .Set(fuel_incommod, tritium_comp)
       .Start();
 
   blanket_fill_policy
@@ -63,12 +73,12 @@ void FusionPowerPlant::EnterNotify() {
               &fuel_tracker,
               buy_quantity, 
               active_dist, dormant_dist, size_dist)
-        .Set(fuel_incommod);
+        .Set(fuel_incommod, tritium_comp);
 
   } else if (refuel_mode == "fill") {
     fuel_refill_policy
         .Init(this, &tritium_storage, std::string("Input"), 
-              &fuel_tracker).Set(fuel_incommod);
+              &fuel_tracker).Set(fuel_incommod, tritium_comp);
 
   } else {
     throw KeyError("Refill mode " + refuel_mode + 
@@ -98,7 +108,7 @@ void FusionPowerPlant::EnterNotify() {
 void FusionPowerPlant::Tick() {
   //pseudocode implementation of Tick():
   
-  if (CheckOperatingConditions()) {
+  if (ReadyToOperate()) {
     fuel_startup_policy.Stop();
     fuel_refill_policy.Start();
     SequesterTritium();
@@ -126,10 +136,38 @@ void FusionPowerPlant::Tock() {
   
 }
 
+double FusionPowerPlant::SequesteredTritiumGap() {
+  cyclus::toolkit::MatQuery mq(sequestered_tritium);
+  double equilibrium_deficit = std::max(sequestered_equilibrium - 
+                                        mq.mass(tritium_id), 0.0);
+  return equilibrium_deficit;
+}
+
+
+bool FusionPowerPlant::TritiumStorageClean() {
+
+  cyclus::toolkit::MatQuery mq(tritium_storage.Peek());
+  return cyclus::AlmostEq(mq.mass(tritium_id), tritium_storage.quantity());
+
+}
+
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool FusionPowerPlant::CheckOperatingConditions() {
-  //Left empty to quickly check if code builds
-  return false;
+bool FusionPowerPlant::ReadyToOperate() {
+
+  // determine required tritium storage inventory
+  double required_storage_inventory = fuel_usage_mass + reserve_inventory + SequesteredTritiumGap();
+
+  // check tritium storage quantity
+  if (tritium_storage.quantity() < required_storage_inventory || !TritiumStorageClean()) {
+        return false;
+  }
+  if (BlanketCycleTime() && blanket_feed.quantity() < blanket_turnover) {
+    return false;
+  }
+      
+  return true;
+
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -168,7 +206,7 @@ void FusionPowerPlant::CycleBlanket() {
     if (blanket->quantity() >= blanket_turnover) {
       blanket_waste.Push(blanket->ExtractQty(blanket_turnover));
 
-      //guarantee blanket has enough material in CheckOperatingConditions()
+      //guarantee blanket_feed has enough material in CheckOperatingConditions()
       blanket->Absorb(blanket_feed.Pop(blanket_turnover));
 
     }
@@ -176,8 +214,8 @@ void FusionPowerPlant::CycleBlanket() {
 }
 
 bool FusionPowerPlant::BlanketCycleTime(){
-  return (context()->time() % blanket_turnover_frequency == 0 
-          && !blanket_feed.empty());
+  return ((context()->time() > 0) &&
+          (context()->time() % blanket_turnover_frequency == 0) );
 }
 
 // WARNING! Do not change the following this function!!! This enables your
