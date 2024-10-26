@@ -223,7 +223,6 @@ class FusionPowerPlant : public cyclus::Facility  {
   void OperateReactor();
   void DecayInventories();
   void ExtractHelium();
-  void MoveExcessTritiumToSellBuffer();
   double SequesteredTritiumGap();
   bool TritiumStorageClean();
 

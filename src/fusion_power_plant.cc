@@ -113,7 +113,6 @@ void FusionPowerPlant::Tick() {
     fuel_refill_policy.Start();
     LoadCore();
     OperateReactor();
-
   } else {
     //Some way of leaving a record of what is going wrong is helpful info I think
     //Record(Error);
@@ -121,8 +120,11 @@ void FusionPowerPlant::Tick() {
 
   DecayInventories();
   ExtractHelium();
-  MoveExcessTritiumToSellBuffer();
-
+  
+  double excess_tritium = std::max(tritium_storage.quantity() - 
+                                   (reserve_inventory+ SequesteredTritiumGap()), 0.0);
+  
+  tritium_excess.Push(tritium_storage.Pop(excess_tritium));
 
   if (sequestered_tritium->quantity() != 0) {
     fuel_startup_policy.Stop();
@@ -204,7 +206,7 @@ void FusionPowerPlant::BreedTritium(double T_burned) {
   cyclus::Composition::Ptr He4 = cyclus::Composition::CreateFromAtom(cyclus::CompMap({{He4_id, 1.0}}));
 
   // Breed tritium
-  cyclus::Material::Ptr T_created = cyclus::Material::CreateUntracked(T_burned * TBR, Tritium);
+  cyclus::Material::Ptr T_created = cyclus::Material::Create(this, T_burned * TBR, Tritium);
   double T_created_atoms = T_created->quantity() * T_molar_mass;
   cyclus::Material::Ptr Li7_burned = cyclus::Material::CreateUntracked(T_created_atoms * Li7_contribution/Li7_molar_mass, Li7);
   cyclus::Material::Ptr Li6_burned = cyclus::Material::CreateUntracked(T_created_atoms * (1-Li7_contribution) / Li6_molar_mass, Li6);
@@ -212,9 +214,9 @@ void FusionPowerPlant::BreedTritium(double T_burned) {
   
   cyclus::Material::Ptr consumed_Li = blanket->ExtractComp(Li7_burned->quantity(), Li7);
   consumed_Li->Absorb(blanket->ExtractComp(Li6_burned->quantity(), Li6));
-  blanket->Absorb(T_created);
   blanket->Absorb(He4_generated);
 
+  tritium_storage.Push(T_created);
 }
 
 void FusionPowerPlant::OperateReactor() {
@@ -226,19 +228,31 @@ void FusionPowerPlant::OperateReactor() {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FusionPowerPlant::DecayInventories() {
   //Left empty to quickly check if code builds
+  //tritium_storage.Decay();
+  //tritium_excess.Decay();
   
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FusionPowerPlant::ExtractHelium() {
-  //Left empty to quickly check if code builds
-  
-}
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FusionPowerPlant::MoveExcessTritiumToSellBuffer() {
-  //Left empty to quickly check if code builds
-  
+  int He3_id = pyne::nucname::id("He-3");
+  cyclus::Composition::Ptr He3 = cyclus::Composition::CreateFromAtom(cyclus::CompMap({{He3_id, 1.0}}));
+
+  std::vector<cyclus::toolkit::ResBuf<Material>> tritium_buffers = {tritium_storage, tritium_excess};
+
+  for (auto inventory : tritium_buffers) {
+    if (!inventory.empty()) {
+      cyclus::Material::Ptr mat = inventory.Pop();
+      cyclus::toolkit::MatQuery mq(mat);
+      
+      cyclus::Material::Ptr helium = mat->ExtractComp(mq.mass(He3_id), He3);
+
+      helium_excess.Push(helium);
+      inventory.Push(mat);
+    }
+  }
+
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
