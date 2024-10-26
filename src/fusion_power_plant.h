@@ -78,7 +78,17 @@ class FusionPowerPlant : public cyclus::Facility  {
   double fusion_power;
 
   #pragma cyclus var { \
-    "doc": "Minimum tritium inventory to hold in reserve in excess of operational quantity in case of tritium recovery system failure", \
+    "doc": "Achievable system tritium breeding ratio before decay", \
+    "tooltip": "Achievable system tritium breeding ratio before decay", \
+    "units": "non-dimensional", \
+    "uitype": "range", \
+    "range": [0, 1e299], \
+    "uilabel": "Tritium Breeding Ratio" \
+  }
+  double TBR;
+
+  #pragma cyclus var { \
+    "doc": "Minimum tritium inventory to hold in reserve in case of tritium recovery system failure", \
     "tooltip": "Minimum tritium inventory to hold in reserve", \
     "units": "kg", \
     "uilabel": "Reserve Inventory" \
@@ -99,6 +109,17 @@ class FusionPowerPlant : public cyclus::Facility  {
     "uilabel": "Fuel input commodity" \
   }
   std::string fuel_incommod;
+
+    #pragma cyclus var { \
+    "default": 0.03, \
+    "doc": "Fraction of tritium that comes from the (n + Li-7 --> T + He + n) reaction", \
+    "tooltip": "Fraction of tritium from Li-7 breeding", \
+    "units": "dimensionless", \
+    "uitype": "range", \
+    "range": [0, 1], \
+    "uilabel": "Li-7 Contribution" \
+  }
+  double Li7_contribution;
 
   #pragma cyclus var { \
     "default": 'fill', \
@@ -197,7 +218,8 @@ class FusionPowerPlant : public cyclus::Facility  {
   void CycleBlanket();
   bool BlanketCycleTime();
   bool ReadyToOperate();
-  void SequesterTritium();
+  void LoadCore();
+  void BreedTritium(double T_burned);
   void OperateReactor();
   void DecayInventories();
   void ExtractHelium();
@@ -243,6 +265,7 @@ class FusionPowerPlant : public cyclus::Facility  {
 
   //Materials:
   cyclus::Material::Ptr sequestered_tritium = cyclus::Material::CreateUntracked(0.0, tritium_comp);
+  cyclus::Material::Ptr incore_fuel = cyclus::Material::CreateUntracked(0.0, tritium_comp);
 
   // And away we go!
 };
