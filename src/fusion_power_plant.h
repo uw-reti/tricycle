@@ -197,7 +197,7 @@ class FusionPowerPlant : public cyclus::Facility  {
   void CycleBlanket();
   bool BlanketCycleTime();
   bool ReadyToOperate();
-  void SequesterTritium();
+  void LoadCore();
   void OperateReactor();
   void DecayInventories();
   void ExtractHelium();
@@ -243,6 +243,7 @@ class FusionPowerPlant : public cyclus::Facility  {
 
   //Materials:
   cyclus::Material::Ptr sequestered_tritium = cyclus::Material::CreateUntracked(0.0, tritium_comp);
+  cyclus::Material::Ptr incore_fuel = cyclus::Material::CreateUntracked(0.0, tritium_comp);
 
   // And away we go!
 };

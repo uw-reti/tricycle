@@ -111,9 +111,8 @@ void FusionPowerPlant::Tick() {
   if (ReadyToOperate()) {
     fuel_startup_policy.Stop();
     fuel_refill_policy.Start();
-    SequesterTritium();
+    LoadCore();
     OperateReactor();
-    CycleBlanket();
 
   } else {
     //Some way of leaving a record of what is going wrong is helpful info I think
@@ -123,6 +122,12 @@ void FusionPowerPlant::Tick() {
   DecayInventories();
   ExtractHelium();
   MoveExcessTritiumToSellBuffer();
+
+
+  if (sequestered_tritium->quantity() != 0) {
+    fuel_startup_policy.Stop();
+    fuel_refill_policy.Start();
+  }
 
 }
 
@@ -137,10 +142,15 @@ void FusionPowerPlant::Tock() {
 }
 
 double FusionPowerPlant::SequesteredTritiumGap() {
-  cyclus::toolkit::MatQuery mq(sequestered_tritium);
-  double equilibrium_deficit = std::max(sequestered_equilibrium - 
-                                        mq.mass(tritium_id), 0.0);
-  return equilibrium_deficit;
+  
+  double current_sequestered_tritium = 0.0;
+
+  if (sequestered_tritium->quantity() > cyclus::eps_rsrc()) {
+    cyclus::toolkit::MatQuery mq(sequestered_tritium);
+    current_sequestered_tritium = mq.mass(tritium_id);
+  }
+
+  return std::max(sequestered_equilibrium - current_sequestered_tritium, 0.0);
 }
 
 
@@ -171,9 +181,10 @@ bool FusionPowerPlant::ReadyToOperate() {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FusionPowerPlant::SequesterTritium() {
-  //Left empty to quickly check if code builds
-  
+void FusionPowerPlant::LoadCore() {
+  CycleBlanket();
+  sequestered_tritium->Absorb(tritium_storage.Pop(SequesteredTritiumGap()));
+  incore_fuel->Absorb(tritium_storage.Pop(fuel_usage_mass));
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -202,14 +213,14 @@ void FusionPowerPlant::MoveExcessTritiumToSellBuffer() {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FusionPowerPlant::CycleBlanket() {
-  if (BlanketCycleTime()) {
-    if (blanket->quantity() >= blanket_turnover) {
-      blanket_waste.Push(blanket->ExtractQty(blanket_turnover));
+  
+  if (blanket->quantity() < cyclus::eps_rsrc()) {
+    blanket->Absorb(blanket_feed.Pop(blanket_size));
+  } else if (BlanketCycleTime()) {
 
-      //guarantee blanket_feed has enough material in CheckOperatingConditions()
-      blanket->Absorb(blanket_feed.Pop(blanket_turnover));
+    blanket_waste.Push(blanket->ExtractQty(blanket_turnover));
+    blanket->Absorb(blanket_feed.Pop(blanket_turnover));
 
-    }
   }
 }
 
