@@ -166,7 +166,7 @@ bool FusionPowerPlant::TritiumStorageClean() {
 bool FusionPowerPlant::ReadyToOperate() {
 
   // determine required tritium storage inventory
-  double required_storage_inventory = fuel_usage_mass + reserve_inventory + SequesteredTritiumGap();
+  double required_storage_inventory = reserve_inventory + SequesteredTritiumGap();
 
   // check tritium storage quantity
   if (tritium_storage.quantity() < required_storage_inventory || !TritiumStorageClean()) {
@@ -188,11 +188,41 @@ void FusionPowerPlant::LoadCore() {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FusionPowerPlant::OperateReactor() {
-  //Left empty to quickly check if code builds
+void FusionPowerPlant::BreedTritium(double T_burned) {
+  int Li6_id = pyne::nucname::id("Li-6");
+  int Li7_id = pyne::nucname::id("Li-7");
+  int He4_id = pyne::nucname::id("He-4");
   
+  double Li6_molar_mass = pyne::atomic_mass(Li6_id);
+  double Li7_molar_mass = pyne::atomic_mass(Li7_id);
+  double T_molar_mass = pyne::atomic_mass(tritium_id);
+  double He4_molar_mass = pyne::atomic_mass(He4_id);
+
+  cyclus::Composition::Ptr Li6 = cyclus::Composition::CreateFromAtom(cyclus::CompMap({{Li6_id, 1.0}}));
+  cyclus::Composition::Ptr Li7 = cyclus::Composition::CreateFromAtom(cyclus::CompMap({{Li7_id, 1.0}}));
+  cyclus::Composition::Ptr Tritium = cyclus::Composition::CreateFromAtom(cyclus::CompMap({{tritium_id, 1.0}}));
+  cyclus::Composition::Ptr He4 = cyclus::Composition::CreateFromAtom(cyclus::CompMap({{He4_id, 1.0}}));
+
+  // Breed tritium
+  cyclus::Material::Ptr T_created = cyclus::Material::CreateUntracked(T_burned * TBR, Tritium);
+  double T_created_atoms = T_created->quantity() * T_molar_mass;
+  cyclus::Material::Ptr Li7_burned = cyclus::Material::CreateUntracked(T_created_atoms * Li7_contribution/Li7_molar_mass, Li7);
+  cyclus::Material::Ptr Li6_burned = cyclus::Material::CreateUntracked(T_created_atoms * (1-Li7_contribution) / Li6_molar_mass, Li6);
+  cyclus::Material::Ptr He4_generated = cyclus::Material::CreateUntracked(T_created_atoms/He4_molar_mass, He4);
+  
+  cyclus::Material::Ptr consumed_Li = blanket->ExtractComp(Li7_burned->quantity(), Li7);
+  consumed_Li->Absorb(blanket->ExtractComp(Li6_burned->quantity(), Li6));
+  blanket->Absorb(T_created);
+  blanket->Absorb(He4_generated);
+
 }
 
+void FusionPowerPlant::OperateReactor() {
+
+  cyclus::Material::Ptr consumed_fuel = incore_fuel->ExtractQty(fuel_usage_mass);
+  BreedTritium(fuel_usage_mass);
+
+}
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FusionPowerPlant::DecayInventories() {
   //Left empty to quickly check if code builds
