@@ -2,13 +2,13 @@
 
 using cyclus::Material;
 using cyclus::Composition;
+using cyclus::CompMap;
 using cyclus::IntDistribution;
 using cyclus::DoubleDistribution;
 using cyclus::FixedIntDist;
 using cyclus::FixedDoubleDist;
 using cyclus::KeyError;
-
-
+using cyclus::toolkit::ResBuf;
 
 namespace tricycle {
 
@@ -21,11 +21,11 @@ FusionPowerPlant::FusionPowerPlant(cyclus::Context* ctx) : cyclus::Facility(ctx)
   fuel_tracker.Init({&tritium_storage}, fuel_limit);
   blanket_tracker.Init({&blanket_feed}, blanket_limit);
 
-  tritium_storage = cyclus::toolkit::ResBuf<cyclus::Material>(true);
-  tritium_excess = cyclus::toolkit::ResBuf<cyclus::Material>(true);
-  helium_excess = cyclus::toolkit::ResBuf<cyclus::Material>(true);
-  blanket_feed = cyclus::toolkit::ResBuf<cyclus::Material>(true);
-  blanket_waste = cyclus::toolkit::ResBuf<cyclus::Material>(true);
+  tritium_storage = ResBuf<Material>(true);
+  tritium_excess = ResBuf<Material>(true);
+  helium_excess = ResBuf<Material>(true);
+  blanket_feed = ResBuf<Material>(true);
+  blanket_waste = ResBuf<Material>(true);
 
 }
 
@@ -200,19 +200,19 @@ void FusionPowerPlant::BreedTritium(double T_burned) {
   double T_molar_mass = pyne::atomic_mass(tritium_id);
   double He4_molar_mass = pyne::atomic_mass(He4_id);
 
-  cyclus::Composition::Ptr Li6 = cyclus::Composition::CreateFromAtom(cyclus::CompMap({{Li6_id, 1.0}}));
-  cyclus::Composition::Ptr Li7 = cyclus::Composition::CreateFromAtom(cyclus::CompMap({{Li7_id, 1.0}}));
-  cyclus::Composition::Ptr Tritium = cyclus::Composition::CreateFromAtom(cyclus::CompMap({{tritium_id, 1.0}}));
-  cyclus::Composition::Ptr He4 = cyclus::Composition::CreateFromAtom(cyclus::CompMap({{He4_id, 1.0}}));
+  Composition::Ptr Li6 = Composition::CreateFromAtom(CompMap({{Li6_id, 1.0}}));
+  Composition::Ptr Li7 = Composition::CreateFromAtom(CompMap({{Li7_id, 1.0}}));
+  Composition::Ptr Tritium = Composition::CreateFromAtom(CompMap({{tritium_id, 1.0}}));
+  Composition::Ptr He4 = Composition::CreateFromAtom(CompMap({{He4_id, 1.0}}));
 
   // Breed tritium
-  cyclus::Material::Ptr T_created = cyclus::Material::Create(this, T_burned * TBR, Tritium);
+  Material::Ptr T_created = Material::Create(this, T_burned * TBR, Tritium);
   double T_created_atoms = T_created->quantity() * T_molar_mass;
-  cyclus::Material::Ptr Li7_burned = cyclus::Material::CreateUntracked(T_created_atoms * Li7_contribution/Li7_molar_mass, Li7);
-  cyclus::Material::Ptr Li6_burned = cyclus::Material::CreateUntracked(T_created_atoms * (1-Li7_contribution) / Li6_molar_mass, Li6);
-  cyclus::Material::Ptr He4_generated = cyclus::Material::CreateUntracked(T_created_atoms/He4_molar_mass, He4);
+  Material::Ptr Li7_burned = Material::CreateUntracked(T_created_atoms * Li7_contribution/Li7_molar_mass, Li7);
+  Material::Ptr Li6_burned = Material::CreateUntracked(T_created_atoms * (1-Li7_contribution) / Li6_molar_mass, Li6);
+  Material::Ptr He4_generated = Material::CreateUntracked(T_created_atoms/He4_molar_mass, He4);
   
-  cyclus::Material::Ptr consumed_Li = blanket->ExtractComp(Li7_burned->quantity(), Li7);
+  Material::Ptr consumed_Li = blanket->ExtractComp(Li7_burned->quantity(), Li7);
   consumed_Li->Absorb(blanket->ExtractComp(Li6_burned->quantity(), Li6));
   blanket->Absorb(He4_generated);
 
@@ -221,7 +221,7 @@ void FusionPowerPlant::BreedTritium(double T_burned) {
 
 void FusionPowerPlant::OperateReactor() {
 
-  cyclus::Material::Ptr consumed_fuel = incore_fuel->ExtractQty(fuel_usage_mass);
+  Material::Ptr consumed_fuel = incore_fuel->ExtractQty(fuel_usage_mass);
   BreedTritium(fuel_usage_mass);
 
 }
@@ -237,16 +237,16 @@ void FusionPowerPlant::DecayInventories() {
 void FusionPowerPlant::ExtractHelium() {
 
   int He3_id = pyne::nucname::id("He-3");
-  cyclus::Composition::Ptr He3 = cyclus::Composition::CreateFromAtom(cyclus::CompMap({{He3_id, 1.0}}));
+  Composition::Ptr He3 = Composition::CreateFromAtom(CompMap({{He3_id, 1.0}}));
 
-  std::vector<cyclus::toolkit::ResBuf<Material>> tritium_buffers = {tritium_storage, tritium_excess};
+  std::vector<ResBuf<Material>> tritium_buffers = {tritium_storage, tritium_excess};
 
   for (auto inventory : tritium_buffers) {
     if (!inventory.empty()) {
-      cyclus::Material::Ptr mat = inventory.Pop();
+      Material::Ptr mat = inventory.Pop();
       cyclus::toolkit::MatQuery mq(mat);
       
-      cyclus::Material::Ptr helium = mat->ExtractComp(mq.mass(He3_id), He3);
+      Material::Ptr helium = mat->ExtractComp(mq.mass(He3_id), He3);
 
       helium_excess.Push(helium);
       inventory.Push(mat);
