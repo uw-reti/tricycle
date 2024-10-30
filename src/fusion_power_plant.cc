@@ -178,7 +178,7 @@ bool FusionPowerPlant::TritiumStorageClean() {
 bool FusionPowerPlant::ReadyToOperate() {
 
   // determine required tritium storage inventory
-  double required_storage_inventory = reserve_inventory + SequesteredTritiumGap();
+  double required_storage_inventory = fuel_usage_mass + SequesteredTritiumGap();
 
   // check tritium storage quantity
   if (tritium_storage.quantity() < required_storage_inventory || !TritiumStorageClean()) {
@@ -197,6 +197,7 @@ void FusionPowerPlant::LoadCore() {
   
   CycleBlanket();
   std::cout<<"Tritium Storage Quantity: " << tritium_storage.quantity()<<std::endl;
+  std::cout<<"Tritium Excess Quantity: " << tritium_excess.quantity()<<std::endl;
   std::cout<<"Sequestered Tritium Quantity: " << sequestered_tritium->quantity()<<std::endl;
 
   // Squash runs into issues when you give it zero, so we need to check frist
