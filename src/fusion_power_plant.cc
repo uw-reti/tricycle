@@ -42,20 +42,23 @@ void FusionPowerPlant::EnterNotify() {
     (kDefaultTimeStepDur * 12) * context()->dt());
   //fuel_usage_atoms = fuel_usage_mass / tritium_atomic_mass;
   blanket_turnover = blanket_size * blanket_turnover_fraction;
-
+  double startup_inventory = reserve_inventory + sequestered_equilibrium; 
+  
   //Create the blanket material for use in the core, no idea if this works...
   blanket = Material::Create(this, 0.0, 
       context()->GetRecipe(blanket_inrecipe));
 
   fuel_startup_policy
-      .Init(this, &tritium_storage, std::string("Tritium Storage"),
-            &fuel_tracker)
-      .Set(fuel_incommod, tritium_comp)
-      .Start();
+    .Init(this, &tritium_storage, std::string("Tritium Storage"),
+          &fuel_tracker, std::string("ss"),
+          startup_inventory,
+          startup_inventory)
+    .Set(fuel_incommod)
+    .Start();
 
   blanket_fill_policy
-      .Init(this, &blanket_feed, std::string("Blanket Startup"), 
-            &blanket_tracker)
+      .Init(this, &blanket_feed, std::string("Blanket Startup"), &blanket_tracker,
+            std::string("ss"), blanket_size, blanket_size)
       .Set(blanket_incommod)
       .Start();
 
@@ -77,8 +80,9 @@ void FusionPowerPlant::EnterNotify() {
 
   } else if (refuel_mode == "fill") {
     fuel_refill_policy
-        .Init(this, &tritium_storage, std::string("Input"), 
-              &fuel_tracker).Set(fuel_incommod, tritium_comp);
+        .Init(this, &tritium_storage, std::string("Input"), &fuel_tracker,
+              std::string("ss"), reserve_inventory, reserve_inventory)
+        .Set(fuel_incommod);
 
   } else {
     throw KeyError("Refill mode " + refuel_mode + 
@@ -106,25 +110,35 @@ void FusionPowerPlant::EnterNotify() {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FusionPowerPlant::Tick() {
-  //pseudocode implementation of Tick():
+
+  // For Debugging:
+  std::cout<<"Timestep "<<context()->time()<<std::endl;
+
   
   if (ReadyToOperate()) {
+    std::cout<<"Ready to Operate"<<std::endl;
     fuel_startup_policy.Stop();
     fuel_refill_policy.Start();
+    
     LoadCore();
     OperateReactor();
+    
   } else {
-    //Some way of leaving a record of what is going wrong is helpful info I think
-    //Record(Error);
+    // Some way of leaving a record of what is going wrong is helpful info I think
+    // Use the cyclus logger
   }
 
+  
   DecayInventories();
   ExtractHelium();
   
   double excess_tritium = std::max(tritium_storage.quantity() - 
                                    (reserve_inventory+ SequesteredTritiumGap()), 0.0);
   
-  tritium_excess.Push(tritium_storage.Pop(excess_tritium));
+  // Otherwise the ResBuf encounters an error when it tries to squash
+  if (excess_tritium > cyclus::eps_rsrc()) {
+    tritium_excess.Push(tritium_storage.Pop(excess_tritium));
+  }
 
   if (sequestered_tritium->quantity() != 0) {
     fuel_startup_policy.Stop();
@@ -135,23 +149,19 @@ void FusionPowerPlant::Tick() {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FusionPowerPlant::Tock() {
-  //This is where we used to squash tritium_storage and blanket, but that's no
-  //longer needed. Leaving a comment to remind myself about that.
-
-  //Again, not sure about the recording:
-  //RecordInventories(all_of_them.quantity());
+  // Again, might make sense to record something here... 
+  // Use the cyclus logger to do that
   
 }
 
 double FusionPowerPlant::SequesteredTritiumGap() {
-  
   double current_sequestered_tritium = 0.0;
 
   if (sequestered_tritium->quantity() > cyclus::eps_rsrc()) {
     cyclus::toolkit::MatQuery mq(sequestered_tritium);
     current_sequestered_tritium = mq.mass(tritium_id);
   }
-
+  std::cout<<"STG: " << std::max(sequestered_equilibrium - current_sequestered_tritium, 0.0)<<std::endl;
   return std::max(sequestered_equilibrium - current_sequestered_tritium, 0.0);
 }
 
@@ -184,8 +194,16 @@ bool FusionPowerPlant::ReadyToOperate() {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FusionPowerPlant::LoadCore() {
+  
   CycleBlanket();
-  sequestered_tritium->Absorb(tritium_storage.Pop(SequesteredTritiumGap()));
+  std::cout<<"Tritium Storage Quantity: " << tritium_storage.quantity()<<std::endl;
+  std::cout<<"Sequestered Tritium Quantity: " << sequestered_tritium->quantity()<<std::endl;
+
+  // Squash runs into issues when you give it zero, so we need to check frist
+  if (SequesteredTritiumGap() > cyclus::eps_rsrc()) { 
+    sequestered_tritium->Absorb(tritium_storage.Pop(SequesteredTritiumGap()));
+  }
+
   incore_fuel->Absorb(tritium_storage.Pop(fuel_usage_mass));
 }
 
@@ -227,9 +245,9 @@ void FusionPowerPlant::OperateReactor() {
 }
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FusionPowerPlant::DecayInventories() {
-  //Left empty to quickly check if code builds
-  //tritium_storage.Decay();
-  //tritium_excess.Decay();
+  tritium_storage.Decay();
+  tritium_excess.Decay();
+  sequestered_tritium->Decay(context()->time());
   
 }
 
