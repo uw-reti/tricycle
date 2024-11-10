@@ -122,12 +122,8 @@ void FusionPowerPlant::EnterNotify() {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FusionPowerPlant::Tick() {
-
-  // For Debugging:
-  std::cout<<"Timestep "<<context()->time()<<std::endl;
   
   if (ReadyToOperate()) {
-    std::cout<<"Ready to Operate"<<std::endl;
     fuel_startup_policy.Stop();
     fuel_refill_policy.Start();
     
@@ -144,7 +140,8 @@ void FusionPowerPlant::Tick() {
   ExtractHelium();
   
   double excess_tritium = std::max(tritium_storage.quantity() - 
-                                   (reserve_inventory+ SequesteredTritiumGap()), 0.0);
+                                  (reserve_inventory + SequesteredTritiumGap())
+                                  , 0.0);
   
   // Otherwise the ResBuf encounters an error when it tries to squash
   if (excess_tritium > cyclus::eps_rsrc()) {
@@ -195,7 +192,6 @@ double FusionPowerPlant::SequesteredTritiumGap() {
     cyclus::toolkit::MatQuery mq(sequestered_tritium);
     current_sequestered_tritium = mq.mass(tritium_id);
   }
-  std::cout<<"STG: " << std::max(sequestered_equilibrium - current_sequestered_tritium, 0.0)<<std::endl;
   return std::max(sequestered_equilibrium - current_sequestered_tritium, 0.0);
 }
 
@@ -230,9 +226,6 @@ bool FusionPowerPlant::ReadyToOperate() {
 void FusionPowerPlant::LoadCore() {
   
   CycleBlanket();
-  std::cout<<"Tritium Storage Quantity: " << tritium_storage.quantity()<<std::endl;
-  std::cout<<"Tritium Excess Quantity: " << tritium_excess.quantity()<<std::endl;
-  std::cout<<"Sequestered Tritium Quantity: " << sequestered_tritium->quantity()<<std::endl;
 
   // Squash runs into issues when you give it zero, so we need to check frist
   if (SequesteredTritiumGap() > cyclus::eps_rsrc()) { 
