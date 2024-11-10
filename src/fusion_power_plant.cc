@@ -29,16 +29,6 @@ FusionPowerPlant::FusionPowerPlant(cyclus::Context* ctx) : cyclus::Facility(ctx)
 
 }
 
-/*
-void FusionPowerPlant::InitFrom(FusionPowerPlant* m) {
-  #pragma cyclus impl initfromcopy tricycle::FusionPowerPlant
-  //cyclus::toolkit::CommodityProducer::Copy(m);
-}
-
-void FusionPowerPlant::InitFrom(cyclus::QueryableBackend* b) {
-  #pragma cyclus impl initfromdb tricycle::FusionPowerPlant
-}
-*/
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 std::string FusionPowerPlant::str() {
   return Facility::str();
@@ -52,7 +42,6 @@ void FusionPowerPlant::EnterNotify() {
 
   fuel_usage_mass = (burn_rate * (fusion_power / MW_to_GW) / 
     (kDefaultTimeStepDur * 12) * context()->dt());
-  //fuel_usage_atoms = fuel_usage_mass / tritium_atomic_mass;
   blanket_turnover = blanket_size * blanket_turnover_fraction;
   double startup_inventory = reserve_inventory + sequestered_equilibrium; 
   
@@ -110,9 +99,6 @@ void FusionPowerPlant::EnterNotify() {
       .Set(he3_outcommod)
       .Start();
 
-  //This is going to need some work... The blanket waste recipe is going to be
-  //different all the time, so we want to just peg it to "depleted lithium" or
-  //something... Come back to this when you have a second.
   blanket_waste_sell_policy
       .Init(this, &blanket_waste, std::string("Blanket Waste"))
       .Set(blanket_outcommod)
@@ -157,9 +143,9 @@ void FusionPowerPlant::Tick() {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FusionPowerPlant::Tock() {
-  // Again, might make sense to record something here... 
-  // Use the cyclus logger to do that
-
+  
+  // ExplicitInventories wasn't working. If possible, may be best to use that
+  // down the road.
   RecordInventories(tritium_storage.quantity(), tritium_excess.quantity(), 
                     sequestered_tritium->quantity(), blanket_feed.quantity(),
                     blanket_waste.quantity(), helium_excess.quantity());
