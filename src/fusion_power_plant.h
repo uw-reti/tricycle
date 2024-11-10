@@ -237,7 +237,7 @@ class FusionPowerPlant : public cyclus::Facility  {
   //Resource Buffers and Trackers:
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_storage;
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_excess;
-  cyclus::toolkit::ResBuf<cyclus::Material> helium_excess; //helium_excess
+  cyclus::toolkit::ResBuf<cyclus::Material> helium_excess;
   cyclus::toolkit::ResBuf<cyclus::Material> blanket_feed;
   cyclus::toolkit::ResBuf<cyclus::Material> blanket_waste;
 
