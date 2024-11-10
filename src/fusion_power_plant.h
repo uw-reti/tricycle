@@ -49,12 +49,15 @@ class FusionPowerPlant : public cyclus::Facility  {
 
   #pragma cyclus
 
+
   #pragma cyclus note {"doc": "A stub facility is provided as a skeleton " \
                               "for the design of new facility agents."}
 
   /// Set up policies and buffers:
   virtual void EnterNotify();
-  
+
+  virtual ~FusionPowerPlant() {};
+
   /// The handleTick function specific to the FusionPowerPlant.
   /// @param time the time of the tick
   virtual void Tick();
@@ -225,13 +228,16 @@ class FusionPowerPlant : public cyclus::Facility  {
   void ExtractHelium();
   double SequesteredTritiumGap();
   bool TritiumStorageClean();
+  void RecordInventories(double tritium_storage, double tritium_excess, 
+                         double sequestered_tritium, double blanket_feed, 
+                         double blanket_excess, double helium_excess);
 
 
  private:
   //Resource Buffers and Trackers:
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_storage;
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_excess;
-  cyclus::toolkit::ResBuf<cyclus::Material> helium_excess;
+  cyclus::toolkit::ResBuf<cyclus::Material> helium_excess; //helium_excess
   cyclus::toolkit::ResBuf<cyclus::Material> blanket_feed;
   cyclus::toolkit::ResBuf<cyclus::Material> blanket_waste;
 

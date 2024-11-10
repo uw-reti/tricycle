@@ -29,10 +29,22 @@ FusionPowerPlant::FusionPowerPlant(cyclus::Context* ctx) : cyclus::Facility(ctx)
 
 }
 
+/*
+void FusionPowerPlant::InitFrom(FusionPowerPlant* m) {
+  #pragma cyclus impl initfromcopy tricycle::FusionPowerPlant
+  //cyclus::toolkit::CommodityProducer::Copy(m);
+}
+
+void FusionPowerPlant::InitFrom(cyclus::QueryableBackend* b) {
+  #pragma cyclus impl initfromdb tricycle::FusionPowerPlant
+}
+*/
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 std::string FusionPowerPlant::str() {
   return Facility::str();
 }
+
+
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FusionPowerPlant::EnterNotify() {
@@ -45,7 +57,7 @@ void FusionPowerPlant::EnterNotify() {
   double startup_inventory = reserve_inventory + sequestered_equilibrium; 
   
   //Create the blanket material for use in the core, no idea if this works...
-  blanket = Material::Create(this, 0.0, 
+   blanket = Material::Create(this, 0.0, 
       context()->GetRecipe(blanket_inrecipe));
 
   fuel_startup_policy
@@ -85,7 +97,7 @@ void FusionPowerPlant::EnterNotify() {
         .Set(fuel_incommod);
 
   } else {
-    throw KeyError("Refill mode " + refuel_mode + 
+    throw KeyError("Refuel mode " + refuel_mode + 
                     " not recognized! Try 'schedule' or 'fill'.");
   }
 
@@ -113,7 +125,6 @@ void FusionPowerPlant::Tick() {
 
   // For Debugging:
   std::cout<<"Timestep "<<context()->time()<<std::endl;
-
   
   if (ReadyToOperate()) {
     std::cout<<"Ready to Operate"<<std::endl;
@@ -151,7 +162,30 @@ void FusionPowerPlant::Tick() {
 void FusionPowerPlant::Tock() {
   // Again, might make sense to record something here... 
   // Use the cyclus logger to do that
-  
+
+  RecordInventories(tritium_storage.quantity(), tritium_excess.quantity(), 
+                    sequestered_tritium->quantity(), blanket_feed.quantity(),
+                    blanket_waste.quantity(), helium_excess.quantity());
+
+}
+
+void FusionPowerPlant::RecordInventories(double tritium_storage, 
+                                         double tritium_excess, 
+                                         double sequestered_tritium, 
+                                         double blanket_feed, 
+                                         double blanket_waste, 
+                                         double helium_excess) {
+  context()
+      ->NewDatum("FPPInventories")
+      ->AddVal("AgentId", id())
+      ->AddVal("Time", context()->time())
+      ->AddVal("TritiumStorage", tritium_storage)
+      ->AddVal("TritiumExcess", tritium_excess)
+      ->AddVal("TritiumSequestered", sequestered_tritium)
+      ->AddVal("BlanketFeed", blanket_feed)
+      ->AddVal("BlanketWaste", blanket_waste)
+      ->AddVal("HeliumExcess", helium_excess)
+      ->Record();
 }
 
 double FusionPowerPlant::SequesteredTritiumGap() {
