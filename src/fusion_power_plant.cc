@@ -46,15 +46,15 @@ void FusionPowerPlant::EnterNotify() {
   double startup_inventory = reserve_inventory + sequestered_equilibrium; 
   
   //Create the blanket material for use in the core, no idea if this works...
-   blanket = Material::Create(this, 0.0, 
-      context()->GetRecipe(blanket_inrecipe));
+  blanket = Material::Create(this, 0.0, 
+    context()->GetRecipe(blanket_inrecipe));
 
   fuel_startup_policy
     .Init(this, &tritium_storage, std::string("Tritium Storage"),
           &fuel_tracker, std::string("ss"),
           startup_inventory,
           startup_inventory)
-    .Set(fuel_incommod)
+    .Set(fuel_incommod, tritium_comp)
     .Start();
 
   blanket_fill_policy
@@ -83,7 +83,7 @@ void FusionPowerPlant::EnterNotify() {
     fuel_refill_policy
         .Init(this, &tritium_storage, std::string("Input"), &fuel_tracker,
               std::string("ss"), reserve_inventory, reserve_inventory)
-        .Set(fuel_incommod);
+        .Set(fuel_incommod, tritium_comp);
 
   } else {
     throw KeyError("Refuel mode " + refuel_mode + 
