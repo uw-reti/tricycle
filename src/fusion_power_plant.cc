@@ -43,7 +43,12 @@ void FusionPowerPlant::EnterNotify() {
   fuel_usage_mass = (burn_rate * (fusion_power / MW_to_GW) / 
     (kDefaultTimeStepDur * 12) * context()->dt());
   blanket_turnover = blanket_size * blanket_turnover_fraction;
-  double startup_inventory = reserve_inventory + sequestered_equilibrium; 
+  startup_inventory = reserve_inventory + sequestered_equilibrium; 
+
+  // Otherwise tritium-limited sims will never startup. We need to overbuy at
+  // startup.
+  trituim_overbuy_multiplier = (1+tritium_yearly_decay_fraction) / 
+    (kDefaultTimeStepDur * 12) * context()->dt();
   
   //Create the blanket material for use in the core, no idea if this works...
   blanket = Material::Create(this, 0.0, 
@@ -52,8 +57,8 @@ void FusionPowerPlant::EnterNotify() {
   fuel_startup_policy
     .Init(this, &tritium_storage, std::string("Tritium Storage"),
           &fuel_tracker, std::string("ss"),
-          startup_inventory,
-          startup_inventory)
+          startup_inventory * (1 + trituim_overbuy_multiplier),
+          startup_inventory * (1 + trituim_overbuy_multiplier))
     .Set(fuel_incommod, tritium_comp)
     .Start();
 
@@ -196,9 +201,13 @@ bool FusionPowerPlant::ReadyToOperate() {
   // determine required tritium storage inventory
   double required_storage_inventory = fuel_usage_mass + SequesteredTritiumGap();
 
-  // check tritium storage quantity
+  // check basic tritium storage quantity requirement
   if (tritium_storage.quantity() < required_storage_inventory || !TritiumStorageClean()) {
-        return false;
+    return false;
+  }
+  // insure correct startup behavior
+  if (tritium_storage.quantity() < startup_inventory && sequestered_tritium->quantity() < cyclus::eps_rsrc()) {
+    return false;
   }
   if (BlanketCycleTime() && blanket_feed.quantity() < blanket_turnover) {
     return false;
