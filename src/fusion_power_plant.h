@@ -260,7 +260,7 @@ class FusionPowerPlant : public cyclus::Facility  {
   double fuel_usage_mass;
   static const double burn_rate; // kg/GW-y
   double startup_inventory;
-  double tritium_yearly_decay_fraction = 0.055;
+  static const double tritium_yearly_decay_fraction;
   double trituim_overbuy_multiplier;
 
 

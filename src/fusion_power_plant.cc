@@ -13,6 +13,7 @@ using cyclus::toolkit::ResBuf;
 namespace tricycle {
 
 const double FusionPowerPlant::burn_rate = 55.8;
+const double FusionPowerPlant::tritium_yearly_decay_fraction = 0.055;
 
 const double MW_to_GW = 1000;
 
@@ -47,8 +48,8 @@ void FusionPowerPlant::EnterNotify() {
 
   // Otherwise tritium-limited sims will never startup. We need to overbuy at
   // startup.
-  trituim_overbuy_multiplier = (1+tritium_yearly_decay_fraction) / 
-    (kDefaultTimeStepDur * 12) * context()->dt();
+  trituim_overbuy_multiplier = 1 + (tritium_yearly_decay_fraction / 
+    (kDefaultTimeStepDur * 12) * context()->dt());
   
   //Create the blanket material for use in the core, no idea if this works...
   blanket = Material::Create(this, 0.0, 
@@ -57,8 +58,8 @@ void FusionPowerPlant::EnterNotify() {
   fuel_startup_policy
     .Init(this, &tritium_storage, std::string("Tritium Storage"),
           &fuel_tracker, std::string("ss"),
-          startup_inventory * (1 + trituim_overbuy_multiplier),
-          startup_inventory * (1 + trituim_overbuy_multiplier))
+          startup_inventory * trituim_overbuy_multiplier,
+          startup_inventory * trituim_overbuy_multiplier)
     .Set(fuel_incommod, tritium_comp)
     .Start();
 
@@ -201,12 +202,12 @@ bool FusionPowerPlant::ReadyToOperate() {
   // determine required tritium storage inventory
   double required_storage_inventory = fuel_usage_mass + SequesteredTritiumGap();
 
-  // check basic tritium storage quantity requirement
-  if (tritium_storage.quantity() < required_storage_inventory || !TritiumStorageClean()) {
+  // ensure correct startup behavior
+  if (sequestered_tritium->quantity() < cyclus::eps_rsrc() && tritium_storage.quantity() < startup_inventory) {
     return false;
   }
-  // insure correct startup behavior
-  if (tritium_storage.quantity() < startup_inventory && sequestered_tritium->quantity() < cyclus::eps_rsrc()) {
+  // check basic tritium storage quantity requirement
+  if (tritium_storage.quantity() < required_storage_inventory || !TritiumStorageClean()) {
     return false;
   }
   if (BlanketCycleTime() && blanket_feed.quantity() < blanket_turnover) {
