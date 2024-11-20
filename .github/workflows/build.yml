@@ -32,6 +32,10 @@ jobs:
       - name: Checkout Tricycle
         uses: actions/checkout@v4
 
+      - name: Build Tricycle
+        run: |
+          python3 install.py
+
       - name: Run Unit Tests
         run: |
           tricycle_unit_tests
