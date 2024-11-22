@@ -199,14 +199,14 @@ bool FusionPowerPlant::TritiumStorageClean() {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool FusionPowerPlant::ReadyToOperate() {
 
-  // determine required tritium storage inventory
-  double required_storage_inventory = fuel_usage_mass + SequesteredTritiumGap();
-
-  // ensure correct startup behavior
-  if (sequestered_tritium->quantity() < cyclus::eps_rsrc() && tritium_storage.quantity() < startup_inventory) {
-    return false;
+  // Determine tritium inventory required to operate
+  if (sequestered_tritium->quantity() < cyclus::eps_rsrc()) {
+    double required_storage_inventory = reserve_inventory + SequesteredTritiumGap();
+  } else {
+    double required_storage_inventory = fuel_usage_mass + SequesteredTritiumGap();
   }
-  // check basic tritium storage quantity requirement
+
+  // check  tritium storage quantity requirement
   if (tritium_storage.quantity() < required_storage_inventory || !TritiumStorageClean()) {
     return false;
   }
