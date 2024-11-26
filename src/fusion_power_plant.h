@@ -259,7 +259,6 @@ class FusionPowerPlant : public cyclus::Facility  {
   double blanket_turnover;
   double fuel_usage_mass;
   double startup_inventory;
-  double trituim_overbuy_multiplier;
 
 
   //NucIDs for Pyne
@@ -275,7 +274,6 @@ class FusionPowerPlant : public cyclus::Facility  {
 
   // Constants
   static const double burn_rate; // kg/GW-y
-  static const double tritium_yearly_decay_fraction;
 
   // And away we go!
 };
