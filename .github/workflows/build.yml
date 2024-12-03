@@ -19,4 +19,24 @@ jobs:
       - name: Build Tricycle
         run: |
           python3 install.py
+
+  test:
+    runs-on: ubuntu-latest
+    container: ghcr.io/cyclus/cycamore_24.04_apt/cycamore:latest
+    needs: build
+
+    steps:
+      - name: Preserve $HOME set in the container
+        run: echo HOME=/root >> "$GITHUB_ENV"
+
+      - name: Checkout Tricycle
+        uses: actions/checkout@v4
+
+      - name: Build Tricycle
+        run: |
+          python3 install.py
+
+      - name: Run Unit Tests
+        run: |
+          tricycle_unit_tests
           
