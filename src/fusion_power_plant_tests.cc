@@ -220,10 +220,8 @@ TEST_F(FusionPowerPlantTest, DecayInventoryExtractHelium) {
 
   double reserve = 6.0;
   double sequestered = 2.121;
-  double tritium_yearly_decay_fraction = 0.055;
-  double overbuy = 1 + (tritium_yearly_decay_fraction / 12);
 
-  double init_quant = (reserve + sequestered) * overbuy;
+  double init_quant = reserve + sequestered;
   // Lambda in base 2, not base e (see Decay.cc for more info)
   double lambda = 2.57208504984001213e-09; 
   double t = 2629846;
@@ -352,9 +350,6 @@ TEST_F(FusionPowerPlantTest, EnterNotifyInitialFillDefault) {
       " <blanket_size>1000</blanket_size>"
       " <he3_outcommod>Helium_3</he3_outcommod>";
 
-  double tritium_yearly_decay_fraction = 0.055;
-  double overbuy = 1 + (tritium_yearly_decay_fraction / 12);
-
   int simdur = 2;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:FusionPowerPlant"), config, simdur);
 
@@ -377,7 +372,7 @@ TEST_F(FusionPowerPlantTest, EnterNotifyInitialFillDefault) {
   QueryResult qr_2 = sim.db().Query("Resources", &conds_2);
   double quantity = qr_2.GetVal<double>("Quantity");
 
-  EXPECT_EQ(8.121*overbuy, quantity);
+  EXPECT_EQ(8.121, quantity);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -399,10 +394,6 @@ TEST_F(FusionPowerPlantTest, EnterNotifyScheduleFill) {
       " <refuel_mode>schedule</refuel_mode>"
       " <he3_outcommod>Helium_3</he3_outcommod>";
 
-
-  double tritium_yearly_decay_fraction = 0.055;
-  double overbuy = 1 + (tritium_yearly_decay_fraction / 12);
-
   int simdur = 2;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:FusionPowerPlant"), config, simdur);
 
@@ -425,7 +416,7 @@ TEST_F(FusionPowerPlantTest, EnterNotifyScheduleFill) {
   QueryResult qr_2 = sim.db().Query("Resources", &conds_2);
   double quantity = qr_2.GetVal<double>("Quantity");
 
-  EXPECT_EQ(8.121*overbuy, quantity);
+  EXPECT_EQ(8.121, quantity);
 
   std::vector<Cond> conds_3;
   conds_3.push_back(Cond("Time", "==", std::string("1")));

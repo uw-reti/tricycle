@@ -258,10 +258,6 @@ class FusionPowerPlant : public cyclus::Facility  {
   Material::Ptr blanket;
   double blanket_turnover;
   double fuel_usage_mass;
-  static const double burn_rate; // kg/GW-y
-  double startup_inventory;
-  static const double tritium_yearly_decay_fraction;
-  double trituim_overbuy_multiplier;
 
 
   //NucIDs for Pyne
@@ -275,9 +271,13 @@ class FusionPowerPlant : public cyclus::Facility  {
   cyclus::Material::Ptr sequestered_tritium = cyclus::Material::CreateUntracked(0.0, tritium_comp);
   cyclus::Material::Ptr incore_fuel = cyclus::Material::CreateUntracked(0.0, tritium_comp);
 
+  // Constants
+  static const double burn_rate; // kg/GW-y
+
   // And away we go!
 };
 
 }  // namespace tricycle
 
 #endif  // CYCLUS_TRICYCLE_FUSION_POWER_PLANT_H_
+
