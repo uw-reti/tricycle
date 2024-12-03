@@ -38,8 +38,7 @@ void FusionPowerPlant::EnterNotify() {
 
   fuel_usage_mass = (burn_rate * (fusion_power / MW_to_GW) / 
     (kDefaultTimeStepDur * 12) * context()->dt());
-  blanket_turnover = blanket_size * blanket_turnover_fraction;
-  startup_inventory = reserve_inventory + sequestered_equilibrium; 
+  blanket_turnover = blanket_size * blanket_turnover_fraction; 
   
   //Create the blanket material for use in the core, no idea if this works...
   blanket = Material::Create(this, 0.0, 
@@ -48,8 +47,8 @@ void FusionPowerPlant::EnterNotify() {
   fuel_startup_policy
     .Init(this, &tritium_storage, std::string("Tritium Storage"),
           &fuel_tracker, std::string("ss"),
-          startup_inventory,
-          startup_inventory)
+          reserve_inventory + sequestered_equilibrium,
+          reserve_inventory + sequestered_equilibrium)
     .Set(fuel_incommod, tritium_comp)
     .Start();
 

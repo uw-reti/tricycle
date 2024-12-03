@@ -258,7 +258,6 @@ class FusionPowerPlant : public cyclus::Facility  {
   Material::Ptr blanket;
   double blanket_turnover;
   double fuel_usage_mass;
-  double startup_inventory;
 
 
   //NucIDs for Pyne
