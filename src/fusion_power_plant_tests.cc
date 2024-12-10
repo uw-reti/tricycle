@@ -47,6 +47,17 @@ std::string common_config =
 " <he3_outcommod>Helium_3</he3_outcommod>";
 
 
+cyclus::MockSim InitializeSim(std::string config, int simdur) {
+  cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:FusionPowerPlant"), config, simdur);
+
+  sim.AddRecipe("tritium", tritium());
+  sim.AddRecipe("enriched_lithium", enriched_lithium());
+  sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
+  sim.AddSource("Tritium").recipe("tritium").Finalize();
+
+  return sim;
+}
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 class FusionPowerPlantTest : public ::testing::Test {
  protected:
@@ -94,13 +105,7 @@ TEST_F(FusionPowerPlantTest, BlanketCycle) {
       " <blanket_turnover_fraction>0.03</blanket_turnover_fraction>";
 
   int simdur = 4;
-  cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:FusionPowerPlant"), config, simdur);
-
-  sim.AddRecipe("tritium", tritium());
-  sim.AddRecipe("enriched_lithium", enriched_lithium());
-
-  sim.AddSource("Tritium").recipe("tritium").Finalize();
-  sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
+  cyclus::MockSim sim = InitializeSim(config, simdur);
 
   int id = sim.Run();
 
@@ -125,6 +130,8 @@ TEST_F(FusionPowerPlantTest, BlanketOverCycle) {
 
   int simdur = 2;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:FusionPowerPlant"), config, simdur);
+
+
 
   sim.AddRecipe("tritium", tritium());
   sim.AddRecipe("enriched_lithium", enriched_lithium());
@@ -154,7 +161,6 @@ TEST_F(FusionPowerPlantTest, WrongFuelStartup) {
 
   sim.AddRecipe("tritium", tritium());
   sim.AddRecipe("enriched_lithium", enriched_lithium());
-
   sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
 
   int id = sim.Run();
@@ -183,14 +189,8 @@ TEST_F(FusionPowerPlantTest, DecayInventoryExtractHelium) {
 
 
   int simdur = 2;
-  cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:FusionPowerPlant"), config, simdur);
-
-  sim.AddRecipe("tritium", tritium());
-  sim.AddRecipe("enriched_lithium", enriched_lithium());
-
-  sim.AddSource("Tritium").recipe("tritium").Finalize();
-  sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
-
+  cyclus::MockSim sim = InitializeSim(config, simdur);
+  
   int id = sim.Run();
 
   std::vector<Cond> conds;
@@ -228,24 +228,12 @@ TEST_F(FusionPowerPlantTest, Li7EdgeCases) {
       " <Li7_contribution>1.00</Li7_contribution>";
 
   int simdur = 2;
-  cyclus::MockSim sim_1(cyclus::AgentSpec(":tricycle:FusionPowerPlant"), config_1, simdur);
-
-  sim_1.AddRecipe("tritium", tritium());
-  sim_1.AddRecipe("enriched_lithium", enriched_lithium());
-
-  sim_1.AddSource("Tritium").recipe("tritium").Finalize();
-  sim_1.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
+  cyclus::MockSim sim_1 = InitializeSim(config_1, simdur);
 
   int id_1 = sim_1.Run();
 
 
-  cyclus::MockSim sim_2(cyclus::AgentSpec(":tricycle:FusionPowerPlant"), config_2, simdur);
-
-  sim_2.AddRecipe("tritium", tritium());
-  sim_2.AddRecipe("enriched_lithium", enriched_lithium());
-
-  sim_2.AddSource("Tritium").recipe("tritium").Finalize();
-  sim_2.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
+  cyclus::MockSim sim_2 = InitializeSim(config_2, simdur);
 
   int id_2 = sim_2.Run();
 
@@ -271,13 +259,7 @@ TEST_F(FusionPowerPlantTest, OperateReactorSustainingTBR) {
       " <fuel_incommod>Tritium</fuel_incommod>";
 
   int simdur = 10;
-  cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:FusionPowerPlant"), config, simdur);
-
-  sim.AddRecipe("tritium", tritium());
-  sim.AddRecipe("enriched_lithium", enriched_lithium());
-
-  sim.AddSource("Tritium").recipe("tritium").Finalize();
-  sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
+  cyclus::MockSim sim = InitializeSim(config, simdur);
 
   int id = sim.Run();
 
@@ -300,13 +282,7 @@ TEST_F(FusionPowerPlantTest, EnterNotifyInitialFillDefault) {
       " <fuel_incommod>Tritium</fuel_incommod>";
 
   int simdur = 2;
-  cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:FusionPowerPlant"), config, simdur);
-
-  sim.AddRecipe("tritium", tritium());
-  sim.AddRecipe("enriched_lithium", enriched_lithium());
-
-  sim.AddSource("Tritium").recipe("tritium").Finalize();
-  sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
+  cyclus::MockSim sim = InitializeSim(config, simdur);
 
   int id = sim.Run();
 
@@ -336,13 +312,7 @@ TEST_F(FusionPowerPlantTest, EnterNotifyScheduleFill) {
       " <refuel_mode>schedule</refuel_mode>";
 
   int simdur = 2;
-  cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:FusionPowerPlant"), config, simdur);
-
-  sim.AddRecipe("tritium", tritium());
-  sim.AddRecipe("enriched_lithium", enriched_lithium());
-
-  sim.AddSource("Tritium").recipe("tritium").Finalize();
-  sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
+  cyclus::MockSim sim = InitializeSim(config, simdur);
 
   int id = sim.Run();
 
@@ -385,13 +355,7 @@ TEST_F(FusionPowerPlantTest, EnterNotifyInvalidFill) {
       " <refuel_mode>kjnsfdhn</refuel_mode>";
 
   int simdur = 2;
-  cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:FusionPowerPlant"), config, simdur);
-
-  sim.AddRecipe("tritium", tritium());
-  sim.AddRecipe("enriched_lithium", enriched_lithium());
-
-  sim.AddSource("Tritium").recipe("tritium").Finalize();
-  sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
+  cyclus::MockSim sim = InitializeSim(config, simdur);
 
   EXPECT_THROW(int id = sim.Run(), cyclus::KeyError);
 }
