@@ -36,6 +36,17 @@ Composition::Ptr enriched_lithium() {
   return Composition::CreateFromAtom(m);
 };
 
+std::string common_config =
+" <fusion_power>300</fusion_power>"
+" <reserve_inventory>6.0</reserve_inventory>"
+" <sequestered_equilibrium>2.121</sequestered_equilibrium>"
+" <blanket_incommod>Enriched_Lithium</blanket_incommod>"
+" <blanket_outcommod>Depleted_Lithium</blanket_outcommod>"
+" <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
+" <blanket_size>1000</blanket_size>"
+" <he3_outcommod>Helium_3</he3_outcommod>";
+
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 class FusionPowerPlantTest : public ::testing::Test {
  protected:
@@ -76,18 +87,11 @@ TEST_F(FusionPowerPlantTest, BlanketCycle) {
   // blanket every blanket turnover period. The default period is 1 timestep
   // so it is left undefined here.
 
-  std::string config =
+  std::string config = common_config +
       " <fusion_power>300</fusion_power>"
-      "  <TBR>1.00</TBR>"
-      " <reserve_inventory>6.0</reserve_inventory>"
-      " <sequestered_equilibrium>2.121</sequestered_equilibrium>"
+      " <TBR>1.00</TBR>"
       " <fuel_incommod>Tritium</fuel_incommod>"
-      " <blanket_incommod>Enriched_Lithium</blanket_incommod>"
-      " <blanket_outcommod>Depleted_Lithium</blanket_outcommod>"
-      " <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
-      " <blanket_size>1000</blanket_size>"
-      " <blanket_turnover_fraction>0.03</blanket_turnover_fraction>"
-      " <he3_outcommod>Helium_3</he3_outcommod>";
+      " <blanket_turnover_fraction>0.03</blanket_turnover_fraction>";
 
   int simdur = 4;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:FusionPowerPlant"), config, simdur);
@@ -114,18 +118,10 @@ TEST_F(FusionPowerPlantTest, BlanketOverCycle) {
   // Test the catch for an overcycle of the blanket. The simulation 
   // should not crash when this happens.
 
-  std::string config =
-      " <fusion_power>300</fusion_power>"
+  std::string config = common_config + 
       "  <TBR>1.00</TBR>"
-      " <reserve_inventory>6.0</reserve_inventory>"
-      " <sequestered_equilibrium>2.121</sequestered_equilibrium>"
       " <fuel_incommod>Tritium</fuel_incommod>"
-      " <blanket_incommod>Enriched_Lithium</blanket_incommod>"
-      " <blanket_outcommod>Depleted_Lithium</blanket_outcommod>"
-      " <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
-      " <blanket_size>1000</blanket_size>"
-      " <blanket_turnover_fraction>0.03</blanket_turnover_fraction>"
-      " <he3_outcommod>Helium_3</he3_outcommod>";
+      " <blanket_turnover_fraction>0.03</blanket_turnover_fraction>";
 
   int simdur = 2;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:FusionPowerPlant"), config, simdur);
@@ -148,18 +144,10 @@ TEST_F(FusionPowerPlantTest, WrongFuelStartup) {
   // Test that the agent can identify that it has not recieved the correct fuel
   // to startup, and will appropriately not run.
 
-  std::string config =
-      " <fusion_power>300</fusion_power>"
+  std::string config = common_config +
       "  <TBR>1.00</TBR>"
-      " <reserve_inventory>6.0</reserve_inventory>"
-      " <sequestered_equilibrium>2.121</sequestered_equilibrium>"
       " <fuel_incommod>Enriched_Lithium</fuel_incommod>"
-      " <blanket_incommod>Enriched_Lithium</blanket_incommod>"
-      " <blanket_outcommod>Depleted_Lithium</blanket_outcommod>"
-      " <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
-      " <blanket_size>1000</blanket_size>"
-      " <blanket_turnover_fraction>0.03</blanket_turnover_fraction>"
-      " <he3_outcommod>Helium_3</he3_outcommod>";
+      " <blanket_turnover_fraction>0.03</blanket_turnover_fraction>";
 
   int simdur = 3;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:FusionPowerPlant"), config, simdur);
@@ -189,17 +177,9 @@ TEST_F(FusionPowerPlantTest, DecayInventoryExtractHelium) {
   // We use unintuitive values for reserve inventory and startup inventory here
   // because they were the values we were originally testing with, and we had
   // already done all the calculations.
-  std::string config =
-      " <fusion_power>300</fusion_power> "
+  std::string config = common_config + 
       " <TBR>1.00</TBR> "
-      " <reserve_inventory>6.0</reserve_inventory>"
-      " <sequestered_equilibrium>2.121</sequestered_equilibrium>"
-      " <fuel_incommod>Tritium</fuel_incommod>"
-      " <blanket_incommod>Enriched_Lithium</blanket_incommod>"
-      " <blanket_outcommod>Depleted_Lithium</blanket_outcommod>"
-      " <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
-      " <blanket_size>1000</blanket_size>"
-      " <he3_outcommod>Helium_3</he3_outcommod>";
+      " <fuel_incommod>Tritium</fuel_incommod>";
 
 
   int simdur = 2;
@@ -236,30 +216,15 @@ TEST_F(FusionPowerPlantTest, DecayInventoryExtractHelium) {
 TEST_F(FusionPowerPlantTest, Li7EdgeCases) {
   // Test that FPP does the same thing regardless of Li-7 Contribution
 
-  std::string config_1 =
-      " <fusion_power>300</fusion_power> "
+  std::string config_1 = common_config +
       " <TBR>1.08</TBR> "
-      " <reserve_inventory>6.0</reserve_inventory>"
-      " <sequestered_equilibrium>2.121</sequestered_equilibrium>"
       " <fuel_incommod>Tritium</fuel_incommod>"
-      " <blanket_incommod>Enriched_Lithium</blanket_incommod>"
-      " <blanket_outcommod>Depleted_Lithium</blanket_outcommod>"
-      " <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
-      " <blanket_size>1000</blanket_size>"
       " <he3_outcommod>Helium_3</he3_outcommod>"
       " <Li7_contribution>0.00</Li7_contribution>";
 
-  std::string config_2 =
-      " <fusion_power>300</fusion_power> "
+  std::string config_2 = common_config +
       " <TBR>1.08</TBR> "
-      " <reserve_inventory>6.0</reserve_inventory>"
-      " <sequestered_equilibrium>2.121</sequestered_equilibrium>"
       " <fuel_incommod>Tritium</fuel_incommod>"
-      " <blanket_incommod>Enriched_Lithium</blanket_incommod>"
-      " <blanket_outcommod>Depleted_Lithium</blanket_outcommod>"
-      " <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
-      " <blanket_size>1000</blanket_size>"
-      " <he3_outcommod>Helium_3</he3_outcommod>"
       " <Li7_contribution>1.00</Li7_contribution>";
 
   int simdur = 2;
@@ -301,17 +266,9 @@ TEST_F(FusionPowerPlantTest, Li7EdgeCases) {
 TEST_F(FusionPowerPlantTest, OperateReactorSustainingTBR) {
   // Test behaviors of the OperateReactor function here
 
-  std::string config =
-      " <fusion_power>300</fusion_power> "
+  std::string config = common_config +
       " <TBR>1.08</TBR> "
-      " <reserve_inventory>6.0</reserve_inventory>"
-      " <sequestered_equilibrium>2.121</sequestered_equilibrium>"
-      " <fuel_incommod>Tritium</fuel_incommod>"
-      " <blanket_incommod>Enriched_Lithium</blanket_incommod>"
-      " <blanket_outcommod>Depleted_Lithium</blanket_outcommod>"
-      " <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
-      " <blanket_size>1000</blanket_size>"
-      " <he3_outcommod>Helium_3</he3_outcommod>";
+      " <fuel_incommod>Tritium</fuel_incommod>";
 
   int simdur = 10;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:FusionPowerPlant"), config, simdur);
@@ -338,17 +295,9 @@ TEST_F(FusionPowerPlantTest, EnterNotifyInitialFillDefault) {
   // Test default fill behavior of EnterNotify. Specifically look that
   // tritium is transacted in the appropriate amounts.
 
-  std::string config =
-      " <fusion_power>300</fusion_power> "
+  std::string config = common_config +
       " <TBR>1.00</TBR> "
-      " <reserve_inventory>6.0</reserve_inventory>"
-      " <sequestered_equilibrium>2.121</sequestered_equilibrium>"
-      " <fuel_incommod>Tritium</fuel_incommod>"
-      " <blanket_incommod>Enriched_Lithium</blanket_incommod>"
-      " <blanket_outcommod>Depleted_Lithium</blanket_outcommod>"
-      " <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
-      " <blanket_size>1000</blanket_size>"
-      " <he3_outcommod>Helium_3</he3_outcommod>";
+      " <fuel_incommod>Tritium</fuel_incommod>";
 
   int simdur = 2;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:FusionPowerPlant"), config, simdur);
@@ -379,20 +328,12 @@ TEST_F(FusionPowerPlantTest, EnterNotifyInitialFillDefault) {
 TEST_F(FusionPowerPlantTest, EnterNotifyScheduleFill) {
   // Test schedule fill behavior of EnterNotify.
 
-  std::string config =
-      " <fusion_power>300</fusion_power> "
+  std::string config = common_config +
       " <TBR>1.00</TBR> "
-      " <reserve_inventory>6.0</reserve_inventory>"
-      " <sequestered_equilibrium>2.121</sequestered_equilibrium>"
       " <fuel_incommod>Tritium</fuel_incommod>"
-      " <blanket_incommod>Enriched_Lithium</blanket_incommod>"
-      " <blanket_outcommod>Depleted_Lithium</blanket_outcommod>"
-      " <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
-      " <blanket_size>1000</blanket_size>"
       " <buy_quantity>0.1</buy_quantity>"
       " <buy_frequency>1</buy_frequency>"
-      " <refuel_mode>schedule</refuel_mode>"
-      " <he3_outcommod>Helium_3</he3_outcommod>";
+      " <refuel_mode>schedule</refuel_mode>";
 
   int simdur = 2;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:FusionPowerPlant"), config, simdur);
@@ -436,20 +377,12 @@ TEST_F(FusionPowerPlantTest, EnterNotifyScheduleFill) {
 TEST_F(FusionPowerPlantTest, EnterNotifyInvalidFill) {
   // Test catch for invalid fill behavior keyword in EnterNotify.
 
-  std::string config =
-      " <fusion_power>300</fusion_power> "
+  std::string config = common_config +
       " <TBR>1.00</TBR> "
-      " <reserve_inventory>6.0</reserve_inventory>"
-      " <sequestered_equilibrium>2.121</sequestered_equilibrium>"
       " <fuel_incommod>Tritium</fuel_incommod>"
-      " <blanket_incommod>Enriched_Lithium</blanket_incommod>"
-      " <blanket_outcommod>Depleted_Lithium</blanket_outcommod>"
-      " <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
-      " <blanket_size>1000</blanket_size>"
       " <buy_quantity>0.1</buy_quantity>"
       " <buy_frequency>1</buy_frequency>"
-      " <refuel_mode>kjnsfdhn</refuel_mode>"
-      " <he3_outcommod>Helium_3</he3_outcommod>";
+      " <refuel_mode>kjnsfdhn</refuel_mode>";
 
   int simdur = 2;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:FusionPowerPlant"), config, simdur);
@@ -467,17 +400,9 @@ TEST_F(FusionPowerPlantTest, EnterNotifyInvalidFill) {
 TEST_F(FusionPowerPlantTest, EnterNotifySellPolicy) {
   // Test sell policy behavior of enter notify.
 
-  std::string config =
-      " <fusion_power>300</fusion_power> "
+  std::string config = common_config +
       " <TBR>1.30</TBR> "
-      " <reserve_inventory>6.0</reserve_inventory>"
-      " <sequestered_equilibrium>2.121</sequestered_equilibrium>"
-      " <fuel_incommod>Tritium</fuel_incommod>"
-      " <blanket_incommod>Enriched_Lithium</blanket_incommod>"
-      " <blanket_outcommod>Depleted_Lithium</blanket_outcommod>"
-      " <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
-      " <blanket_size>1000</blanket_size>"
-      " <he3_outcommod>Helium_3</he3_outcommod>";
+      " <fuel_incommod>Tritium</fuel_incommod>";
 
   int simdur = 10;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:FusionPowerPlant"), config, simdur);
