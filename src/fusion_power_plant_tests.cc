@@ -58,6 +58,15 @@ cyclus::MockSim InitializeSim(std::string config, int simdur) {
   return sim;
 }
 
+QueryResult TimeInventoryQuery(cyclus::MockSim& sim, std::string time) {
+  std::vector<Cond> conds;
+
+  conds.push_back(Cond("Time", "==", time));
+  QueryResult qr = sim.db().Query("FPPInventories", &conds);
+
+  return qr;
+}
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 class FusionPowerPlantTest : public ::testing::Test {
  protected:
@@ -86,6 +95,7 @@ TEST_F(FusionPowerPlantTest, Print) {
   // Test FusionPowerPlant specific aspects of the print method here
 }
 
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(FusionPowerPlantTest, Tock) {
   EXPECT_NO_THROW(facility->Tock());
@@ -109,9 +119,7 @@ TEST_F(FusionPowerPlantTest, BlanketCycle) {
 
   int id = sim.Run();
 
-  std::vector<Cond> conds;
-  conds.push_back(Cond("Time", "==", std::string("3")));
-  QueryResult qr = sim.db().Query("FPPInventories", &conds);
+  QueryResult qr = TimeInventoryQuery(sim, "3");
   double waste = qr.GetVal<double>("BlanketWaste");
 
   // We expect there to be some amount of waste greater than 0.0 kg
@@ -167,9 +175,7 @@ TEST_F(FusionPowerPlantTest, WrongFuelStartup) {
 
   // Under these conditions, we expect the reactor to never start, meaning it
   // never sequesteres tritium.
-  std::vector<Cond> conds;
-  conds.push_back(Cond("Time", "==", std::string("2")));
-  QueryResult qr = sim.db().Query("FPPInventories", &conds);
+  QueryResult qr = TimeInventoryQuery(sim, "2");
   double seq_trit = qr.GetVal<double>("TritiumSequestered");
 
   EXPECT_EQ(0, seq_trit);
@@ -193,9 +199,7 @@ TEST_F(FusionPowerPlantTest, DecayInventoryExtractHelium) {
   
   int id = sim.Run();
 
-  std::vector<Cond> conds;
-  conds.push_back(Cond("Time", "==", std::string("1")));
-  QueryResult qr = sim.db().Query("FPPInventories", &conds);
+  QueryResult qr = TimeInventoryQuery(sim, "1");
   double he3 = qr.GetVal<double>("HeliumExcess");
 
   double reserve = 6.0;
@@ -237,14 +241,10 @@ TEST_F(FusionPowerPlantTest, Li7EdgeCases) {
 
   int id_2 = sim_2.Run();
 
-  std::vector<Cond> conds_1;
-  conds_1.push_back(Cond("Time", "==", std::string("1")));
-  QueryResult qr_1 = sim_1.db().Query("FPPInventories", &conds_1);
+  QueryResult qr_1 = TimeInventoryQuery(sim_1, "1");
   double excess_1 = qr_1.GetVal<double>("TritiumExcess");
 
-  std::vector<Cond> conds_2;
-  conds_2.push_back(Cond("Time", "==", std::string("1")));
-  QueryResult qr_2 = sim_2.db().Query("FPPInventories", &conds_2);
+  QueryResult qr_2 = TimeInventoryQuery(sim_2, "1");
   double excess_2 = qr_2.GetVal<double>("TritiumExcess");
 
   EXPECT_NEAR(excess_1, excess_2, 1e-3);
@@ -263,10 +263,8 @@ TEST_F(FusionPowerPlantTest, OperateReactorSustainingTBR) {
 
   int id = sim.Run();
 
-  std::vector<Cond> conds_2;
-  conds_2.push_back(Cond("Time", "==", std::string("9")));
-  QueryResult qr_2 = sim.db().Query("FPPInventories", &conds_2);
-  double excess_quantity = qr_2.GetVal<double>("TritiumExcess");
+  QueryResult qr = TimeInventoryQuery(sim, "9");
+  double excess_quantity = qr.GetVal<double>("TritiumExcess");
 
   // We should have extra Tritium
   EXPECT_LT(0, excess_quantity);
