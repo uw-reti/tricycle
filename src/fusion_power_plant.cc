@@ -305,3 +305,4 @@ extern "C" cyclus::Agent* ConstructFusionPowerPlant(cyclus::Context* ctx) {
 }
 
 }  // namespace tricycle
+

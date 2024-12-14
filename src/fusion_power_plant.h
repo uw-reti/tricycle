@@ -280,3 +280,4 @@ class FusionPowerPlant : public cyclus::Facility  {
 }  // namespace tricycle
 
 #endif  // CYCLUS_TRICYCLE_FUSION_POWER_PLANT_H_
+
