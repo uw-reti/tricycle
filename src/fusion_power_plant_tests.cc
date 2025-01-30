@@ -96,13 +96,13 @@ TEST_F(FusionPowerPlantTest, Print) {
 }
 
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(FusionPowerPlantTest, Tock) {
   EXPECT_NO_THROW(facility->Tock());
   // Test FusionPowerPlant specific behaviors of the Tock function here
 }
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(FusionPowerPlantTest, BlanketCycle) {
   // Test that the agent correctly removes and replaces a portion of the
   // blanket every blanket turnover period. The default period is 1 timestep
@@ -154,7 +154,7 @@ TEST_F(FusionPowerPlantTest, BlanketOverCycle) {
   EXPECT_NO_THROW(sim.Run());
 }
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(FusionPowerPlantTest, WrongFuelStartup) {
   // Test that the agent can identify that it has not recieved the correct fuel
   // to startup, and will appropriately not run.
@@ -181,7 +181,7 @@ TEST_F(FusionPowerPlantTest, WrongFuelStartup) {
   EXPECT_EQ(0, seq_trit);
 }
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(FusionPowerPlantTest, DecayInventoryExtractHelium) {
   // Test behaviors of the DecayInventory and ExtractHelium function here
   EXPECT_NO_THROW(facility->DecayInventories());
@@ -216,7 +216,7 @@ TEST_F(FusionPowerPlantTest, DecayInventoryExtractHelium) {
   EXPECT_NEAR(expected_decay, he3, 1e-6);
 }
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(FusionPowerPlantTest, Li7EdgeCases) {
   // Test that FPP does the same thing regardless of Li-7 Contribution
 
@@ -250,7 +250,7 @@ TEST_F(FusionPowerPlantTest, Li7EdgeCases) {
   EXPECT_NEAR(excess_1, excess_2, 1e-3);
 }
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(FusionPowerPlantTest, OperateReactorSustainingTBR) {
   // Test behaviors of the OperateReactor function here
 
@@ -270,7 +270,7 @@ TEST_F(FusionPowerPlantTest, OperateReactorSustainingTBR) {
   EXPECT_LT(0, excess_quantity);
 }
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(FusionPowerPlantTest, EnterNotifyInitialFillDefault) {
   // Test default fill behavior of EnterNotify. Specifically look that
   // tritium is transacted in the appropriate amounts.
@@ -298,7 +298,7 @@ TEST_F(FusionPowerPlantTest, EnterNotifyInitialFillDefault) {
   EXPECT_EQ(8.121, quantity);
 }
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(FusionPowerPlantTest, EnterNotifyScheduleFill) {
   // Test schedule fill behavior of EnterNotify.
 
@@ -341,7 +341,7 @@ TEST_F(FusionPowerPlantTest, EnterNotifyScheduleFill) {
   EXPECT_EQ(0.1, quantity_2);
 }
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(FusionPowerPlantTest, EnterNotifyInvalidFill) {
   // Test catch for invalid fill behavior keyword in EnterNotify.
 
@@ -357,8 +357,8 @@ TEST_F(FusionPowerPlantTest, EnterNotifyInvalidFill) {
 
   EXPECT_THROW(int id = sim.Run(), cyclus::KeyError);
 }
-// Unfinished
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(FusionPowerPlantTest, EnterNotifySellPolicy) {
   // Test sell policy behavior of enter notify.
 
@@ -388,7 +388,7 @@ TEST_F(FusionPowerPlantTest, EnterNotifySellPolicy) {
 
 
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Do Not Touch! Below section required for connection with Cyclus
 cyclus::Agent* FusionPowerPlantConstructor(cyclus::Context* ctx) {
   return new FusionPowerPlant(ctx);
