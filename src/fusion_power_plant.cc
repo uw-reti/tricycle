@@ -102,7 +102,6 @@ void FusionPowerPlant::EnterNotify() {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FusionPowerPlant::Tick() {
-  
 
   if (ReadyToOperate()) {
     fuel_startup_policy.Stop();
@@ -206,19 +205,17 @@ bool FusionPowerPlant::ReadyToOperate() {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FusionPowerPlant::LoadCore() {
   
+  // Squash runs into issues when you give it zero, so we need to check frist
+  if (SequesteredTritiumGap() > cyclus::eps_rsrc()) { 
+    sequestered_tritium->Absorb(tritium_storage.Pop(SequesteredTritiumGap()));
+  }
+
   // Force decay of storage_inventory to avoid it resetting dt to 0
   tritium_storage.Decay();
   ExtractHelium();
 
   CycleBlanket();
-
-  // Squash runs into issues when you give it zero, so we need to check frist
-  if (SequesteredTritiumGap() > cyclus::eps_rsrc()) { 
-    sequestered_tritium->Absorb(tritium_storage.Pop(SequesteredTritiumGap()));
-  }
   incore_fuel->Absorb(tritium_storage.Pop(fuel_usage_mass));
-
-  
 
 }
 
