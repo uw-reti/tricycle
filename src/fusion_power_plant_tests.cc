@@ -210,7 +210,7 @@ TEST_F(FusionPowerPlantTest, DecayInventoryExtractHelium) {
   double lambda = 2.57208504984001213e-09; 
   double t = 2629846;
 
-  double expected_decay = reserve - reserve * std::pow(2, -lambda * t);
+  double expected_decay = init_quant - init_quant * std::pow(2, -lambda * t);
 
   EXPECT_NEAR(expected_decay, he3, 1e-6);
 }

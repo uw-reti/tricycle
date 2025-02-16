@@ -107,6 +107,16 @@ class FusionPowerPlant : public cyclus::Facility  {
   double sequestered_equilibrium; 
 
   #pragma cyclus var { \
+    "default": 0.9, \
+    "doc": "Fraction of desired startup tritium inventory required. ", \
+    "tooltip": "Gives flexibility accounting for decay", \
+    "units": "Dimensionless", \
+    "range": [0, 1], \
+    "uilabel": "Tritium Startup Fraction" \
+  }
+  double tritium_startup_fraction; 
+
+  #pragma cyclus var { \
     "doc": "Fresh fuel commodity", \
     "tooltip": "Name of fuel commodity requested", \
     "uilabel": "Fuel input commodity" \

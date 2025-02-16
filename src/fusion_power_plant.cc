@@ -103,6 +103,9 @@ void FusionPowerPlant::EnterNotify() {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FusionPowerPlant::Tick() {
 
+  DecayInventories();
+  ExtractHelium();
+
   if (ReadyToOperate()) {
     fuel_startup_policy.Stop();
     fuel_refill_policy.Start();
@@ -114,9 +117,6 @@ void FusionPowerPlant::Tick() {
     // Some way of leaving a record of what is going wrong is helpful info I think
     // Use the cyclus logger
   }
-  
-  DecayInventories();
-  ExtractHelium();
   
   double excess_tritium = std::max(tritium_storage.quantity() - 
                                   (reserve_inventory + SequesteredTritiumGap())
@@ -188,6 +188,7 @@ bool FusionPowerPlant::ReadyToOperate() {
   double required_storage_inventory = SequesteredTritiumGap();
   if (sequestered_tritium->quantity() < cyclus::eps_rsrc()) {
     required_storage_inventory += reserve_inventory;
+    required_storage_inventory *= tritium_startup_fraction;
   } else {
     required_storage_inventory += fuel_usage_mass;
   }
@@ -209,10 +210,6 @@ void FusionPowerPlant::LoadCore() {
   if (SequesteredTritiumGap() > cyclus::eps_rsrc()) { 
     sequestered_tritium->Absorb(tritium_storage.Pop(SequesteredTritiumGap()));
   }
-
-  // Force decay of storage_inventory to avoid it resetting dt to 0
-  tritium_storage.Decay();
-  ExtractHelium();
 
   CycleBlanket();
   incore_fuel->Absorb(tritium_storage.Pop(fuel_usage_mass));
