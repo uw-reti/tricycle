@@ -110,7 +110,7 @@ class FusionPowerPlant : public cyclus::Facility  {
     "default": 0.9, \
     "doc": "Fraction of desired startup tritium inventory required. ", \
     "tooltip": "Fraction of reserve required for startup", \
-    "units": "Dimensionless", \
+    "units": "dimensionless", \
     "range": [0, 1], \
     "uilabel": "Tritium Startup Fraction" \
   }
