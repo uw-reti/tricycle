@@ -108,7 +108,7 @@ class FusionPowerPlant : public cyclus::Facility  {
 
   #pragma cyclus var { \
     "default": 0.9, \
-    "doc": "Fraction of desired startup tritium inventory required. ", \
+    "doc": "Fraction of desired startup ( = reserve + sequestered) tritium inventory required for initial startup. ", \
     "tooltip": "Fraction of reserve required for startup", \
     "units": "dimensionless", \
     "range": [0, 1], \
