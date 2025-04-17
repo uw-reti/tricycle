@@ -1,0 +1,119 @@
+<simulation>
+  <control>
+    <duration>480</duration>
+    <startmonth>1</startmonth>
+    <startyear>2000</startyear>
+    <decay>lazy</decay>
+    <explicit_inventory>true</explicit_inventory>
+  </control>
+
+  <archetypes>
+    <spec><lib>tricycle</lib><name>FusionPowerPlant</name></spec>
+    <spec><lib>cycamore</lib><name>DeployInst</name></spec>
+    <spec><lib>cycamore</lib><name>Source</name></spec>
+    <spec><lib>cycamore</lib><name>Storage</name></spec>
+    <spec><lib>cycamore</lib><name>Sink</name></spec>
+    <spec><lib>agents</lib><name>NullInst</name></spec>
+    <spec><lib>agents</lib><name>NullRegion</name></spec>
+  </archetypes>
+
+    <commodity>
+    <name>Tritium</name>
+    <solution_priority>1.0</solution_priority>
+  </commodity>
+  <commodity>
+    <name>Enriched_Lithium</name>
+    <solution_priority>1.0</solution_priority>
+  </commodity>
+  <commodity>
+    <name>Helium_3</name>
+    <solution_priority>1.0</solution_priority>
+  </commodity>
+
+   <recipe>
+    <name>Lithium</name>
+    <basis>atom</basis>
+    <nuclide>
+      <id>30060000</id>
+      <comp>0.3</comp>
+    </nuclide>
+    <nuclide>
+      <id>30070000</id>
+      <comp>0.7</comp>
+    </nuclide>
+  </recipe>
+
+    <recipe>
+    <name>Tritium</name>
+    <basis>atom</basis>
+    <nuclide>
+        <id>10030000</id>
+        <comp>1</comp>
+    </nuclide>
+  </recipe>
+
+<facility>
+    <name>PlantOne</name>
+      <config>
+      <FusionPowerPlant>
+        <fusion_power>100</fusion_power>
+        <TBR>1.1</TBR>
+	     <reserve_inventory>6.0</reserve_inventory>
+     	<!--<startup_inventory>8.121</startup_inventory> -->
+        <sequestered_equilibrium>2.121</sequestered_equilibrium>
+        <fuel_incommod>Tritium</fuel_incommod>
+        <blanket_incommod>Enriched_Lithium</blanket_incommod>
+        <blanket_inrecipe>Lithium</blanket_inrecipe>
+        <blanket_size>1000</blanket_size>
+        <he3_outcommod>Helium_3</he3_outcommod>
+	    <Li7_contribution>1.0</Li7_contribution>
+        <refuel_mode>fill</refuel_mode>
+        <buy_frequency>5</buy_frequency>
+	     <blanket_outcommod>Tritium</blanket_outcommod>
+        <blanket_turnover_fraction>0.1</blanket_turnover_fraction>
+        <blanket_turnover_frequency>6</blanket_turnover_frequency>
+      </FusionPowerPlant>
+    </config>
+  </facility>
+
+  <facility>
+    <name>One Source</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>Tritium</outrecipe>
+            <throughput>2.133</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <region>
+    <name>OneRegion</name>
+    <config> <NullRegion/> </config>
+    <institution>
+      <name>OneInst</name>
+
+      <config> 
+        <DeployInst>
+          <prototypes>
+            <val>One Source</val>
+            <val>PlantOne</val>
+          </prototypes>
+          <build_times>
+            <val>1</val>
+            <val>1</val>
+            </build_times>
+          <lifetimes>
+            <val>360</val>
+            <val>480</val>
+          </lifetimes>
+          <n_build>
+            <val>1</val>
+            <val>1</val>
+        </n_build> 
+      </DeployInst> 
+      </config>
+    </institution>
+  </region>
+
+</simulation>
