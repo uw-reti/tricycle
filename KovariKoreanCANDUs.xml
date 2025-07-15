@@ -1,0 +1,47 @@
+<myFPPs>
+  
+<facility>
+    <name>Wolsong 1</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.014235</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Wolsong 2</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.014192</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Wolsong 3</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.01482</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Wolsong 4</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.014907</throughput>
+        </Source>
+    </config>
+  </facility>
+
+</myFacilities>

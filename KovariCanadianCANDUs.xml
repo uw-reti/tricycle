@@ -1,0 +1,450 @@
+<myFPPs>
+
+  <facility>
+   <name>Storage</name>
+    <config>
+      <Storage>
+        <in_commods>
+            <val>Tritium</val>
+        </in_commods>
+        <out_commods>
+            <val>TritiumFuel</val>
+        </out_commods>
+        <throughput>1e299</throughput>
+      </Storage>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Bruce A1</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.016467</throughput>
+        </Source>
+    </config>
+  </facility>
+
+    <facility>
+    <name>Bruce A2</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.016467</throughput>
+        </Source>
+    </config>
+  </facility>
+
+    <facility>
+    <name>Bruce A3</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.01625</throughput>
+        </Source>
+    </config>
+  </facility>
+
+    <facility>
+    <name>Bruce A4</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.01625</throughput>
+        </Source>
+    </config>
+  </facility>
+
+    <facility>
+    <name>Bruce B5</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.017702</throughput>
+        </Source>
+    </config>
+  </facility>
+
+    <facility>
+    <name>Bruce B6</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.017702</throughput>
+        </Source>
+    </config>
+  </facility>
+
+    <facility>
+    <name>Bruce B7</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.017702</throughput>
+        </Source>
+    </config>
+  </facility>
+
+    <facility>
+    <name>Bruce B8</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.017702</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <!--(PI) Stands for Post Idle-->
+    <facility>
+    <name>Bruce A3 (PI)</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.01625</throughput>
+        </Source>
+    </config>
+  </facility>
+
+    <facility>
+    <name>Bruce A4 (PI)</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.01625</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <!--(R) Stands for Refurbished-->
+  <facility>
+    <name>Bruce A1 (R)</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.016467</throughput>
+        </Source>
+    </config>
+  </facility>
+
+    <facility>
+    <name>Bruce A2 (R)</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.016476</throughput>
+        </Source>
+    </config>
+  </facility>
+
+    <facility>
+    <name>Bruce A3 (R)</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.01625</throughput>
+        </Source>
+    </config>
+  </facility>
+
+    <facility>
+    <name>Bruce A4 (R)</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.01625</throughput>
+        </Source>
+    </config>
+  </facility>
+
+    <facility>
+    <name>Bruce B5 (R)</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.017702</throughput>
+        </Source>
+    </config>
+  </facility>
+
+    <facility>
+    <name>Bruce B6 (R)</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.017702</throughput>
+        </Source>
+    </config>
+  </facility>
+
+    <facility>
+    <name>Bruce B7 (R)</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.017702</throughput>
+        </Source>
+    </config>
+  </facility>
+
+    <facility>
+    <name>Bruce B8 (R)</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.017702</throughput>
+        </Source>
+    </config>
+  </facility>
+
+
+  <facility>
+    <name>Darlington 1</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.019023</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Darlington 2</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.019023</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Darlington 3</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.019023</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Darlington 4</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.019023</throughput>
+        </Source>
+    </config>
+  </facility>
+
+    <facility>
+    <name>Darlington 1 (R)</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.019023</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Darlington 2 (R)</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.019023</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Darlington 3 (R)</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.019023</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Darlington 4 (R)</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.019023</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Pickering A1</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.011158</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Pickering A2</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.011158</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Pickering A3</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.011158</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Pickering A4</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.011158</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Pickering B5</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.01118</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Pickering B6</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.01118</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Pickering B7</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.01118</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Pickering B8</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.01118</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Point Lepreau 1</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.0143</throughput>
+        </Source>
+    </config>
+  </facility>
+
+    <facility>
+    <name>Point Lepreau 1 (R)</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.0143</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Gentilly 1</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.005417</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Gentilly 2</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.013758</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Douglas Point 1</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.004463</throughput>
+        </Source>
+    </config>
+  </facility>
+
+</myFacilities>
