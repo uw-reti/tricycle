@@ -45,15 +45,7 @@ class DecayStorage : public cyclus::Facility  {
   #pragma cyclus
 
   #pragma cyclus note {"doc": "A decaystorage facility is provided as a skeleton " \
-                              "for the design of new facility agents."}
-
-  #pragma cyclus var { \
-  "doc": "Maximum amount of material that can be transferred in or out each time step", \
-  "tooltip": "Maximum amount of material that can be transferred in or out each time step", \
-  "units": "kg", \
-  "uilabel": "Maximum Throughput" \
-  }
-  double throughput;
+                              "for the design of new facility agents."}\
 
   #pragma cyclus var { \
   "tooltip": "Storage input commodity", \
@@ -70,6 +62,14 @@ class DecayStorage : public cyclus::Facility  {
   "uitype": "outcommodity", \
   }
   std::string outcommod;
+
+  #pragma cyclus var { \
+  "doc": "Maximum amount of material that can be transferred in or out each time step", \
+  "tooltip": "Maximum amount of material that can be transferred in or out each time step", \
+  "units": "kg", \
+  "uilabel": "Maximum Throughput" \
+  }
+  double throughput;
 
   #pragma cyclus var {"tooltip":"Buffer for handling tritium material to be used in reactor"}
   cyclus::toolkit::ResBuf<cyclus::Material> input;
