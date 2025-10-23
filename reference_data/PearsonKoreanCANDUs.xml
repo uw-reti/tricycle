@@ -1,0 +1,87 @@
+<candus>
+
+<facility>
+    <name>Wolsong 1</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.01625</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Wolsong 2</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.01625</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Wolsong 3</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.01625</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Wolsong 4</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.01625</throughput>
+        </Source>
+    </config>
+  </facility>
+
+<region>
+    <name>Korea</name>
+    <config> <NullRegion /> </config>
+    <institution>
+      <name>WTRF</name>
+      <config> 
+         <DeployInst> 
+          <prototypes>
+            <!--Wolsong-->
+            <val>Wolsong 1</val>
+            <val>Wolsong 2</val>
+            <val>Wolsong 3</val>
+            <val>Wolsong 4</val>
+          </prototypes>
+          <build_times>
+            <!--Wolsong-->
+            <val>5</val>
+            <val>175</val>
+            <val>187</val>
+            <val>202</val>
+          </build_times>
+          <lifetimes>
+           <!--Wolsong-->
+            <val>441</val>
+            <val>361</val>
+            <val>361</val>
+            <val>361</val>
+          </lifetimes>
+          <n_build>
+		    <!--Wolsong-->
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+          </n_build>
+        </DeployInst>  
+      </config>
+    </institution>
+  </region>
+
+</candus>
