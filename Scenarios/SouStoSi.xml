@@ -1,0 +1,113 @@
+<simulation>
+<control>
+<duration>120</duration>
+<startmonth>1</startmonth>
+<startyear>2018</startyear>
+<decay>never</decay>
+<explicit_inventory>true</explicit_inventory>
+</control>
+
+<archetypes>
+<spec><lib>cycamore</lib><name>Source</name></spec>
+<spec><lib>cycamore</lib><name>Storage</name></spec>
+<spec><lib>cycamore</lib><name>Sink</name></spec>
+<spec><lib>agents</lib><name>NullRegion</name></spec>
+<spec><lib>agents</lib><name>NullInst</name></spec>
+</archetypes>
+
+<commodity>
+    <name>li_ore</name>
+    <solution_priority>1.0</solution_priority>
+</commodity>
+<commodity>
+    <name>enr_li</name>
+    <solution_priority>1.0</solution_priority>
+</commodity>
+<commodity>
+    <name>nat_li</name>
+    <solution_priority>1.0</solution_priority>
+</commodity>
+
+
+<facility>
+    <name>Li_Source</name>
+    <config>
+        <Source>
+            <outcommod>li_ore</outcommod>
+        </Source>
+    </config>
+</facility>
+
+<facility>
+    <name>Li_Storage</name>
+    <config>
+        <Storage>
+            <in_commods><val>li_ore</val></in_commods>
+            <out_commods><val>nat_li</val></out_commods>
+            <in_recipe>nat_li</in_recipe>
+            <throughput>10</throughput>
+        </Storage>
+    </config>
+</facility>
+
+<facility>
+    <name>Li_Sink</name>
+    <config>
+        <Sink>
+            <in_commods>
+                <val>nat_li</val>
+            </in_commods>
+        </Sink>
+    </config>
+</facility>
+
+<recipe>
+    <name>nat_li</name>
+    <basis>atom</basis>
+    <nuclide>
+        <id>30060000</id>
+        <comp>0.075</comp>
+    </nuclide>
+    <nuclide>
+        <id>30070000</id>
+        <comp>0.925</comp>
+    </nuclide>
+</recipe>
+
+<recipe>
+    <name>enr_li</name>
+    <basis>atom</basis>
+ <nuclide>
+        <id>30060000</id>
+        <comp>0.3</comp>
+    </nuclide>
+    <nuclide>
+        <id>30070000</id>
+        <comp>0.7</comp>
+    </nuclide>
+</recipe>
+
+<region>
+    <name>Region_One</name>
+    <config><NullRegion/></config>
+    <institution>
+        <initialfacilitylist>
+            <entry>
+                <prototype>Li_Source</prototype>
+                <number>1</number>
+            </entry>
+            <entry>
+                <prototype>Li_Storage</prototype>
+                <number>1</number>
+            </entry>
+            <entry>
+                <prototype>Li_Sink</prototype>
+                <number>1</number>
+            </entry>
+        </initialfacilitylist>
+        <name>National Separation</name>
+        <config><NullInst/></config>
+    </institution>
+</region>
+
+</simulation>
