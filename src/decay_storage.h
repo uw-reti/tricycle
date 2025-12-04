@@ -7,32 +7,33 @@
 
 namespace decaystorage {
 
-/// @class DecaystorageFacility
+/// @class DecayStorage
 ///
-/// This Facility is intended
-/// as a skeleton to guide the implementation of new Facility
-/// agents.
-/// The DecaystorageFacility class inherits from the Facility class and is
-/// dynamically loaded by the Agent class when requested.
+/// The DecayStorage facility manages tritium storage with radioactive decay
+/// and helium-3 extraction. It accepts tritium material, allows it to decay
+/// over time, and periodically extracts the helium-3 that forms from tritium
+/// decay for separate storage and output.
 ///
 /// @section intro Introduction
-/// Place an introduction to the agent here.
+/// DecayStorage is designed for fuel cycle simulations involving tritium
+/// breeding and handling. It accounts for the radioactive decay of tritium
+/// and enables tracking of both the remaining tritium and accumulated
+/// helium-3 inventories.
 ///
 /// @section agentparams Agent Parameters
-/// Place a description of the required input parameters which define the
-/// agent implementation.
-///
-/// @section optionalparams Optional Parameters
-/// Place a description of the optional input parameters to define the
-/// agent implementation.
+/// - incommod: Input commodity name for accepting tritium material
+/// - outcommod: Output commodity name for offering helium-3
 ///
 /// @section detailed Detailed Behavior
-/// Place a description of the detailed behavior of the agent. Consider
-/// describing the behavior at the tick and tock as well as the behavior
-/// upon sending and receiving materials and messages.
+/// Each time step, the facility:
+/// - Tick: Decays all tritium inventory, then extracts accumulated helium-3
+/// - Tock: Transfers incoming material from input buffer to tritium storage
+///         and records current inventories
+/// The tritium_storage buffer uses bulk storage mode for automatic material
+/// combining, and helium-3 is continuously separated and stored independently.
 class DecayStorage : public cyclus::Facility  {
  public:
-  /// Constructor for DecaystorageFacility Class
+  /// Constructor for DecayStorage Class
   /// @param ctx the cyclus context for access to simulation-wide parameters
   explicit DecayStorage(cyclus::Context* ctx);
 
@@ -44,62 +45,63 @@ class DecayStorage : public cyclus::Facility  {
 
   #pragma cyclus
 
-  #pragma cyclus note {"doc": "A decaystorage facility is provided as a skeleton " \
-                              "for the design of new facility agents."}
+  #pragma cyclus note {"doc": "A DecayStorage facility manages tritium storage " \
+                              "with radioactive decay and helium-3 extraction."}
 
 
 
   #pragma cyclus var { \
-  "tooltip": "Storage input commodity", \
-  "doc": "Input commodity on which Storage requests material.", \
+  "tooltip": "Tritium input commodity", \
+  "doc": "Input commodity on which DecayStorage requests tritium material.", \
   "uilabel": "Input Commodity", \
   "uitype": "incommodity", \
   }
   std::string incommod;
 
   #pragma cyclus var { \
-  "tooltip": "Storage output commodity", \
-  "doc": "Output commodity on which Storage offers material.", \
+  "tooltip": "Helium-3 output commodity", \
+  "doc": "Output commodity on which DecayStorage offers extracted helium-3.", \
   "uilabel": "Output Commodity", \
   "uitype": "outcommodity", \
   }
   std::string outcommod;
 
-  #pragma cyclus var {"tooltip":"Buffer for handling tritium material to be used in reactor"}
+  #pragma cyclus var {"tooltip":"Input buffer for incoming tritium material"}
   cyclus::toolkit::ResBuf<cyclus::Material> input;
 
-  #pragma cyclus var {"tooltip":"Buffer for handling tritium material to be used in reactor"}
+  #pragma cyclus var {"tooltip":"Bulk storage buffer for tritium inventory with decay"}
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_storage{true};
 
-  #pragma cyclus var {"tooltip":"Buffer for handling tritium material to be used in reactor"}
+  #pragma cyclus var {"tooltip":"Storage buffer for extracted helium-3"}
   cyclus::toolkit::ResBuf<cyclus::Material> helium_storage;
 
   #pragma cyclus var {"tooltip":"Tracker to handle on-hand tritium"}
   cyclus::toolkit::TotalInvTracker fuel_tracker;
 
-  /// a policy for requesting material
+  /// Policy for requesting tritium material
   cyclus::toolkit::MatlBuyPolicy buy_policy;
 
-  /// a policy for sending material
+  /// Policy for offering helium-3 material
   cyclus::toolkit::MatlSellPolicy sell_policy;
 
 
 
-  /// Set up policies and buffers:
+  /// Set up policies and buffers
   virtual void EnterNotify();
 
-  /// A verbose printer for the DecaystorageFacility
+  /// A verbose printer for the DecayStorage facility
   virtual std::string str();
 
-  /// The handleTick function specific to the DecaystorageFacility.
-  /// @param time the time of the tick
+  /// Decays tritium inventory and extracts helium-3 each time step
   virtual void Tick();
 
-  /// The handleTick function specific to the DecaystorageFacility.
-  /// @param time the time of the tock
+  /// Transfers incoming material to storage and records inventories
   virtual void Tock();
 
+  /// Extracts helium-3 from decayed tritium and stores it separately
   void ExtractHelium(cyclus::toolkit::ResBuf<cyclus::Material> &inventory);
+  
+  /// Records current tritium and helium-3 inventory quantities
   void RecordInventories(double tritium, double helium);
 
 
