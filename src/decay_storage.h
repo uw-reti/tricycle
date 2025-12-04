@@ -69,7 +69,7 @@ class DecayStorage : public cyclus::Facility  {
   cyclus::toolkit::ResBuf<cyclus::Material> input;
 
   #pragma cyclus var {"tooltip":"Buffer for handling tritium material to be used in reactor"}
-  cyclus::toolkit::ResBuf<cyclus::Material> tritium_storage;
+  cyclus::toolkit::ResBuf<cyclus::Material> tritium_storage{true};
 
   #pragma cyclus var {"tooltip":"Buffer for handling tritium material to be used in reactor"}
   cyclus::toolkit::ResBuf<cyclus::Material> helium_storage;
@@ -99,9 +99,7 @@ class DecayStorage : public cyclus::Facility  {
   /// @param time the time of the tock
   virtual void Tock();
 
-  void DecayInventory(cyclus::toolkit::ResBuf<cyclus::Material> &inventory);
   void ExtractHelium(cyclus::toolkit::ResBuf<cyclus::Material> &inventory);
-  void CombineInventory(cyclus::toolkit::ResBuf<cyclus::Material> &inventory);
   void RecordInventories(double tritium, double helium);
 
 

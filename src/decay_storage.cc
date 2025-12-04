@@ -29,15 +29,6 @@ void DecayStorage::RecordInventories(double tritium, double helium) {
       ->Record();
 }
 
-void DecayStorage::DecayInventory(
-    cyclus::toolkit::ResBuf<cyclus::Material>& inventory) {
-  if (!inventory.empty()) {
-    cyclus::Material::Ptr mat = inventory.Pop();
-    mat->Decay(context()->time());
-    inventory.Push(mat);
-  }
-}
-
 void DecayStorage::ExtractHelium(
     cyclus::toolkit::ResBuf<cyclus::Material>& inventory) {
   if (!inventory.empty()) {
@@ -51,34 +42,18 @@ void DecayStorage::ExtractHelium(
   }
 }
 
-void DecayStorage::CombineInventory(
-    cyclus::toolkit::ResBuf<cyclus::Material>& inventory) {
-  if (!inventory.empty()) {
-    cyclus::Material::Ptr base = inventory.Pop();
-    int count = inventory.count();
-    for (int i = 0; i < count; i++) {
-      cyclus::Material::Ptr m = inventory.Pop();
-      base->Absorb(m);
-    }
-
-    inventory.Push(base);
-  }
-}
-
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void DecayStorage::Tick() {
-  DecayInventory(tritium_storage);
+  tritium_storage.Decay(context()->time());
   ExtractHelium(tritium_storage);
   LOG(cyclus::LEV_INFO2, "Storage") << "Quantity to be offered: " << sell_policy.Limit() << " kg.";
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void DecayStorage::Tock() {
-  CombineInventory(input);
   if (!input.empty()){
     tritium_storage.Push(input.Pop());
   }
-  CombineInventory(tritium_storage);
   RecordInventories(tritium_storage.quantity(), helium_storage.quantity());
 }
 
