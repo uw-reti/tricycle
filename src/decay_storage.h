@@ -79,6 +79,7 @@ class DecayStorage : public cyclus::Facility  {
   #pragma cyclus var {"tooltip":"Bulk storage buffer for extracted helium-3 byproduct"}
   cyclus::toolkit::ResBuf<cyclus::Material> helium_storage{true};
 
+  /// Required to make the matl_buy/sell_policy work
   #pragma cyclus var {"tooltip":"Tracker to handle on-hand tritium"}
   cyclus::toolkit::TotalInvTracker fuel_tracker;
 

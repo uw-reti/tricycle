@@ -4,7 +4,7 @@ namespace decaystorage {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 DecayStorage::DecayStorage(cyclus::Context* ctx) : cyclus::Facility(ctx) {
-  fuel_tracker.Init({&input}, 10000);
+  fuel_tracker.Init({&input}, 100000000);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
