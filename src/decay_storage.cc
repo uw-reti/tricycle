@@ -4,11 +4,13 @@ namespace decaystorage {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 DecayStorage::DecayStorage(cyclus::Context* ctx) : cyclus::Facility(ctx) {
-  fuel_tracker.Init({&input}, 100000000);
+  // Required by DRE policies
+  fuel_tracker.Init({&tritium_storage}, 100000000);
 
-  input = cyclus::toolkit::ResBuf<cyclus::Material>(true);
-  tritium_storage = cyclus::toolkit::ResBuf<cyclus::Material>(true);
-  helium_storage = cyclus::toolkit::ResBuf<cyclus::Material>(true);
+  bool is_bulk = true;
+
+  tritium_storage = cyclus::toolkit::ResBuf<cyclus::Material>(is_bulk);
+  helium_storage = cyclus::toolkit::ResBuf<cyclus::Material>(is_bulk);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -18,7 +20,7 @@ std::string DecayStorage::str() {
 
 void DecayStorage::EnterNotify() {
   cyclus::Facility::EnterNotify(); // call base function first
-  buy_policy.Init(this, &input, std::string("input"), &fuel_tracker).Set(incommod).Start();
+  buy_policy.Init(this, &tritium_storage, std::string("input"), &fuel_tracker).Set(incommod).Start();
   sell_policy.Init(this, &tritium_storage, std::string("output")).Set(outcommod).Start();
 }
 
@@ -48,16 +50,13 @@ void DecayStorage::ExtractHelium(
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void DecayStorage::Tick() {
-  tritium_storage.Decay(context()->time());
+  tritium_storage.Decay();
   ExtractHelium(tritium_storage);
   LOG(cyclus::LEV_INFO2, "Storage") << "Quantity to be offered: " << sell_policy.Limit() << " kg.";
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void DecayStorage::Tock() {
-  if (!input.empty()){
-    tritium_storage.Push(input.Pop());
-  }
   RecordInventories(tritium_storage.quantity(), helium_storage.quantity());
 }
 

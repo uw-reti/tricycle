@@ -30,8 +30,7 @@ namespace decaystorage {
 /// Each time step, the facility:
 /// - Tick: Decays all tritium inventory, then extracts accumulated helium-3
 ///         (helium-3 is treated as a byproduct)
-/// - Tock: Transfers incoming material from input buffer to tritium storage
-///         and records current inventories
+/// - Tock: Records current inventories
 /// The tritium_storage buffer uses bulk storage mode for automatic material
 /// combining, and helium-3 is continuously separated and stored independently
 /// as a byproduct (not currently offered to market).
@@ -69,9 +68,6 @@ class DecayStorage : public cyclus::Facility  {
   "uitype": "outcommodity", \
   }
   std::string outcommod;
-
-  #pragma cyclus var {"tooltip":"Bulk input buffer for incoming tritium material"}
-  cyclus::toolkit::ResBuf<cyclus::Material> input;
 
   #pragma cyclus var {"tooltip":"Bulk storage buffer for tritium inventory with decay"}
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_storage;
