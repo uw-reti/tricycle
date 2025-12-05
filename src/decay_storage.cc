@@ -5,7 +5,7 @@ namespace decaystorage {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 DecayStorage::DecayStorage(cyclus::Context* ctx) : cyclus::Facility(ctx) {
   // Required by DRE policies
-  fuel_tracker.Init({&tritium_storage}, 100000000);
+  fuel_tracker.Init({&tritium_storage}, max_tritium_inventory);
 
   bool is_bulk = true;
 

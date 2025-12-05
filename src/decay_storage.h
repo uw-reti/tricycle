@@ -5,6 +5,8 @@
 
 #include "cyclus.h"
 
+#pragma cyclus exec from cyclus.system import CY_LARGE_DOUBLE, CY_LARGE_INT, CY_NEAR_ZERO
+
 namespace decaystorage {
 
 /// @class DecayStorage
@@ -40,12 +42,6 @@ class DecayStorage : public cyclus::Facility  {
   /// @param ctx the cyclus context for access to simulation-wide parameters
   explicit DecayStorage(cyclus::Context* ctx);
 
-  /// The Prime Directive
-  /// Generates code that handles all input file reading and restart operations
-  /// (e.g., reading from the database, instantiating a new object, etc.).
-  /// @warning The Prime Directive must have a space before it! (A fix will be
-  /// in 2.0 ^TM)
-
   #pragma cyclus
 
   #pragma cyclus note {"doc": "A DecayStorage facility provides tritium storage " \
@@ -68,6 +64,16 @@ class DecayStorage : public cyclus::Facility  {
   "uitype": "outcommodity", \
   }
   std::string outcommod;
+
+  #pragma cyclus var { \
+  "tooltip": "(Optional) Maximum tritium inventory (kg)", \
+  "default": 100000000.0, \
+  "doc": "Maximum tritium inventory (kg). If not provided, the default is an arbitrary large number (100,000,000 kg).", \
+  "uilabel": "Maximum Tritium Inventory", \
+  "uitype": "range", \
+  "range": [0.0, CY_LARGE_DOUBLE], \
+  }
+  double max_tritium_inventory;
 
   #pragma cyclus var {"tooltip":"Bulk storage buffer for tritium inventory with decay"}
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_storage;
