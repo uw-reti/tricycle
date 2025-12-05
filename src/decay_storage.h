@@ -71,13 +71,13 @@ class DecayStorage : public cyclus::Facility  {
   std::string outcommod;
 
   #pragma cyclus var {"tooltip":"Bulk input buffer for incoming tritium material"}
-  cyclus::toolkit::ResBuf<cyclus::Material> input{true};
+  cyclus::toolkit::ResBuf<cyclus::Material> input;
 
   #pragma cyclus var {"tooltip":"Bulk storage buffer for tritium inventory with decay"}
-  cyclus::toolkit::ResBuf<cyclus::Material> tritium_storage{true};
+  cyclus::toolkit::ResBuf<cyclus::Material> tritium_storage;
 
   #pragma cyclus var {"tooltip":"Bulk storage buffer for extracted helium-3 byproduct"}
-  cyclus::toolkit::ResBuf<cyclus::Material> helium_storage{true};
+  cyclus::toolkit::ResBuf<cyclus::Material> helium_storage;
 
   /// Required to make the matl_buy/sell_policy work
   #pragma cyclus var {"tooltip":"Tracker to handle on-hand tritium"}

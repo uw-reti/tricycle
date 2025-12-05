@@ -5,6 +5,10 @@ namespace decaystorage {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 DecayStorage::DecayStorage(cyclus::Context* ctx) : cyclus::Facility(ctx) {
   fuel_tracker.Init({&input}, 100000000);
+
+  input = ResBuf<Material>(true);
+  tritium_storage = ResBuf<Material>(true);
+  helium_storage = ResBuf<Material>(true);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
