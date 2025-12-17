@@ -28,8 +28,8 @@ The design power was used for each reactor.
 Tritium production factor is 0.2 kg/GWe/fpy.
 
 Canadian Tritium
-*Reactors are refurbished according to schedule.
+* Reactors are refurbished according to schedule.
 
 Korean Tritium
-*Production starts in 2007 with WTRF coming online.
-*There is no refurbishment of these reactors.
+* Production starts in 2007 with WTRF coming online.
+* There is no refurbishment of these reactors.
