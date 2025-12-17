@@ -2,7 +2,7 @@ Global Tritium Scenarios
 
 Attempt to recreate global tritium supply graphs found in the literature.
 
-Kovari (Pessimistic) Scenario Assumptions
+## Kovari (Pessimistic) Scenario Assumptions
 
 There are 21.1 kg of tritium in 2006.
 The power from 2015 was used for each reactor.
