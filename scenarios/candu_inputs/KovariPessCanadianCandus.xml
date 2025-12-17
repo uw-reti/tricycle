@@ -231,7 +231,7 @@
           <prototypes>
             <!--Bruce-->
             <val>Bruce B5</val>
-            <val>Bruce B6</val>
+            <val>Bruce B6</val>  <!-- initial deployment of Bruce B6 before refurbishment -->
             <val>Bruce B7</val>
             <val>Bruce B8</val>
             <val>Bruce A3</val>
