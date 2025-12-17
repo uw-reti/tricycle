@@ -281,7 +281,7 @@
           <lifetimes>
             <!--Bruce-->
             <val>252</val>
-            <val>143</val>
+            <val>143</val>  <!-- Bruce B6 shuts down early for refurbishment -->
             <val>275</val>
             <val>299</val>
             <val>278</val>
