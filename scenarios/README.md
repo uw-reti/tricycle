@@ -1,4 +1,4 @@
-Global Tritium Scenarios
+# Global Tritium Scenarios
 
 Attempt to recreate global tritium supply graphs found in the literature.
 
