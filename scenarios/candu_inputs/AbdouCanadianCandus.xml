@@ -1,0 +1,444 @@
+<candus>
+
+<!--Start Year: 2003-->
+
+<facility>
+    <name>Bruce A1</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.01360</throughput>
+        </Source>
+    </config>
+  </facility>
+
+    <facility>
+    <name>Bruce A2</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.013617</throughput>
+        </Source>
+    </config>
+  </facility>
+
+    <facility>
+    <name>Bruce A3</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.012833</throughput>
+        </Source>
+    </config>
+  </facility>
+
+    <facility>
+    <name>Bruce A4</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.013450</throughput>
+        </Source>
+    </config>
+  </facility>
+
+    <facility>
+    <name>Bruce B5</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.013617</throughput>
+        </Source>
+    </config>
+  </facility>
+
+    <facility>
+    <name>Bruce B6</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.013617</throughput>
+        </Source>
+    </config>
+  </facility>
+
+    <facility>
+    <name>Bruce B7</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.013617</throughput>
+        </Source>
+    </config>
+  </facility>
+
+    <facility>
+    <name>Bruce B8</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.013617</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Darlington 1</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.014633</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Darlington 2</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.014633</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Darlington 3</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.014633</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Darlington 4</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.014633</throughput>
+        </Source>
+    </config>
+  </facility>
+
+   <facility>
+    <name>Pickering A1</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.008583</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Pickering A2</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.008583</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Pickering A3</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.008583</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Pickering A4</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.008583</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Pickering B5</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.0086</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Pickering B6</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.0086</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Pickering B7</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.0086</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Pickering B8</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.0086</throughput>
+        </Source>
+    </config>
+  </facility>
+
+    <facility>
+    <name>Gentilly 2</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.010583</throughput>
+        </Source>
+    </config>
+  </facility>
+
+   <facility>
+    <name>Start Supply</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>18.5</throughput>
+        </Source>
+    </config>
+  </facility>
+
+
+    <facility>
+    <name>Tritium Sales</name>
+    <config>
+      <Sink>
+        <in_commods>
+          <val>Tritium</val>
+        </in_commods>
+        <capacity>0.00833</capacity>
+      </Sink>
+    </config>
+  </facility>
+
+
+  <region>
+    <name>Canada</name>
+    <config> <NullRegion /> </config>
+    <institution>
+      <name>DTRF</name>
+      <initialfacilitylist>
+        <entry>
+          <prototype>Storage</prototype>
+          <number>1</number>
+        </entry>
+          <entry>
+          <prototype>Tritium Sales</prototype>
+          <number>1</number>
+        </entry>
+      </initialfacilitylist>
+      <config> 
+         <DeployInst> 
+          <prototypes>
+          <val>Start Supply</val>
+            <!--Bruce-->
+            <val>Bruce B5</val>
+            <val>Bruce B6</val>
+            <val>Bruce B7</val>
+            <val>Bruce B8</val>
+            <val>Bruce A3</val> <!--Post-Idle phase for Bruce A3-->
+            <val>Bruce A4</val> <!--Post-Idle phase for Bruce A4-->
+            <val>Bruce A1</val> <!--After Refurbishment of Bruce A1-->
+            <val>Bruce A2</val> <!--After Refurbishment of Bruce A2-->
+            <val>Bruce A3</val> <!--After Refurbishment of Bruce A3-->
+            <val>Bruce A4</val> <!--After Refurbishment of Bruce A4-->
+            <val>Bruce B5</val> <!--After Refurbishment of Bruce B5-->
+            <val>Bruce B6</val> <!--After Refurbishment of Bruce B6-->
+            <val>Bruce B7</val> <!--After Refurbishment of Bruce B7-->
+            <val>Bruce B8</val> <!--After Refurbishment of Bruce B8-->        
+            <!--Darlington-->
+            <val>Darlington 1</val>
+            <val>Darlington 2</val>
+            <val>Darlington 3</val>
+            <val>Darlington 4</val>
+            <val>Darlington 1</val>  <!--After Refurbishment of Darlington 1-->
+            <val>Darlington 2</val>  <!--After Refurbishment of Darlington 2-->
+            <val>Darlington 3</val>  <!--After Refurbishment of Darlington 3-->
+            <val>Darlington 4</val>  <!--After Refurbishment of Darlington 4-->
+            <!--Pickering-->
+            <val>Pickering A1</val>
+            <val>Pickering A4</val>
+            <val>Pickering B5</val>
+            <val>Pickering B6</val>
+            <val>Pickering B7</val>
+            <val>Pickering B8</val>
+            <val>Pickering B5</val> <!--After Refurbishment of Pickering B5-->
+            <val>Pickering B6</val> <!--After Refurbishment of Pickering B6-->
+            <val>Pickering B7</val> <!--After Refurbishment of Pickering B7-->
+            <val>Pickering B8</val> <!--After Refurbishment of Pickering B8-->
+            <!--Gentilly-->
+            <val>Gentilly 2</val>
+          </prototypes>
+          <build_times>
+            <val>1</val>
+            <!--Bruce-->
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>12</val>
+            <val>9</val>
+            <val>117</val>
+            <val>118</val>
+            <val>323</val>
+            <val>299</val>
+            <val>323</val>
+            <val>247</val>
+            <val>347</val>
+            <val>371</val>         
+            <!--Darlington-->
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>270</val>
+            <val>209</val>
+            <val>246</val>
+            <val>288</val>
+            <!--Pickering-->
+            <val>1</val>
+            <val>9</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+             <val>336</val>
+            <val>354</val>
+            <val>362</val>
+            <val>371</val>
+            <!--Gentilly-->
+            <val>1</val>
+          </build_times>
+          <lifetimes>
+            <val>1</val>
+            <!--Bruce-->
+            <val>286</val>
+            <val>203</val>
+            <val>310</val>
+            <val>334</val>
+            <val>230</val>
+            <val>266</val>
+            <val>362</val>
+            <val>373</val>
+            <val>421</val>
+            <val>445</val>
+            <val>421</val>
+            <val>497</val>
+            <val>397</val>
+            <val>373</val>
+            <!--Darlington-->
+            <val>228</val>
+            <val>164</val>
+            <val>211</val>
+            <val>245</val>
+            <val>365</val>
+            <val>426</val>
+            <val>389</val>
+            <val>347</val>
+            <!--Pickering-->
+            <val>260</val>
+            <val>255</val>
+            <val>286</val>
+            <val>286</val>
+            <val>286</val>
+            <val>286</val>
+            <val>480</val>
+            <val>480</val>
+            <val>480</val>
+            <val>480</val>
+            <!--Gentilly-->
+            <val>283</val>
+          </lifetimes>
+          <n_build>
+          <val>1</val>
+		        <!--Bruce-->
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <!--Darlington-->
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <!--Pickering-->
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <!--Gentilly-->
+            <val>1</val>
+          </n_build>
+        </DeployInst>  
+      </config>
+    </institution>
+  </region>
+
+
+</candus>
