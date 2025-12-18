@@ -1,0 +1,127 @@
+<simulation xmlns:xi="http://www.w3.org/2001/XInclude">
+  <control>
+    <duration>1000</duration>
+    <startmonth>1</startmonth>
+    <startyear>2006
+    </startyear>
+    <decay>lazy</decay>
+    <explicit_inventory>true</explicit_inventory>
+  </control>
+
+  <archetypes>
+    <spec><lib>cycamore</lib><name>DeployInst</name></spec>
+    <spec><lib>cycamore</lib><name>Source</name></spec>
+    <spec><lib>cycamore</lib><name>Storage</name></spec>
+    <spec><lib>cycamore</lib><name>Sink</name></spec>
+    <spec><lib>agents</lib><name>NullInst</name></spec>
+    <spec><lib>agents</lib><name>NullRegion</name></spec>
+    <spec><lib>tricycle</lib><name>FusionPowerPlant</name></spec>
+    <spec><lib>tricycle</lib><name>DecayStorage</name></spec>
+  </archetypes>
+
+
+    <!--Start of the Commodities Section-->
+  <commodity>
+    <name>Tritium</name>
+    <solution_priority>1.0</solution_priority>
+  </commodity>
+  <commodity>
+    <name>Helium_3</name>
+    <solution_priority>1.0</solution_priority>
+  </commodity>
+
+
+  <!--Start of the Recipe Section-->
+  <recipe>
+    <name>T</name>
+    <basis>atom</basis>
+    <nuclide>
+        <id>10030000</id>
+        <comp>1</comp>
+    </nuclide>
+  </recipe>
+
+   <recipe>
+    <name>Lithium</name>
+    <basis>atom</basis>
+    <nuclide>
+      <id>30060000</id>
+      <comp>0.3</comp>
+    </nuclide>
+    <nuclide>
+      <id>30070000</id>
+      <comp>0.7</comp>
+    </nuclide>
+  </recipe>
+
+   <facility>
+    <name>Start Supply</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>21.1</throughput>
+        </Source>
+    </config>
+  </facility>
+
+   <facility>
+    <name>Tritium Sales</name>
+    <config>
+      <Sink>
+        <in_commods>
+          <val>Tritium</val>
+        </in_commods>
+        <capacity>0.00833</capacity>
+      </Sink>
+    </config>
+  </facility>
+
+<!--Facility Definitions-->
+<xi:include href="PearsonCanadianCANDUs.xml" xpointer="xpointer(//candus/*)"/>
+
+<xi:include href="PearsonKoreanCANDUs.xml" xpointer="xpointer(//candus/*)"/>
+
+<region>
+    <name>Global Supply</name>
+    <config> <NullRegion /> </config>
+    <institution>
+      <name>Startup and Sales</name>
+      <initialfacilitylist>
+        <entry>
+          <prototype>Storage</prototype>
+          <number>1</number>
+        </entry>
+      </initialfacilitylist>
+      <config> 
+         <DeployInst> 
+          <prototypes>
+            <!--Start Supply-->
+            <val>Start Supply</val>
+            <!--Tritium Sales-->
+            <val>Tritium Sales</val>
+          </prototypes>
+          <build_times>
+            <!--Start Supply-->
+            <val>1</val>
+            <!--Tritium Sales-->
+            <val>1</val>
+          </build_times>
+          <lifetimes>
+            <!--Start Supply-->
+            <val>1</val>
+            <!--Tritium Sales-->
+            <val>999</val>
+            </lifetimes>
+            <n_build>
+            <!--Start Supply-->
+            <val>1</val>
+            <!--Tritium Sales-->
+            <val>1</val>
+          </n_build>
+        </DeployInst>  
+      </config>
+    </institution>
+  </region>
+
+</simulation>
