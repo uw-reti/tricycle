@@ -15,8 +15,8 @@ Canadian Tritium
 * Canadian tritium sales of 0.3 kg/year.
 
 Korean Tritium 
-•	Wolsong 1 was permanently shut down in 2022.
-•	Wolsong 2-3 will run for 30 years from first connection to the grid and will not be refurbished.
-•	Wolsong Tritium Removal Facility (WTRF) will operate until 2032 and still be able to remove tritium from the shutdown reactors. The reactor lifetimes include 18 months of post shutdown processing.
-•	Wolsong 1 was permanently shut down in 2022.
-•	Tritium production factor is 0.26 kg/GWe/fpy.
+*	Wolsong 1 was permanently shut down in 2022.
+*	Wolsong 2-3 will run for 30 years from first connection to the grid and will not be refurbished.
+*	Wolsong Tritium Removal Facility (WTRF) will operate until 2032 and still be able to remove tritium from the shutdown reactors. The reactor lifetimes include 18 months of post shutdown processing.
+*	Wolsong 1 was permanently shut down in 2022.
+*	Tritium production factor is 0.26 kg/GWe/fpy.
