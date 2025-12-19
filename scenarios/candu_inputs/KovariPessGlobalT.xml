@@ -16,18 +16,6 @@
     <spec><lib>agents</lib><name>NullRegion</name></spec>
   </archetypes>
 
-
-    <!--Start of the Commodities Section-->
-  <commodity>
-    <name>Tritium</name>
-    <solution_priority>1.0</solution_priority>
-  </commodity>
-  <commodity>
-    <name>Helium_3</name>
-    <solution_priority>1.0</solution_priority>
-  </commodity>
-
-
   <!--Start of the Recipe Section-->
   <recipe>
     <name>T</name>
@@ -35,19 +23,6 @@
     <nuclide>
         <id>10030000</id>
         <comp>1</comp>
-    </nuclide>
-  </recipe>
-
-   <recipe>
-    <name>Lithium</name>
-    <basis>atom</basis>
-    <nuclide>
-      <id>30060000</id>
-      <comp>0.3</comp>
-    </nuclide>
-    <nuclide>
-      <id>30070000</id>
-      <comp>0.7</comp>
     </nuclide>
   </recipe>
 
@@ -82,10 +57,13 @@
     <name>GlobalTSupply</name>
     <config> <NullRegion /> </config>
     <institution>
-      <name>AbdouCandus</name>
+      <name>GlobalTExchange</name>
       <initialfacilitylist>
         <entry>
           <prototype>Storage</prototype>
+          <number>1</number>
+          <!--Sales-->
+          <val>Tritium Sales</val>
           <number>1</number>
         </entry>
       </initialfacilitylist>
@@ -94,31 +72,22 @@
           <prototypes>
             <!--Start Supply-->
             <val>Start Supply</val>
-            <!--Sales-->
-            <val>Tritium Sales</val>
           </prototypes>
           <build_times>
             <!--Start Supply-->
-            <val>1</val>
-             <!--Sales-->
             <val>1</val>
           </build_times>
           <lifetimes>
             <!--Start Supply-->
             <val>1</val>
-             <!--Sales-->
-            <val>649</val>
           </lifetimes>
           <n_build>
             <!--Start Supply-->
-            <val>1</val>
-             <!--Sales-->
             <val>1</val>
           </n_build>
         </DeployInst>  
       </config>
     </institution>
   </region>
-
 
 </simulation>
