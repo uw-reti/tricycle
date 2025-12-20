@@ -2,16 +2,6 @@
 
 <!-- all deployment timings in this file assume a start date of January 2006 -->
 
-  <archetypes>
-    <spec><lib>cycamore</lib><name>DeployInst</name></spec>
-    <spec><lib>cycamore</lib><name>Source</name></spec>
-    <spec><lib>cycamore</lib><name>Storage</name></spec>
-    <spec><lib>agents</lib><name>NullInst</name></spec>
-    <spec><lib>agents</lib><name>NullRegion</name></spec>
-  </archetypes>
-
-<!--facility definitions-->
-	
   <facility>
    <name>Storage</name>
     <config>
