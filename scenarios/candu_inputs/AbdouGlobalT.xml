@@ -1,0 +1,35 @@
+<simulation xmlns:xi="http://www.w3.org/2001/XInclude">
+  <control>
+    <duration>1000</duration>
+    <startmonth>1</startmonth>
+    <startyear>2003</startyear>
+    <decay>lazy</decay>
+    <explicit_inventory>true</explicit_inventory>
+  </control>
+
+  <archetypes>
+    <spec><lib>cycamore</lib><name>DeployInst</name></spec>
+    <spec><lib>cycamore</lib><name>Source</name></spec>
+    <spec><lib>cycamore</lib><name>Storage</name></spec>
+    <spec><lib>cycamore</lib><name>Sink</name></spec>
+    <spec><lib>agents</lib><name>NullInst</name></spec>
+    <spec><lib>agents</lib><name>NullRegion</name></spec>
+</archetypes>
+
+  <!--Start of the Recipe Section-->
+  <recipe>
+    <name>T</name>
+    <basis>atom</basis>
+    <nuclide>
+        <id>10030000</id>
+        <comp>1</comp>
+    </nuclide>
+  </recipe>
+
+<!--Facility Definitions-->
+
+<xi:include href="AbdouCanadianCandus.xml" xpointer="xpointer(//candus/*)"/>
+
+<xi:include href="AbdouKoreanCandus.xml" xpointer="xpointer(//candus/*)"/>
+
+</simulation>
