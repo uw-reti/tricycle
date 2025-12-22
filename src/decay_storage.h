@@ -65,16 +65,6 @@ class DecayStorage : public cyclus::Facility  {
   }
   std::string outcommod;
 
-  #pragma cyclus var { \
-  "tooltip": "(Optional) Maximum tritium inventory (kg)", \
-  "default": 100000000.0, \
-  "doc": "Maximum tritium inventory (kg). If not provided, the default is an arbitrary large number (100,000,000 kg).", \
-  "uilabel": "Maximum Tritium Inventory", \
-  "uitype": "range", \
-  "range": [0.0, CY_LARGE_DOUBLE], \
-  }
-  double max_tritium_inventory;
-
   #pragma cyclus var {"tooltip":"Bulk storage buffer for tritium inventory with decay"}
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_storage;
 
@@ -112,6 +102,8 @@ class DecayStorage : public cyclus::Facility  {
   void RecordInventories(double tritium, double helium);
 
 
+
+  double max_tritium_inventory = 100000000.0;
   const int He3_id = 20030000;
   const cyclus::CompMap He3 = {{He3_id, 1}};
   const cyclus::Composition::Ptr He3_comp = cyclus::Composition::CreateFromAtom(He3);
