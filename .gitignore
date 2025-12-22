@@ -2,3 +2,5 @@ build/**
 input/**
 core
 docker/**
+.vscode/**
+run_cyclus.sh
