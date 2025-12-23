@@ -62,8 +62,10 @@
         <entry>
           <prototype>Storage</prototype>
           <number>1</number>
+        </entry>
           <!--Sales-->
-          <val>Tritium Sales</val>
+        <entry>
+          <prototype>Tritium Sales</prototype>
           <number>1</number>
         </entry>
       </initialfacilitylist>
