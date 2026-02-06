@@ -32,6 +32,16 @@
   <xi:include href="PearsonCanA.xml" xpointer="xpointer(//candus/*)"/>
 
   <facility>
+    <name>Storage</name>
+    <config>
+      <DecayStorage>
+        <incommod>Tritium</incommod>
+        <outcommod>TritiumFuel</outcommod>
+      </DecayStorage>
+    </config>
+  </facility>
+
+  <facility>
     <name>Tritium Sales</name>
     <config>
       <Sink>
@@ -42,17 +52,7 @@
       </Sink>
     </config>
   </facility>
-
-  <facility>
-    <name>Storage</name>
-    <config>
-      <DecayStorage>
-        <incommod>Tritium</incommod>
-        <outcommod>TritiumFuel</outcommod>
-      </DecayStorage>
-    </config>
-  </facility>
-
+  
   <facility>
     <name>ITER A</name>
     <config>
