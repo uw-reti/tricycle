@@ -27,6 +27,17 @@
   </recipe>
 
   <!--Facility Definitions-->
+  <facility>
+    <name>Start Supply</name>
+    <config>
+      <Source>
+        <outcommod>Tritium</outcommod>
+        <outrecipe>T</outrecipe>
+        <throughput>21.1</throughput>
+      </Source>
+    </config>
+  </facility>
+  
   <xi:include href="KovariPessCan.xml" xpointer="xpointer(//candus/*)"/>
   <xi:include href="KovariPessKor.xml" xpointer="xpointer(//candus/*)"/>
 
@@ -49,17 +60,6 @@
         </in_commods>
         <capacity>0.025</capacity>
       </Sink>
-    </config>
-  </facility>
-
-  <facility>
-    <name>Start Supply</name>
-    <config>
-      <Source>
-        <outcommod>Tritium</outcommod>
-        <outrecipe>T</outrecipe>
-        <throughput>21.1</throughput>
-      </Source>
     </config>
   </facility>
 
