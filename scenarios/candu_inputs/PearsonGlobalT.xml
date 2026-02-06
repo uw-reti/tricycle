@@ -1,0 +1,195 @@
+<simulation xmlns:xi="http://www.w3.org/2001/XInclude">
+  <control>
+    <duration>1120</duration>
+    <startmonth>1</startmonth>
+    <startyear>1971</startyear>
+    <decay>manual</decay>
+    <explicit_inventory>true</explicit_inventory>
+  </control>
+
+  <archetypes>
+    <spec><lib>cycamore</lib><name>DeployInst</name></spec>
+    <spec><lib>cycamore</lib><name>Source</name></spec>
+    <spec><lib>cycamore</lib><name>Storage</name></spec>
+    <spec><lib>tricycle</lib><name>DecayStorage</name></spec>
+    <spec><lib>cycamore</lib><name>Sink</name></spec>
+    <spec><lib>agents</lib><name>NullInst</name></spec>
+    <spec><lib>agents</lib><name>NullRegion</name></spec>
+  </archetypes>
+
+  <!--Start of the Recipe Section-->
+  <recipe>
+    <name>T</name>
+    <basis>atom</basis>
+    <nuclide>
+        <id>10030000</id>
+        <comp>1</comp>
+    </nuclide>
+  </recipe>
+
+  <!--Facility Definitions-->
+  <xi:include href="PearsonKorA.xml" xpointer="xpointer(//candus/*)"/>
+  <xi:include href="PearsonCanA.xml" xpointer="xpointer(//candus/*)"/>
+
+  <facility>
+    <name>Storage</name>
+    <config>
+      <DecayStorage>
+        <incommod>Tritium</incommod>
+        <outcommod>TritiumFuel</outcommod>
+      </DecayStorage>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Tritium Sales</name>
+    <config>
+      <Sink>
+        <in_commods>
+          <val>TritiumFuel</val>
+        </in_commods>
+        <capacity>0.00833</capacity>
+      </Sink>
+    </config>
+  </facility>
+  
+  <facility>
+    <name>ITER A</name>
+    <config>
+      <Sink>
+        <in_commods>
+          <val>TritiumFuel</val>
+        </in_commods>
+        <capacity>0.1</capacity>
+      </Sink>
+    </config>
+  </facility>
+
+  <facility>
+    <name>ITER B</name>
+    <config>
+      <Sink>
+        <in_commods>
+          <val>TritiumFuel</val>
+        </in_commods>
+        <capacity>0.8</capacity>
+      </Sink>
+    </config>
+  </facility>
+
+  <facility>
+    <name>ITER C</name>
+    <config>
+      <Sink>
+        <in_commods>
+          <val>TritiumFuel</val>
+        </in_commods>
+        <capacity>1.1</capacity>
+      </Sink>
+    </config>
+  </facility>
+
+  <region>
+    <name>GlobalTSupply</name>
+    <config> <NullRegion /> </config>
+    <institution>
+      <name>GlobalTExchange</name>
+        <initialfacilitylist>
+          <entry>
+            <prototype>Storage</prototype>
+            <number>1</number>
+          </entry>
+          <entry>
+            <prototype>Tritium Sales</prototype>
+            <number>1</number>
+          </entry>
+        </initialfacilitylist>
+      <config> 
+        <DeployInst> 
+          <prototypes>
+            <!--ITER-->
+            <val>ITER A</val>
+            <val>ITER A</val>
+            <val>ITER B</val>
+            <val>ITER B</val>
+            <val>ITER B</val>
+            <val>ITER B</val>
+            <val>ITER C</val>
+            <val>ITER C</val>
+            <val>ITER C</val>
+            <val>ITER C</val>
+            <val>ITER C</val>
+            <val>ITER C</val>
+            <val>ITER C</val>
+            <val>ITER C</val>
+            <val>ITER C</val>
+            <val>ITER C</val>
+            <val>ITER C</val>
+            <val>ITER C</val>
+          </prototypes>
+          <build_times>
+            <val>672</val>
+            <val>708</val>
+            <val>720</val>
+            <val>732</val>
+            <val>744</val>
+            <val>756</val>
+            <val>768</val>
+            <val>780</val>
+            <val>792</val>
+            <val>804</val>
+            <val>816</val>
+            <val>828</val>
+            <val>840</val>
+            <val>852</val>
+            <val>864</val>
+            <val>876</val>
+            <val>888</val>
+            <val>900</val>
+          </build_times>
+          <lifetimes>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+          </lifetimes>
+          <n_build>
+            <val>1</val>
+            <val>2</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+          </n_build>
+        </DeployInst>  
+      </config>
+    </institution>
+  </region>
+  
+</simulation>
