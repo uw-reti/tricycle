@@ -1,0 +1,93 @@
+<simulation xmlns:xi="http://www.w3.org/2001/XInclude">
+  <control>
+    <duration>650</duration>
+    <startmonth>1</startmonth>
+    <startyear>2006</startyear>
+    <decay>lazy</decay>
+    <explicit_inventory>true</explicit_inventory>
+  </control>
+
+  <archetypes>
+    <spec><lib>cycamore</lib><name>DeployInst</name></spec>
+    <spec><lib>cycamore</lib><name>Source</name></spec>
+    <spec><lib>cycamore</lib><name>Storage</name></spec>
+    <spec><lib>cycamore</lib><name>Sink</name></spec>
+    <spec><lib>agents</lib><name>NullInst</name></spec>
+    <spec><lib>agents</lib><name>NullRegion</name></spec>
+  </archetypes>
+
+  <!--Start of the Recipe Section-->
+  <recipe>
+    <name>T</name>
+    <basis>atom</basis>
+    <nuclide>
+        <id>10030000</id>
+        <comp>1</comp>
+    </nuclide>
+  </recipe>
+
+<!--Facility Definitions-->
+<xi:include href="KovariPessCanadianCandus.xml" xpointer="xpointer(//candus/*)"/>
+<xi:include href="KovariPessKoreanCandus.xml" xpointer="xpointer(//candus/*)"/>
+
+ <facility>
+    <name>Tritium Sales</name>
+    <config>
+      <Sink>
+        <in_commods>
+          <val>Tritium</val>
+        </in_commods>
+        <capacity>0.025</capacity>
+      </Sink>
+    </config>
+  </facility>
+
+   <facility>
+    <name>Start Supply</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>21.1</throughput>
+        </Source>
+    </config>
+  </facility>
+
+  <region>
+    <name>GlobalTSupply</name>
+    <config> <NullRegion /> </config>
+    <institution>
+      <name>GlobalTExchange</name>
+      <initialfacilitylist>
+        <entry>
+          <prototype>Storage</prototype>
+          <number>1</number>
+          <!--Sales-->
+          <val>Tritium Sales</val>
+          <number>1</number>
+        </entry>
+      </initialfacilitylist>
+      <config> 
+        <DeployInst> 
+          <prototypes>
+            <!--Start Supply-->
+            <val>Start Supply</val>
+          </prototypes>
+          <build_times>
+            <!--Start Supply-->
+            <val>1</val>
+          </build_times>
+          <lifetimes>
+            <!--Start Supply-->
+            <val>1</val>
+          </lifetimes>
+          <n_build>
+            <!--Start Supply-->
+            <val>1</val>
+          </n_build>
+        </DeployInst>  
+      </config>
+    </institution>
+  </region>
+
+</simulation>

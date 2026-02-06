@@ -20,7 +20,7 @@ Korean Tritium
 * Korean extraction begins in July 2007 with the start if Wolsong Tritium Removal Facility (WTRF).
 *	Wolsong 1-4 will run for 30 years from first connection to the grid and will not be refurbished.
 *	Wolsong 1 was permanently shut down in 2022.
-*	Tritium production factor is 0.2304 kg/GWe based on 2015 power (retrieved from IAEA website.
+*	Tritium production factor is 0.2304 kg/GWe based on 2015 power (retrieved from IAEA website).
 
 ## Pearson Supply 1 Demand A Scenario Assumptions
 
@@ -36,4 +36,4 @@ Canadian Tritium
 Korean Tritium 
 * When all four Wolsong units are operational, 780 g of tritium are produced each year. Porduction is based on the proportion of units that are online.
 *	Wolsong units will begin shutdown in 2022 with the last units shutting down by 2030.
-*	Tritium extraction will occur at a reduced rate until 2032.(This is accountedfor by keeping units 3 and 4 in the simulation until 2032).
+*	Tritium extraction will occur at a reduced rate until 2032.(This is accounted for by keeping units 3 and 4 in the simulation until 2032).
