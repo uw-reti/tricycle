@@ -1,0 +1,24 @@
+  <facility>
+    <name>{}</name>
+    <config>
+      <FusionPowerPlant>
+        <fusion_power>{}</fusion_power>
+        <TBR>{}</TBR>
+        <reserve_inventory>{}</reserve_inventory>
+        <sequestered_equilibrium>{}</sequestered_equilibrium>
+        <fuel_incommod>{}</fuel_incommod>
+        <Li7_contribution>{}</Li7_contribution>
+        <refuel_mode>{}</refuel_mode>
+        <buy_quantity>{}</buy_quantity>
+        <buy_frequency>{}</buy_frequency>
+        <he3_outcommod>{}</he3_outcommod>
+        <blanket_inrecipe>{}</blanket_inrecipe>
+        <blanket_incommod>{}</blanket_incommod>
+        <blanket_outcommod>{}</blanket_outcommod>
+        <blanket_size>{}</blanket_size>
+        <blanket_turnover_fraction>{}</blanket_turnover_fraction>
+        <blanket_turnover_frequency>{}</blanket_turnover_frequency>
+      </FusionPowerPlant>
+    </config>
+  </facility>
+
