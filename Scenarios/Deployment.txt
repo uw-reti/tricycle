@@ -1,0 +1,23 @@
+<region>
+    <name>{}</name>
+    <config> <NullRegion /> </config>
+    <institution>
+      <name>{}</name>
+      <config> 
+         <DeployInst> 
+          <prototypes>
+            <val>{}</val>
+          </prototypes>
+          <build_times>
+            <val>{}</val> 
+          </build_times>
+          <lifetimes>
+            <val>{}</val>
+          </lifetimes>
+          <n_build>
+            <val>{}</val>
+          </n_build>
+        </DeployInst>  
+      </config>
+    </institution>
+  </region>
