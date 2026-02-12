@@ -19,7 +19,7 @@
     <Source>
       <outcommod>Tritium</outcommod>
       <outrecipe>T</outrecipe>
-      <throughput>0.0009508</throughput>
+      <throughput>0.009508</throughput>
     </Source>
   </config>
 </facility>
