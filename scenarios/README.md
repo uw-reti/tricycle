@@ -28,7 +28,7 @@ The simulation starts in 1971.
 ITER requires the following tritium: 100 g in 2027; 200 g in 2030; 800 g yearly from 2031 to 2034; 1100 g for 12 years starting in 2035.
 
 Canadian Tritium
-* Whan all Canadian units are operational, 1932 g of tritium are prduced each year. Production is based on the proportion of power from the units that are online.
+* Whan all Canadian units are operational, 1932 g of tritium are produced each year. Production is based on the proportion of power from the units that are online.
 * Sales occur at a rate of 100 g/year.
 * The known schedule for Canadian CANDU operation from 2017 was used.
 * Units from Bruce, Darlington, Pickering, and Gentilly 2 were used in the simulation.
