@@ -169,7 +169,7 @@
           </lifetimes>
           <n_build>
             <val>1</val>
-            <val>2</val>
+            <val>2</val>    <!-- there is double the demand in this year -->
             <val>1</val>
             <val>1</val>
             <val>1</val>
