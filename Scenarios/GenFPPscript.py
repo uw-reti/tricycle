@@ -99,8 +99,12 @@ def fill_template(data_list, template):
         result.append(spec)
     return '\n\n'.join(result)  
 
-# turn the spec and timeline files into lists
-if __name__ == '__main__':
+def build_XML_snippet():
+    """
+    Main function to build the FPP and Deployment XML snippets. Reads in the FPP
+    spec and deployment commissioning timeline from csv files, fills in the
+    template files, and writes the resulting XML snippets to output files.                         
+    """
     add_parse()
 
     fpp_list = read_csv_to_list(args.fpp)
@@ -118,3 +122,7 @@ if __name__ == '__main__':
         for region_name, institution_data in dep_map.items():
             region_xml = fill_region_template(region_name, institution_data, 'RegionTemplate.txt', 'InstitutionTemplate.txt')
             dep_out.write(region_xml + "\n\n") 
+
+# turn the spec and timeline files into lists
+if __name__ == '__main__':
+    build_XML_snippet()
