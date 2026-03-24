@@ -40,10 +40,8 @@ def process_deployment_data(data_list):
         institution = entry['institution']
         if institution not in deployment_map[region]:
             deployment_map[region][institution] = {'prototypes': [], 'build_times': [], 'lifetimes': [], 'n_build': []}
-        deployment_map[region][institution]['prototypes'].append(entry['prototypes'])
-        deployment_map[region][institution]['build_times'].append(entry['build_times'])
-        deployment_map[region][institution]['lifetimes'].append(entry['lifetimes'])
-        deployment_map[region][institution]['n_build'].append(entry['n_build'])
+        for key in deployment_map[region][institution].keys():
+            deployment_map[region][institution][key].append(entry[key])
 
     return deployment_map
 
@@ -93,15 +91,13 @@ def fill_institution_template(inst_name, data_dict, template_filename):
     return xml_string
 
 
-def fill_template(out_filename, data_list, template_filename):
+def fill_template(data_list, template):
 
-    with open(template_filename, 'r') as template_file:
-        template = template_file.read()
-
-    with open(out_filename, "w") as outxml:
-        for entry in data_list:
-            spec = template.format(*entry)
-            outxml.write(spec)
+    result = []
+    for entry in data_list:
+        spec = template.format(*entry)
+        result.append(spec)
+    return '\n\n'.join(result)  
 
 # turn the spec and timeline files into lists
 if __name__ == '__main__':
@@ -109,7 +105,11 @@ if __name__ == '__main__':
 
     fpp_list = read_csv_to_list(args.fpp)
     # fill the FPP template file with specs
-    fill_template('FPP_spec.xml', fpp_list, 'FPPTemplate.txt')
+    with open('FPPTemplate.txt', 'r') as template_file:
+        template = template_file.read()
+    fpp_string = fill_template( fpp_list, template)
+    with open('FPP.xml', 'w') as fpp_out:
+        fpp_out.write(fpp_string)
 
     # fill the Deployment template with regions and commisioning timeline
     dep_list = read_csv_to_list(args.dep)
