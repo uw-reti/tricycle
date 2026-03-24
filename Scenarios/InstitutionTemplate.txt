@@ -1,6 +1,4 @@
-<region>
-    <name>{region_name}</name>
-    <config> <NullRegion /> </config>
+
     <institution>
       <name>{inst_name}</name>
       <config> 
@@ -20,4 +18,3 @@
         </DeployInst>  
       </config>
     </institution>
-  </region>

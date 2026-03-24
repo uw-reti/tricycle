@@ -1,10 +1,10 @@
   <facility>
-    <name>{}</name>
+    <name>{name}</name>
     <config>
       <FusionPowerPlant>
-        <fusion_power>{}</fusion_power>
-        <TBR>{}</TBR>
-        <reserve_inventory>{}</reserve_inventory>
+        <fusion_power>{fusion_power}</fusion_power>
+        <TBR>{TBR}</TBR>
+        <reserve_inventory>{reserve_inventory}</reserve_inventory>
         <sequestered_equilibrium>{}</sequestered_equilibrium>
         <fuel_incommod>{}</fuel_incommod>
         <Li7_contribution>{}</Li7_contribution>

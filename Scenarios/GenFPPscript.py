@@ -5,10 +5,11 @@ import argparse
 
 #Enter FPP spec and Deployment commissioning input files
 
-parser = argparse.ArgumentParser(description='Generate FPP deployment scenario for tricycle')
-parser.add_argument('-f','--fpp', type=str, help='FPP spec file')
-parser.add_argument('-d','--dep', type=str, help='FPP deployment file')
-args = parser.parse_args()
+def add_parse(): 
+    parser = argparse.ArgumentParser(description='Generate FPP deployment scenario for tricycle')
+    parser.add_argument('-f','--fpp', type=str, help='FPP spec file')
+    parser.add_argument('-d','--dep', type=str, help='FPP deployment file')
+    return parser.parse_args()
 
 # function to turn csv file into list
 
@@ -19,29 +20,101 @@ def read_csv_to_list(filename):
 
     data = []
 
-    with open(filename, 'r') as fp:
-        flines =sum(1 for line in fp)
-    
     with open(filename, mode='r', newline='', encoding='utf-8') as file:
-        for row in range(flines):
-            reader = csv.reader(file)
-            for row in reader:
-                data.append(row)
-    return data[1:row+1] # Returns the values of input data in lists
+        reader = csv.reader(file)
+        #reader = csv.DictReader(file) # Use DictReader to read the header and create a dictionary for each row
+        header = next(reader) # Reads and discards the first row
+        for row in reader:
+            data.append(row)
+
+    return data
+
+def process_deployment_data(data_list):
+
+    deployment_map = {}
+
+    for entry in data_list:
+        region = entry['region_name']
+        if region not in deployment_map:
+            deployment_map[region] = {}
+        institution = entry['institution']
+        if institution not in deployment_map[region]:
+            deployment_map[region][institution] = {'prototypes': [], 'build_times': [], 'lifetimes': [], 'n_build': []}
+        deployment_map[region][institution]['prototypes'].append(entry['prototypes'])
+        deployment_map[region][institution]['build_times'].append(entry['build_times'])
+        deployment_map[region][institution]['lifetimes'].append(entry['lifetimes'])
+        deployment_map[region][institution]['n_build'].append(entry['n_build'])
+
+    return deployment_map
+
+def fill_region_template(region_name, institution_data, template_filename, inst_template_filename):
+    """
+    Fill in a region template with data from a dictionary for that region. That
+    dictionary is expected to have institution names as keys, and each value is
+    expected to be a dictionary with four keys: prototypes, build_times,
+    lifetimes, n_build. Each of those keys should have a list of values.
+    """
+
+    with open(template_filename, 'r') as template_file:
+        template = template_file.read()
+
+    institution_strings = []
+    for inst_name, data_dict in institution_data.items():
+        inst_string = fill_institution_template(inst_name, data_dict, inst_template_filename)
+        institution_strings.append(inst_string)
+
+    institutions = '\n'.join(institution_strings)
+
+    xml_string = template.format(region_name=region_name, institutions=institutions)
+
+    return xml_string       
+
+def fill_institution_template(inst_name, data_dict, template_filename):
+    """
+    Fill in an institution template with data from a dictionary for that
+    institution. That dictionary is expected to have four keys: prototypes,
+    build_times, lifetimes, n_build. Each of those keys should have a list of
+    values.
+    """
+
+    with open(template_filename, 'r') as template_file:
+        template = template_file.read()
+
+    prototypes = '\n'.join([f"<val>{p}</val>" for p in data_dict['prototypes']])
+    build_times = '\n'.join([f"<val>{bt}</val>" for bt in data_dict['build_times']])
+    lifetimes = '\n'.join([f"<val>{lt}</val>" for lt    in data_dict['lifetimes']])            
+    n_build = '\n'.join([f"<val>{nb}</val>" for nb in data_dict['n_build']])
+    
+
+    xml_string = template.format(inst_name=inst_name, prototypes=prototypes, 
+                                 build_times=build_times, lifetimes=lifetimes, 
+                                 n_build=n_build)
+
+    return xml_string
+
+
+def fill_template(out_filename, data_list, template_filename):
+
+    with open(template_filename, 'r') as template_file:
+        template = template_file.read()
+
+    with open(out_filename, "w") as outxml:
+        for entry in data_list:
+            spec = template.format(*entry)
+            outxml.write(spec)
 
 # turn the spec and timeline files into lists
 if __name__ == '__main__':
-    fpp_list = read_csv_to_list(args.fpp)
-    dep_list = read_csv_to_list(args.dep)
+    add_parse()
 
-# fill the FPP template file with specs
-with open("FPP_spec.xml", "w") as fplant:
-     for i in range(len(fpp_list)):
-         fppspec = open('FPPTemplate.txt', 'r').read().format(*fpp_list[i])
-         fplant.write(fppspec)
-         
-# fill the Deployment template with regions and commisioning timeline
-with open("FPP_dep.xml", "w") as comm:
-   for i in range(len(dep_list)):
-    dep_time = open('Deployment.txt', 'r').read().format(*dep_list[i])
-    comm.write(dep_time)
+    fpp_list = read_csv_to_list(args.fpp)
+    # fill the FPP template file with specs
+    fill_template('FPP_spec.xml', fpp_list, 'FPPTemplate.txt')
+
+    # fill the Deployment template with regions and commisioning timeline
+    dep_list = read_csv_to_list(args.dep)
+    dep_map = process_deployment_data(dep_list)
+    with open('Deployment.xml', 'w') as dep_out:
+        for region_name, institution_data in dep_map.items():
+            region_xml = fill_region_template(region_name, institution_data, 'RegionTemplate.txt', 'InstitutionTemplate.txt')
+            dep_out.write(region_xml + "\n\n") 
