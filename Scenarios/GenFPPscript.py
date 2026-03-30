@@ -23,7 +23,6 @@ def read_csv_to_list(filename):
 
     with open(filename, mode='r', newline='', encoding='utf-8') as file:
         reader = csv.DictReader(file)
-        #header = next(reader) # Reads and discards the first row
         for row in reader:
             data.append(row)
 
@@ -37,7 +36,7 @@ def process_deployment_data(data_list):
         region = entry['region_name']
         if region not in deployment_map:
             deployment_map[region] = {}
-            institution = entry['institution']
+        institution = entry['institution']
         if institution not in deployment_map[region]:
             deployment_map[region][institution] = {'prototypes': [], 'build_times': [], 'lifetimes': [], 'n_build': []}
         for key in deployment_map[region][institution].keys():
