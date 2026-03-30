@@ -1,4 +1,4 @@
-region name, institution, prototypes, build_times, lifetimes, n_build
+region_name, institutions, prototypes, build_times, lifetimes, n_build
 OneRegion,FusionPower,PlantOne,2,350,2
 OneRegion,FusionPower,PlantOne,5,350,4
 OneRegion,FusionPower,PlantTwo,5,350,1
