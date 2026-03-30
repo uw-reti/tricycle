@@ -5,7 +5,7 @@ import argparse
 
 #Enter FPP spec and Deployment commissioning input files
 
-def add_parse(): 
+def add_parse():    
     parser = argparse.ArgumentParser(description='Generate FPP deployment scenario for tricycle')
     parser.add_argument('-f','--fpp', type=str, help='FPP spec file')
     parser.add_argument('-d','--dep', type=str, help='FPP deployment file')
@@ -15,15 +15,15 @@ def add_parse():
 
 def read_csv_to_list(filename):
     """
-    Reads a CSV file into a python list
+    Reads a CSV file into a python list of dictionaries with dictionary keys 
+    based on the CSV header values
     """
 
     data = []
 
     with open(filename, mode='r', newline='', encoding='utf-8') as file:
-        reader = csv.reader(file)
-        #reader = csv.DictReader(file) # Use DictReader to read the header and create a dictionary for each row
-        header = next(reader) # Reads and discards the first row
+        reader = csv.DictReader(file)
+        #header = next(reader) # Reads and discards the first row
         for row in reader:
             data.append(row)
 
@@ -37,7 +37,7 @@ def process_deployment_data(data_list):
         region = entry['region_name']
         if region not in deployment_map:
             deployment_map[region] = {}
-        institution = entry['institution']
+            institution = entry['institution']
         if institution not in deployment_map[region]:
             deployment_map[region][institution] = {'prototypes': [], 'build_times': [], 'lifetimes': [], 'n_build': []}
         for key in deployment_map[region][institution].keys():
@@ -80,7 +80,7 @@ def fill_institution_template(inst_name, data_dict, template_filename):
 
     prototypes = '\n'.join([f"<val>{p}</val>" for p in data_dict['prototypes']])
     build_times = '\n'.join([f"<val>{bt}</val>" for bt in data_dict['build_times']])
-    lifetimes = '\n'.join([f"<val>{lt}</val>" for lt    in data_dict['lifetimes']])            
+    lifetimes = '\n'.join([f"<val>{lt}</val>" for lt in data_dict['lifetimes']])            
     n_build = '\n'.join([f"<val>{nb}</val>" for nb in data_dict['n_build']])
     
 
@@ -90,28 +90,22 @@ def fill_institution_template(inst_name, data_dict, template_filename):
 
     return xml_string
 
-
-def fill_template(data_list, template):
-
-    result = []
-    for entry in data_list:
-        spec = template.format(*entry)
-        result.append(spec)
-    return '\n\n'.join(result)  
-
 def build_XML_snippet():
     """
     Main function to build the FPP and Deployment XML snippets. Reads in the FPP
     spec and deployment commissioning timeline from csv files, fills in the
     template files, and writes the resulting XML snippets to output files.                         
     """
-    add_parse()
+    args = add_parse()
 
     fpp_list = read_csv_to_list(args.fpp)
     # fill the FPP template file with specs
-    with open('FPPTemplate.txt', 'r') as template_file:
+    with open('FPP.tmpl', 'r') as template_file:
         template = template_file.read()
-    fpp_string = fill_template( fpp_list, template)
+    fpp_xml_list = []
+    for fpp in fpp_list:
+        fpp_xml_list.append(template.format(**fpp))
+    fpp_string = '\n\n'.join(fpp_xml_list)
     with open('FPP.xml', 'w') as fpp_out:
         fpp_out.write(fpp_string)
 
@@ -120,7 +114,7 @@ def build_XML_snippet():
     dep_map = process_deployment_data(dep_list)
     with open('Deployment.xml', 'w') as dep_out:
         for region_name, institution_data in dep_map.items():
-            region_xml = fill_region_template(region_name, institution_data, 'RegionTemplate.txt', 'InstitutionTemplate.txt')
+            region_xml = fill_region_template(region_name, institution_data, 'Region.tmpl', 'Institution.tmpl')
             dep_out.write(region_xml + "\n\n") 
 
 # turn the spec and timeline files into lists
