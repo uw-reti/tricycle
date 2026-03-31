@@ -1,0 +1,375 @@
+<candus>
+
+<!-- all deployment timings in this file assume a start date of January 2003 -->
+
+<facility>
+    <name>Bruce A1</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.006150</throughput>
+        </Source>
+    </config>
+  </facility>
+
+<facility>
+  <name>Bruce A2</name>
+  <config>
+    <Source>
+      <outcommod>Tritium</outcommod>
+      <outrecipe>T</outrecipe>
+      <throughput>0.006150</throughput>
+    </Source>
+  </config>
+</facility>
+
+<facility>
+  <name>Bruce A3</name>
+  <config>
+    <Source>
+      <outcommod>Tritium</outcommod>
+      <outrecipe>T</outrecipe>
+      <throughput>0.006150</throughput>
+    </Source>
+  </config>
+</facility>
+
+<facility>
+  <name>Bruce A4</name>
+  <config>
+    <Source>
+      <outcommod>Tritium</outcommod>
+      <outrecipe>T</outrecipe>
+      <throughput>0.006150</throughput>
+    </Source>
+  </config>
+</facility>
+
+<facility>
+  <name>Bruce B5</name>
+  <config>
+    <Source>
+      <outcommod>Tritium</outcommod>
+      <outrecipe>T</outrecipe>
+      <throughput>0.006765</throughput>
+    </Source>
+  </config>
+</facility>
+
+<facility>
+  <name>Bruce B6</name>
+  <config>
+    <Source>
+      <outcommod>Tritium</outcommod>
+      <outrecipe>T</outrecipe>
+      <throughput>0.006765</throughput>
+    </Source>
+  </config>
+</facility>
+
+<facility>
+  <name>Bruce B7</name>
+  <config>
+    <Source>
+      <outcommod>Tritium</outcommod>
+      <outrecipe>T</outrecipe>
+      <throughput>0.006765</throughput>
+    </Source>
+  </config>
+</facility>
+
+<facility>
+  <name>Bruce B8</name>
+  <config>
+    <Source>
+      <outcommod>Tritium</outcommod>
+      <outrecipe>T</outrecipe>
+      <throughput>0.006765</throughput>
+    </Source>
+  </config>
+</facility>
+
+<facility>
+  <name>Darlington 1</name>
+  <config>
+    <Source>
+      <outcommod>Tritium</outcommod>
+      <outrecipe>T</outrecipe>
+      <throughput>0.007225</throughput>
+    </Source>
+  </config>
+</facility>
+
+<facility>
+  <name>Darlington 2</name>
+  <config>
+    <Source>
+      <outcommod>Tritium</outcommod>
+      <outrecipe>T</outrecipe>
+      <throughput>0.007225</throughput>
+    </Source>
+  </config>
+</facility>
+
+<facility>
+  <name>Darlington 3</name>
+  <config>
+    <Source>
+      <outcommod>Tritium</outcommod>
+      <outrecipe>T</outrecipe>
+      <throughput>0.007225</throughput>
+    </Source>
+  </config>
+</facility>
+
+<facility>
+  <name>Darlington 4</name>
+  <config>
+    <Source>
+      <outcommod>Tritium</outcommod>
+      <outrecipe>T</outrecipe>
+      <throughput>0.007225</throughput>
+    </Source>
+  </config>
+</facility>
+
+<facility>
+  <name>Pickering A1</name>
+  <config>
+    <Source>
+      <outcommod>Tritium</outcommod>
+      <outrecipe>T</outrecipe>
+      <throughput>0.004223</throughput>
+    </Source>
+  </config>
+</facility>
+
+<facility>
+  <name>Pickering A2</name>
+  <config>
+    <Source>
+      <outcommod>Tritium</outcommod>
+      <outrecipe>T</outrecipe>
+      <throughput>0.004223</throughput>
+    </Source>
+  </config>
+</facility>
+
+<facility>
+  <name>Pickering A3</name>
+  <config>
+    <Source>
+      <outcommod>Tritium</outcommod>
+      <outrecipe>T</outrecipe>
+      <throughput>0.004223</throughput>
+    </Source>
+  </config>
+</facility>
+
+<facility>
+  <name>Pickering A4</name>
+  <config>
+    <Source>
+      <outcommod>Tritium</outcommod>
+      <outrecipe>T</outrecipe>
+      <throughput>0.004223</throughput>
+    </Source>
+  </config>
+</facility>
+
+<facility>
+  <name>Pickering B5</name>
+  <config>
+    <Source>
+      <outcommod>Tritium</outcommod>
+      <outrecipe>T</outrecipe>
+      <throughput>0.004231</throughput>
+    </Source>
+  </config>
+</facility>
+
+<facility>
+  <name>Pickering B6</name>
+  <config>
+    <Source>
+      <outcommod>Tritium</outcommod>
+      <outrecipe>T</outrecipe>
+      <throughput>0.004231</throughput>
+    </Source>
+  </config>
+</facility>
+
+<facility>
+  <name>Pickering B7</name>
+  <config>
+    <Source>
+      <outcommod>Tritium</outcommod>
+      <outrecipe>T</outrecipe>
+      <throughput>0.004231</throughput>
+    </Source>
+  </config>
+</facility>
+
+<facility>
+  <name>Pickering B8</name>
+  <config>
+    <Source>
+      <outcommod>Tritium</outcommod>
+      <outrecipe>T</outrecipe>
+      <throughput>0.004231</throughput>
+    </Source>
+  </config>
+</facility>
+
+<facility>
+  <name>Point Lepreau</name>
+  <config>
+    <Source>
+      <outcommod>Tritium</outcommod>
+      <outrecipe>T</outrecipe>
+      <throughput>0.005412</throughput>
+  </Source>
+  </config>
+</facility>
+
+<facility>
+  <name>Gentilly 2</name>
+  <config>
+    <Source>
+      <outcommod>Tritium</outcommod>
+      <outrecipe>T</outrecipe>
+      <throughput>0.005207</throughput>
+    </Source>
+  </config>
+</facility>
+
+<region>
+  <name>Canada</name>
+  <config> <NullRegion /> </config>
+  <institution>
+    <name>DTRF</name>
+    <config> 
+      <DeployInst> 
+        <prototypes>
+          <!--Bruce-->
+          <val>Bruce A1</val> 
+          <val>Bruce A2</val> 
+          <val>Bruce A3</val> 
+          <val>Bruce A4</val> 
+          <val>Bruce B5</val> 
+          <val>Bruce B6</val> 
+          <val>Bruce B7</val> 
+          <val>Bruce B8</val> 
+          <!--Darlington-->
+          <val>Darlington 1</val>
+          <val>Darlington 2</val>
+          <val>Darlington 3</val>
+          <val>Darlington 4</val>
+          <!--Pickering-->
+          <val>Pickering A1</val>
+          <val>Pickering A2</val>
+          <val>Pickering A3</val>
+          <val>Pickering A4</val>
+          <val>Pickering B5</val>
+          <val>Pickering B6</val>
+          <val>Pickering B7</val> 
+          <val>Pickering B8</val> 
+          <!--Gentilly 2-->
+          <val>Gentilly 2</val>
+          <!--Point Lepreau-->
+          <val>Point Lepreau</val>
+        </prototypes>
+        <build_times>
+          <!--Bruce-->
+          <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <!--Darlington-->
+          <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <!--Pickering-->
+          <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <!--Gentilly 2-->
+          <val>1</val>
+          <!--Point Lepreau-->
+          <val>1</val>
+        </build_times>
+        <lifetimes>
+          <!--Bruce-->
+          <val>276</val>
+          <val>276</val>
+          <val>276</val>
+          <val>276</val>
+          <val>326</val>
+          <val>320</val>
+          <val>339</val>
+          <val>352</val>
+          <!--Darlington-->
+          <val>418</val>
+          <val>393</val>
+          <val>421</val>
+          <val>425</val>
+          <!--Pickering-->
+          <val>276</val>
+          <val>276</val>
+          <val>276</val>
+          <val>276</val>
+          <val>340</val>
+          <val>349</val>
+          <val>360</val>
+          <val>374</val>
+          <!--Gentilly 2-->
+          <val>309</val>
+          <!--Point Lepreau-->
+          <val>301</val>
+        </lifetimes>
+        <n_build>
+		      <!--Bruce-->
+          <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <!--Darlington-->
+          <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <!--Pickering-->
+          <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <!--Gentilly 2-->
+          <val>1</val>
+          <!--Point Lepreau-->
+          <val>1</val>
+        </n_build>
+      </DeployInst>  
+    </config>
+  </institution>
+</region>
+
+</candus>
