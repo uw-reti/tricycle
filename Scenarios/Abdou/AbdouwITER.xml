@@ -2,17 +2,17 @@
 
 <!-- all deployment timings in this file assume a start date of January 2003 -->
 
-  <facility>
-    <name>ITER</name>
-    <config>
-      <Sink>
-        <in_commods>
-          <val>TritiumFuel</val>
-        </in_commods>
-        <capacity>0.075</capacity>
-      </Sink>
-    </config>
-  </facility>
+<facility>
+  <name>ITER</name>
+  <config>
+    <Sink>
+      <in_commods>
+        <val>TritiumFuel</val>
+      </in_commods>
+      <capacity>0.075</capacity>
+    </Sink>
+  </config>
+</facility>
 
 <region>
     <name>Global</name>
