@@ -1,0 +1,45 @@
+<candus>
+
+<!-- all deployment timings in this file assume a start date of January 2003 -->
+
+<facility>
+  <name>ITER</name>
+  <config>
+    <Sink>
+      <in_commods>
+        <val>TritiumFuel</val>
+      </in_commods>
+      <capacity>0.075</capacity>
+    </Sink>
+  </config>
+</facility>
+
+<region>
+    <name>Global</name>
+    <config> <NullRegion /> </config>
+    <institution>
+      <name>ITER1</name>
+      <config> 
+         <DeployInst> 
+          <prototypes>
+            <!--ITER-->
+            <val>ITER</val>
+          </prototypes>
+          <build_times>
+            <!--ITER-->
+            <val>396</val>
+          </build_times>
+          <lifetimes>
+           <!--ITER-->
+            <val>192</val>
+          </lifetimes>
+          <n_build>
+		      <!--ITER-->
+            <val>1</val>
+          </n_build>
+        </DeployInst>  
+      </config>
+    </institution>
+  </region>
+
+</candus>
