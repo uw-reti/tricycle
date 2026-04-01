@@ -1,0 +1,74 @@
+<global>
+  <facility>
+    <name>Storage</name>
+    <config>
+      <DecayStorage>
+        <incommod>Tritium</incommod>
+        <outcommod>TritiumFuel</outcommod>
+      </DecayStorage>
+      </config>
+  </facility>
+
+  <facility>
+    <name>Start Supply</name>
+    <config>
+      <Source>
+        <outcommod>Tritium</outcommod>
+        <outrecipe>T</outrecipe>
+        <throughput>18.5</throughput>
+        <inventory_size>18.5</inventory_size>
+      </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Tritium Sales</name>
+    <config>
+      <Sink>
+      <in_commods>
+        <val>TritiumFuel</val>
+      </in_commods>
+        <capacity>0.00833</capacity>
+      </Sink>
+    </config>
+  </facility>
+
+  <region>
+    <name>GlobalTSupply</name>
+    <config> <NullRegion /> </config>
+    <institution>
+      <name>GlobalTExchange</name>
+        <initialfacilitylist>
+          <entry>
+          <prototype>Storage</prototype>
+          <number>1</number>
+          </entry>
+          <!--Sales-->
+          <entry>
+          <prototype>Tritium Sales</prototype>
+          <number>1</number>
+          </entry>
+        </initialfacilitylist>
+      <config> 
+        <DeployInst> 
+          <prototypes>
+            <!--Start Supply-->
+            <val>Start Supply</val>
+          </prototypes>
+          <build_times>
+            <!--Start Supply-->
+            <val>1</val>
+          </build_times>
+          <lifetimes>
+            <!--Start Supply-->
+            <val>1</val>
+          </lifetimes>
+          <n_build>
+            <!--Start Supply-->
+            <val>1</val>
+          </n_build>
+        </DeployInst>  
+      </config>
+    </institution>
+  </region>
+  </global>
