@@ -1,14 +1,14 @@
 <candus>
 
-<!-- all deployment timings in this file assume a start date of January 2006 -->
- 
+<!-- all deployment timings in this file assume a start date of January 2003 -->
+
 <facility>
   <name>Wolsong 1</name>
   <config>
     <Source>
       <outcommod>Tritium</outcommod>
       <outrecipe>T</outrecipe>
-      <throughput>0.012995</throughput>
+      <throughput>0.007663</throughput>
     </Source>
   </config>
 </facility>
@@ -19,7 +19,7 @@
     <Source>
       <outcommod>Tritium</outcommod>
       <outrecipe>T</outrecipe>
-      <throughput>0.012897</throughput>
+      <throughput>0.009508</throughput>
     </Source>
   </config>
 </facility>
@@ -30,7 +30,7 @@
     <Source>
       <outcommod>Tritium</outcommod>
       <outrecipe>T</outrecipe>
-      <throughput>0.013154</throughput>
+      <throughput>0.009299</throughput>
     </Source>
   </config>
 </facility>
@@ -41,7 +41,7 @@
     <Source>
       <outcommod>Tritium</outcommod>
       <outrecipe>T</outrecipe>
-      <throughput>0.013233</throughput>
+      <throughput>0.009968</throughput>
     </Source>
   </config>
 </facility>
@@ -62,20 +62,20 @@
         </prototypes>
         <build_times>
           <!--Wolsong-->
-          <val>18</val>
-          <val>18</val>
-          <val>18</val>
-          <val>18</val>
+          <val>54</val>
+          <val>54</val>
+          <val>54</val>
+          <val>54</val>
         </build_times>
         <lifetimes>
-          <!--Wolsong-->
-          <val>66</val>
-          <val>237</val>
-          <val>249</val>
-          <val>263</val>
+         <!--Wolsong-->
+          <val>246</val>
+          <val>417</val>
+          <val>429</val>
+          <val>443</val>
         </lifetimes>
         <n_build>
-		  <!--Wolsong-->
+		      <!--Wolsong-->
           <val>1</val>
           <val>1</val>
           <val>1</val>
@@ -85,6 +85,5 @@
     </config>
   </institution>
 </region>
-
 
 </candus>
