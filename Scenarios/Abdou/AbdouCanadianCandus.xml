@@ -1,17 +1,17 @@
 <candus>
 
-<!-- all deployment timings in this file assume a start date of January 2006 -->
+<!-- all deployment timings in this file assume a start date of January 2003 -->
 
 <facility>
-  <name>Bruce A1</name>
-  <config>
-    <Source>
-      <outcommod>Tritium</outcommod>
-      <outrecipe>T</outrecipe>
-      <throughput>0.014873</throughput>
-    </Source>
-  </config>
-</facility>
+    <name>Bruce A1</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>0.006150</throughput>
+        </Source>
+    </config>
+  </facility>
 
 <facility>
   <name>Bruce A2</name>
@@ -19,7 +19,7 @@
     <Source>
       <outcommod>Tritium</outcommod>
       <outrecipe>T</outrecipe>
-      <throughput>0.014286</throughput>
+      <throughput>0.006150</throughput>
     </Source>
   </config>
 </facility>
@@ -30,7 +30,7 @@
     <Source>
       <outcommod>Tritium</outcommod>
       <outrecipe>T</outrecipe>
-      <throughput>0.014678</throughput>
+      <throughput>0.006150</throughput>
     </Source>
   </config>
 </facility>
@@ -41,7 +41,7 @@
     <Source>
       <outcommod>Tritium</outcommod>
       <outrecipe>T</outrecipe>
-      <throughput>0.014678</throughput>
+      <throughput>0.006150</throughput>
     </Source>
   </config>
 </facility>
@@ -52,7 +52,7 @@
     <Source>
       <outcommod>Tritium</outcommod>
       <outrecipe>T</outrecipe>
-      <throughput>0.015989</throughput>
+      <throughput>0.006765</throughput>
     </Source>
   </config>
 </facility>
@@ -63,7 +63,7 @@
     <Source>
       <outcommod>Tritium</outcommod>
       <outrecipe>T</outrecipe>
-      <throughput>0.015989</throughput>
+      <throughput>0.006765</throughput>
     </Source>
   </config>
 </facility>
@@ -74,7 +74,7 @@
     <Source>
       <outcommod>Tritium</outcommod>
       <outrecipe>T</outrecipe>
-      <throughput>0.015989</throughput>
+      <throughput>0.006765</throughput>
     </Source>
   </config>
 </facility>
@@ -85,11 +85,10 @@
     <Source>
       <outcommod>Tritium</outcommod>
       <outrecipe>T</outrecipe>
-      <throughput>0.0159892</throughput>
+      <throughput>0.006765</throughput>
     </Source>
   </config>
 </facility>
-
 
 <facility>
   <name>Darlington 1</name>
@@ -97,7 +96,7 @@
     <Source>
       <outcommod>Tritium</outcommod>
       <outrecipe>T</outrecipe>
-      <throughput>0.017182</throughput>
+      <throughput>0.007225</throughput>
     </Source>
   </config>
 </facility>
@@ -108,7 +107,7 @@
     <Source>
       <outcommod>Tritium</outcommod>
       <outrecipe>T</outrecipe>
-      <throughput>0.017182</throughput>
+      <throughput>0.007225</throughput>
     </Source>
   </config>
 </facility>
@@ -119,7 +118,7 @@
     <Source>
       <outcommod>Tritium</outcommod>
       <outrecipe>T</outrecipe>
-      <throughput>0.017182</throughput>
+      <throughput>0.007225</throughput>
     </Source>
   </config>
 </facility>
@@ -130,7 +129,7 @@
     <Source>
       <outcommod>Tritium</outcommod>
       <outrecipe>T</outrecipe>
-      <throughput>0.017182</throughput>
+      <throughput>0.007225</throughput>
     </Source>
   </config>
 </facility>
@@ -141,7 +140,29 @@
     <Source>
       <outcommod>Tritium</outcommod>
       <outrecipe>T</outrecipe>
-      <throughput>0.010079</throughput>
+      <throughput>0.004223</throughput>
+    </Source>
+  </config>
+</facility>
+
+<facility>
+  <name>Pickering A2</name>
+  <config>
+    <Source>
+      <outcommod>Tritium</outcommod>
+      <outrecipe>T</outrecipe>
+      <throughput>0.004223</throughput>
+    </Source>
+  </config>
+</facility>
+
+<facility>
+  <name>Pickering A3</name>
+  <config>
+    <Source>
+      <outcommod>Tritium</outcommod>
+      <outrecipe>T</outrecipe>
+      <throughput>0.004223</throughput>
     </Source>
   </config>
 </facility>
@@ -152,7 +173,7 @@
     <Source>
       <outcommod>Tritium</outcommod>
       <outrecipe>T</outrecipe>
-      <throughput>0.010079</throughput>
+      <throughput>0.004223</throughput>
     </Source>
   </config>
 </facility>
@@ -163,7 +184,7 @@
     <Source>
       <outcommod>Tritium</outcommod>
       <outrecipe>T</outrecipe>
-      <throughput>0.010098</throughput>
+      <throughput>0.004231</throughput>
     </Source>
   </config>
 </facility>
@@ -174,7 +195,7 @@
     <Source>
       <outcommod>Tritium</outcommod>
       <outrecipe>T</outrecipe>
-      <throughput>0.010098</throughput>
+      <throughput>0.004231</throughput>
     </Source>
   </config>
 </facility>
@@ -185,7 +206,7 @@
     <Source>
       <outcommod>Tritium</outcommod>
       <outrecipe>T</outrecipe>
-      <throughput>0.010098</throughput>
+      <throughput>0.004231</throughput>
     </Source>
   </config>
 </facility>
@@ -196,7 +217,29 @@
     <Source>
       <outcommod>Tritium</outcommod>
       <outrecipe>T</outrecipe>
-      <throughput>0.010098</throughput>
+      <throughput>0.004231</throughput>
+    </Source>
+  </config>
+</facility>
+
+<facility>
+  <name>Point Lepreau</name>
+  <config>
+    <Source>
+      <outcommod>Tritium</outcommod>
+      <outrecipe>T</outrecipe>
+      <throughput>0.005412</throughput>
+  </Source>
+  </config>
+</facility>
+
+<facility>
+  <name>Gentilly 2</name>
+  <config>
+    <Source>
+      <outcommod>Tritium</outcommod>
+      <outrecipe>T</outrecipe>
+      <throughput>0.005207</throughput>
     </Source>
   </config>
 </facility>
@@ -210,82 +253,93 @@
       <DeployInst> 
         <prototypes>
           <!--Bruce-->
-          <val>Bruce A1</val>
-          <val>Bruce A2</val>
-          <val>Bruce A3</val>
-          <val>Bruce A4</val>
-          <val>Bruce B5</val>
-          <val>Bruce B6</val>  <!-- initial deployment of Bruce B6 before refurbishment -->
-          <val>Bruce B7</val>
-          <val>Bruce B8</val>
-          <val>Bruce B6</val>  <!-- Restart of Bruce B6 after refurbishment -->
+          <val>Bruce A1</val> 
+          <val>Bruce A2</val> 
+          <val>Bruce A3</val> 
+          <val>Bruce A4</val> 
+          <val>Bruce B5</val> 
+          <val>Bruce B6</val> 
+          <val>Bruce B7</val> 
+          <val>Bruce B8</val> 
           <!--Darlington-->
           <val>Darlington 1</val>
           <val>Darlington 2</val>
           <val>Darlington 3</val>
           <val>Darlington 4</val>
-          <val>Darlington 2</val>  <!-- Restart of Darlington 2 after refurbishment -->
           <!--Pickering-->
           <val>Pickering A1</val>
+          <val>Pickering A2</val>
+          <val>Pickering A3</val>
           <val>Pickering A4</val>
           <val>Pickering B5</val>
           <val>Pickering B6</val>
-          <val>Pickering B7</val>
-          <val>Pickering B8</val>
+          <val>Pickering B7</val> 
+          <val>Pickering B8</val> 
+          <!--Gentilly 2-->
+          <val>Gentilly 2</val>
+          <!--Point Lepreau-->
+          <val>Point Lepreau</val>
         </prototypes>
         <build_times>
           <!--Bruce-->
-          <val>81</val>
-          <val>82</val>
           <val>1</val>
           <val>1</val>
           <val>1</val>
           <val>1</val>
           <val>1</val>
           <val>1</val>
-          <val>211</val>
+          <val>1</val>
+          <val>1</val>
           <!--Darlington-->
           <val>1</val>
           <val>1</val>
           <val>1</val>
           <val>1</val>
-          <val>173</val>
           <!--Pickering-->
           <val>1</val>
           <val>1</val>
           <val>1</val>
           <val>1</val>
           <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <!--Gentilly 2-->
+          <val>1</val>
+          <!--Point Lepreau-->
           <val>1</val>
         </build_times>
         <lifetimes>
           <!--Bruce-->
-          <val>300</val>
-          <val>300</val>
           <val>276</val>
-          <val>273</val>
-          <val>107</val>
-          <val>101</val>
-          <val>121</val>
-          <val>134</val>
-          <val>300</val>
+          <val>276</val>
+          <val>276</val>
+          <val>276</val>
+          <val>326</val>
+          <val>320</val>
+          <val>339</val>
+          <val>352</val>
           <!--Darlington-->
-          <val>179</val>
-          <val>168</val>
-          <val>203</val>
-          <val>207</val>
-          <val>300</val>
+          <val>418</val>
+          <val>393</val>
+          <val>421</val>
+          <val>425</val>
           <!--Pickering-->
-          <val>292</val>
-          <val>273</val>
-          <val>83</val>
-          <val>94</val>
-          <val>106</val>
-          <val>120</val>
+          <val>276</val>
+          <val>276</val>
+          <val>276</val>
+          <val>276</val>
+          <val>340</val>
+          <val>349</val>
+          <val>360</val>
+          <val>374</val>
+          <!--Gentilly 2-->
+          <val>309</val>
+          <!--Point Lepreau-->
+          <val>301</val>
         </lifetimes>
         <n_build>
-		<!--Bruce-->
-          <val>1</val>
+		      <!--Bruce-->
           <val>1</val>
           <val>1</val>
           <val>1</val>
@@ -299,19 +353,23 @@
           <val>1</val>
           <val>1</val>
           <val>1</val>
-          <val>1</val>
           <!--Pickering-->
           <val>1</val>
           <val>1</val>
           <val>1</val>
           <val>1</val>
           <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <val>1</val>
+          <!--Gentilly 2-->
+          <val>1</val>
+          <!--Point Lepreau-->
           <val>1</val>
         </n_build>
       </DeployInst>  
     </config>
   </institution>
 </region>
-
 
 </candus>
