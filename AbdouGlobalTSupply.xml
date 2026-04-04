@@ -1,0 +1,273 @@
+<simulation xmlns:xi="http://www.w3.org/2001/XInclude">
+  <control>
+    <duration>1000</duration>
+    <startmonth>1</startmonth>
+    <startyear>2006</startyear>
+    <decay>lazy</decay>
+    <explicit_inventory>true</explicit_inventory>
+  </control>
+
+  <archetypes>
+    <spec><lib>cycamore</lib><name>DeployInst</name></spec>
+    <spec><lib>cycamore</lib><name>Source</name></spec>
+    <spec><lib>cycamore</lib><name>Storage</name></spec>
+    <spec><lib>cycamore</lib><name>Sink</name></spec>
+    <spec><lib>agents</lib><name>NullInst</name></spec>
+    <spec><lib>agents</lib><name>NullRegion</name></spec>
+  </archetypes>
+
+  <!--Start of the Commodities Section-->
+  <commodity>
+    <name>Tritium</name>
+    <solution_priority>1.0</solution_priority>
+  </commodity>
+  <commodity>
+    <name>Helium_3</name>
+    <solution_priority>1.0</solution_priority>
+  </commodity>
+
+
+  <!--Start of the Recipe Section-->
+  <recipe>
+    <name>T</name>
+    <basis>atom</basis>
+    <nuclide>
+        <id>10030000</id>
+        <comp>1</comp>
+    </nuclide>
+  </recipe>
+
+  <facility>
+   <name>Storage</name>
+    <config>
+      <Storage>
+        <in_commods>
+            <val>Tritium</val>
+        </in_commods>
+        <out_commods>
+            <val>Tritium</val>
+        </out_commods>
+        <throughput>1e+299</throughput>
+      </Storage>
+    </config>
+  </facility>
+
+  <facility>
+    <name>Start Supply</name>
+    <config>
+        <Source>
+            <outcommod>Tritium</outcommod>
+            <outrecipe>T</outrecipe>
+            <throughput>21.1</throughput>
+        </Source>
+    </config>
+  </facility>
+
+   <facility>
+    <name>Tritium Sales</name>
+    <config>
+      <Sink>
+        <in_commods>
+          <val>Tritium</val>
+        </in_commods>
+        <capacity>0.00833</capacity>
+      </Sink>
+    </config>
+  </facility>
+
+  <!--Facility Definitions-->
+<xi:include href="PearsonCanadianCANDUs.xml" xpointer="xpointer(//candus/*)"/>
+
+<xi:include href="PearsonKoreanCANDUs.xml" xpointer="xpointer(//candus/*)"/>
+
+  <region>
+    <name>GlobalTSupply</name>
+    <config> <NullRegion /> </config>
+    <institution>
+      <name>PearsonCandus</name>
+      <initialfacilitylist>
+        <entry>
+          <prototype>Storage</prototype>
+          <number>1</number>
+        </entry>
+      </initialfacilitylist>
+      <config> 
+        <DeployInst> 
+          <prototypes>
+            <val>Start Supply</val>
+            <!--Bruce-->
+            <val>Bruce B5</val>
+            <val>Bruce B6</val>
+            <val>Bruce B7</val>
+            <val>Bruce B8</val>
+            <val>Bruce A3 (PI)</val>
+            <val>Bruce A4 (PI)</val>
+            <val>Bruce A1 (R)</val>
+            <val>Bruce A2 (R)</val>
+            <val>Bruce A3 (R)</val>
+            <val>Bruce A4 (R)</val>
+            <val>Bruce B5 (R)</val>
+            <val>Bruce B6 (R)</val>
+            <val>Bruce B7 (R)</val>
+            <val>Bruce B8 (R)</val>
+            <!--Darlington-->
+            <val>Darlington 1</val>
+            <val>Darlington 2</val>
+            <val>Darlington 3</val>
+            <val>Darlington 4</val>
+            <val>Darlington 1 (R)</val>
+            <val>Darlington 2 (R)</val>
+            <val>Darlington 3 (R)</val>
+            <val>Darlington 4 (R)</val>
+            <!--Pickering-->
+            <val>Pickering A1</val>
+            <val>Pickering A2</val>
+            <val>Pickering A3</val>
+            <val>Pickering A4</val>
+            <val>Pickering B5</val>
+            <val>Pickering B6</val>
+            <val>Pickering B7</val>
+            <val>Pickering B8</val>
+            <!--Wolsong-->
+            <val>Wolsong 1</val>
+            <val>Wolsong 2</val>
+            <val>Wolsong 3</val>
+            <val>Wolsong 4</val>
+            <!--Sales-->
+            <val>Tritum Sales</val>
+          </prototypes>
+          <build_times>
+            <val>1</val>
+            <!--Bruce-->
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>80</val>
+            <val>81</val>
+            <val>251</val>
+            <val>263</val>
+            <val>287</val>
+            <val>211</val>
+            <val>311</val>
+            <val>335</val>
+            <!--Darlington-->
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>234</val>
+            <val>173</val>
+            <val>210</val>
+            <val>252</val>
+            <!--Pickering-->
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <!--Wolsong-->
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+             <!--Sales-->
+            <val>1</val>
+          </build_times>
+          <lifetimes>
+            <val>1</val>
+            <!--Bruce-->
+            <val>251</val>
+            <val>168</val>
+            <val>275</val>
+            <val>299</val>
+            <val>206</val>
+            <val>239</val>
+            <val>363</val>
+            <val>374</val>
+            <val>456</val>
+            <val>444</val>
+            <val>420</val>
+            <val>496</val>
+            <val>396</val>
+            <val>372</val>
+            <!--Darlington-->
+            <val>193</val>
+            <val>129</val>
+            <val>176</val>
+            <val>210</val>
+            <val>365</val>
+            <val>426</val>
+            <val>389</val>
+            <val>347</val>
+            <!--Pickering-->
+            <val>227</val>
+            <val>16</val>
+            <val>33</val>
+            <val>227</val>
+            <val>251</val>
+            <val>251</val>
+            <val>251</val>
+            <val>251</val>
+             <!--Wolsong-->
+            <val>168</val>
+            <val>258</val>
+            <val>270</val>
+            <val>285</val>
+             <!--Sales-->
+            <val>999</val>
+          </lifetimes>
+          <n_build>
+            <val>1</val>
+		 <!--Bruce-->
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <!--Darlington-->
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <!--Pickering-->
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <!--Wolsong-->
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+            <val>1</val>
+             <!--Sales-->
+            <val>1</val>
+          </n_build>
+        </DeployInst>  
+      </config>
+    </institution>
+  </region>
+
+</simulation>
