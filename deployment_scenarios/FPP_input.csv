@@ -1,0 +1,4 @@
+name, fusion_power, TBR, reserve_inventory, sequestered_equilibrium, fuel_incommod, Li7_contribution, refuel_mode, buy_quantity, buy_frequency, he3_outcommod, blanket_inrecipe, blanket_incommod, blanket_outcommod, blanket_size, blanket_turnover_fraction, blanket_turnover_frequency
+OneFacility,110,1.15,8.121,,,,,,,,,,,,,,,,,
+region, institution, build_times, lifetimes, n_build
+Canada, DTRF,1,250,2

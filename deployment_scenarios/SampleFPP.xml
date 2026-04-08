@@ -1,0 +1,55 @@
+<simulation>
+  <control>
+    <duration>10</duration>
+    <startmonth>1</startmonth>
+    <startyear>2000</startyear>
+  </control>
+
+  <archetypes>
+    <spec><lib>tricycle</lib><name>FusionPowerPlant</name></spec>
+    <spec><lib>agents</lib><name>NullInst</name></spec>
+    <spec><lib>agents</lib><name>NullRegion</name></spec>
+  </archetypes>
+
+
+  <facility>
+    <name>OneFacility</name>
+    <config>
+      <FusionPowerPlant>
+        <fusion_power></fusion_power>
+        <TBR></TBR>
+        <reserve_inventory></reserve_inventory>
+        <sequestered_equilibrium></sequestered_equilibrium>
+        <fuel_incommod></fuel_incommod>
+        <Li7_contribution></Li7_contribution>
+        <refuel_mode></refuel_mode>
+        <buy_quantity></buy_quantity>
+        <buy_frequency></buy_frequency>
+        <he3_outcommod></he3_outcommod>
+        <blanket_inrecipe></blanket_inrecipe>
+        <blanket_incommod></blanket_incommod>
+        <blanket_outcommod></blanket_outcommod>
+        <blanket_size></blanket_size>
+        <blanket_turnover_fraction></blanket_turnover_fraction>
+        <blanket_turnover_frequency></blanket_turnover_frequency>
+      </FusionPowerPlant>
+    </config>
+  </facility>
+
+  <region>
+    <name></name>
+    <config> <NullRegion /> </config>
+    <institution>
+      <name></name>
+      <config> 
+         <DeployInst> 
+          <prototypes><val></val></prototypes>
+          <build_times><val></val></build_times>
+          <lifetimes><val></val></lifetimes>
+          <n_build><val></val></n_build>
+        </DeployInst>  
+      </config>
+    </institution>
+  </region>
+
+</simulation>
