@@ -77,4 +77,4 @@ extern "C" cyclus::Agent* ConstructDecayStorage(cyclus::Context* ctx) {
   return new DecayStorage(ctx);
 }
 
-}  // namespace decaystorage
+}  // namespace tricycle
