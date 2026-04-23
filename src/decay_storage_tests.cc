@@ -139,7 +139,7 @@ TEST_F(DecayStorageTest, BasicMaterialFlow) {
   double tritium_qty = qr.GetVal<double>("TritiumStorage");
 
   // Should have received and stored some tritium
-  EXPECT_LE(0.0, tritium_qty);
+  EXPECT_LT(0.0, tritium_qty);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
