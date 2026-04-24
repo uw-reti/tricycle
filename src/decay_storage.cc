@@ -1,21 +1,15 @@
+// decay_storage.cc
+
 #include "decay_storage.h"
 
-using cyclus::CompMap;
-using cyclus::Composition;
-using cyclus::DoubleDistribution;
-using cyclus::FixedDoubleDist;
-using cyclus::FixedIntDist;
-using cyclus::IntDistribution;
-using cyclus::KeyError;
-using cyclus::Material;
-using cyclus::toolkit::ResBuf;
+#pragma cyclus exec from cyclus.system import CY_LARGE_DOUBLE, CY_LARGE_INT, CY_NEAR_ZERO
 
 namespace tricycle {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 DecayStorage::DecayStorage(cyclus::Context* ctx) : cyclus::Facility(ctx) {
   // Required by DRE policies
-  fuel_tracker.Init({&tritium_storage}, max_tritium_inventory);
+  fuel_tracker.Init({&tritium_storage}, cyclus::CY_LARGE_DOUBLE);
 
   bool is_bulk = true;
 
@@ -30,8 +24,9 @@ std::string DecayStorage::str() {
 
 void DecayStorage::EnterNotify() {
   cyclus::Facility::EnterNotify(); // call base function first
-  buy_policy.Init(this, &tritium_storage, std::string("input"), &fuel_tracker).Set(incommod).Start();
-  sell_policy.Init(this, &tritium_storage, std::string("output")).Set(outcommod).Start();
+  fuel_tracker.set_capacity(max_tritium_inventory);
+  buy_policy.Init(this, &tritium_storage, std::string("input"), &fuel_tracker, throughput ).Set(incommod).Start();
+  sell_policy.Init(this, &tritium_storage, std::string("output"), cyclus::CY_LARGE_DOUBLE).Set(outcommod).Start();
 }
 
 void DecayStorage::RecordInventories(double tritium, double helium) {
@@ -62,13 +57,15 @@ void DecayStorage::ExtractHelium(
 void DecayStorage::Tick() {
   tritium_storage.Decay();
   ExtractHelium(tritium_storage);
-  LOG(cyclus::LEV_INFO2, "Storage") << "Quantity to be offered: " << sell_policy.Limit() << " kg.";
+  LOG(cyclus::LEV_INFO2, "Storage") << "Quantity to be offered: " << throughput << " kg.";
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void DecayStorage::Tock() {
   RecordInventories(tritium_storage.quantity(), helium_storage.quantity());
 }
+
+
 
 // WARNING! Do not change the following this function!!! This enables your
 // archetype to be dynamically loaded and any alterations will cause your
@@ -77,4 +74,4 @@ extern "C" cyclus::Agent* ConstructDecayStorage(cyclus::Context* ctx) {
   return new DecayStorage(ctx);
 }
 
-}  // namespace tricycle
+}  // namespace decaystorage

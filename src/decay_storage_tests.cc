@@ -15,27 +15,32 @@ using cyclus::QueryResult;
 using cyclus::toolkit::MatQuery;
 using tricycle::DecayStorage;
 
+#include "cyclus.h"
+
+#pragma cyclus exec from cyclus.system import CY_LARGE_DOUBLE, CY_LARGE_INT, CY_NEAR_ZERO
+
 // Use an anonymous namespace to avoid polluting the global namespace with 
 // test-specific code.
 namespace {
 
 Composition::Ptr tritium() {
   cyclus::CompMap m;
-  m[10030000] = 1.0;
+  m[10030000] = 10;
   return Composition::CreateFromAtom(m);
 };
 
 Composition::Ptr decayed_tritium() {
   cyclus::CompMap m;
-  m[10030000] = 0.9;
-  m[20030000] = 0.1;
+  m[10030000] = 90;
+  m[20030000] = 10;
   return Composition::CreateFromAtom(m);
 };
 
 std::string common_config =
     " <incommod>Tritium</incommod>"
     " <outcommod>Tritium_Out</outcommod>"
-    " <max_tritium_inventory>10000000000.0</max_tritium_inventory>";
+    "<throughput>1e299</throughput>"
+    " <max_tritium_inventory>1e299</max_tritium_inventory>";
 
 cyclus::MockSim InitializeSim(std::string config, int simdur) {
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:DecayStorage"), config,
@@ -76,9 +81,10 @@ class DecayStorageTest : public ::testing::Test {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(DecayStorageTest, InitialState) {
   // Test that the facility is constructed with empty storage buffers
-  EXPECT_EQ(0.0, facility->tritium_storage.quantity());
-  EXPECT_EQ(0.0, facility->helium_storage.quantity());
-  EXPECT_EQ(10000000000.0, facility->max_tritium_inventory);
+  EXPECT_EQ(0.00, facility->tritium_storage.quantity());
+  EXPECT_EQ(0.00, facility->helium_storage.quantity());
+  EXPECT_EQ(0.0, facility->throughput);
+  EXPECT_EQ(0.0, facility->max_tritium_inventory);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -180,7 +186,6 @@ TEST_F(DecayStorageTest, EmptyStorageBehavior) {
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:DecayStorage"), config,
                       simdur);
 
-  sim.AddRecipe("tritium", tritium());
   // No source added, so no material flows
 
   EXPECT_NO_THROW(int id = sim.Run());
@@ -208,6 +213,7 @@ TEST_F(DecayStorageTest, EnterNotifyPolicySetup) {
 
   facility->incommod = "Tritium";
   facility->outcommod = "Tritium_Out";
+  facility->throughput = 0;
 
   EXPECT_NO_THROW(facility->EnterNotify());
 }

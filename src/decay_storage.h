@@ -5,7 +5,10 @@
 
 #include "cyclus.h"
 
+#include "boost/shared_ptr.hpp"
+
 #pragma cyclus exec from cyclus.system import CY_LARGE_DOUBLE, CY_LARGE_INT, CY_NEAR_ZERO
+
 
 namespace tricycle {
 
@@ -63,6 +66,24 @@ class DecayStorage : public cyclus::Facility {
   }
   std::string outcommod;
 
+  #pragma cyclus var {"default": CY_LARGE_DOUBLE,\
+                     "tooltip":"throughput per timestep (kg)",\
+                     "doc":"the max amount that can be moved through the facility per timestep (kg)",\
+                     "uilabel":"Throughput",\
+                     "uitype": "range", \
+                     "range": [0.0, CY_LARGE_DOUBLE], \
+                     "units":"kg"}
+  double throughput;
+
+  #pragma cyclus var {"default": CY_LARGE_DOUBLE,\
+                      "tooltip":"maximum inventory size (kg)",\
+                      "doc":"the maximum amount of material that can be in all storage buffer stages",\
+                      "uilabel":"Maximum Inventory Size",\
+                      "uitype": "range", \
+                      "range": [0.0, CY_LARGE_DOUBLE], \
+                      "units":"kg"}
+  double max_tritium_inventory;
+
   #pragma cyclus var {"tooltip":"Bulk storage buffer for tritium inventory with decay"}
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_storage;
 
@@ -100,8 +121,6 @@ class DecayStorage : public cyclus::Facility {
   void RecordInventories(double tritium, double helium);
 
 
-
-  double max_tritium_inventory = 10000000000.0;
   const int He3_id = 20030000;
   const cyclus::CompMap He3 = {{He3_id, 1}};
   const cyclus::Composition::Ptr He3_comp = cyclus::Composition::CreateFromAtom(He3);
