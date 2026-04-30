@@ -1,0 +1,2 @@
+name,fusion_power,TBR,reserve_inventory,sequestered_equilibrium,fuel_incommod,Li7_contribution,refuel_mode,buy_quantity,buy_frequency,he3_outcommod,blanket_inrecipe,blanket_incommod,blanket_outcommod,blanket_size,blanket_turnover_fraction,blanket_turnover_frequency
+PlantOne,100,1.15,8.121,2.121,Trit,0.3,fill,2.2,2,Helium,Lithium,Li7,He3,1000,0.2,24
