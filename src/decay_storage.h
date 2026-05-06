@@ -48,22 +48,44 @@ class DecayStorage : public cyclus::Facility {
 
   #pragma cyclus note {"doc": "A DecayStorage facility provides tritium storage " \
                               "and tracking with proper radioactive decay accounting."}
+  
+  /// A verbose printer for the DecayStorage facility
+  virtual std::string str();
+  
+  /// Set up policies and buffers
+  virtual void EnterNotify();
 
+  /// Decays tritium inventory and extracts helium-3 byproduct each time step
+  virtual void Tick();
 
-  #pragma cyclus var { \
-  "tooltip": "Tritium input commodity", \
-  "doc": "Input commodity on which DecayStorage requests tritium material.", \
-  "uilabel": "Input Commodity", \
-  "uitype": "incommodity", \
-  }
+  /// Transfers incoming material to storage and records inventories
+  virtual void Tock();
+
+ protected:
+
+  /// Extracts helium-3 byproduct from decayed tritium and stores it separately
+  void ExtractHelium();
+  
+  /// Records current tritium and helium-3 inventory quantities
+  void RecordInventories(double tritium, double helium);
+
+  const int He3_id = 20030000;
+  const cyclus::CompMap He3 = {{He3_id, 1}};
+  const cyclus::Composition::Ptr He3_comp = cyclus::Composition::CreateFromAtom(He3);
+
+  // --- Module Members ---
+  #pragma cyclus var {"tooltip": "Tritium input commodity",\
+                      "doc": "Input commodity on which DecayStorage"\
+                      " requests tritium material.",\
+                      "uilabel": "Input Commodity",\
+                      "uitype": "incommodity"}
   std::string incommod;
 
-  #pragma cyclus var { \
-  "tooltip": "Tritium output commodity", \
-  "doc": "Output commodity on which DecayStorage offers decayed tritium material.", \
-  "uilabel": "Output Commodity", \
-  "uitype": "outcommodity", \
-  }
+  #pragma cyclus var {"tooltip": "Tritium output commodity",\
+                      "doc": "Output commodity on which DecayStorage"\
+                      " offers decayed tritium material.",\
+                      "uilabel": "Output Commodity", \
+                      "uitype": "outcommodity"}
   std::string outcommod;
 
   #pragma cyclus var {"default": CY_LARGE_DOUBLE,\
@@ -94,36 +116,14 @@ class DecayStorage : public cyclus::Facility {
   #pragma cyclus var {"tooltip":"Tracker to handle on-hand tritium"}
   cyclus::toolkit::TotalInvTracker fuel_tracker;
 
+  friend class DecayStorageTest;
+
+ private:
   /// Policy for requesting tritium material
   cyclus::toolkit::MatlBuyPolicy buy_policy;
 
   /// Policy for offering tritium material
   cyclus::toolkit::MatlSellPolicy sell_policy;
-
-
-
-  /// Set up policies and buffers
-  virtual void EnterNotify();
-
-  /// A verbose printer for the DecayStorage facility
-  virtual std::string str();
-
-  /// Decays tritium inventory and extracts helium-3 byproduct each time step
-  virtual void Tick();
-
-  /// Transfers incoming material to storage and records inventories
-  virtual void Tock();
-
-  /// Extracts helium-3 byproduct from decayed tritium and stores it separately
-  void ExtractHelium(cyclus::toolkit::ResBuf<cyclus::Material> &inventory);
-  
-  /// Records current tritium and helium-3 inventory quantities
-  void RecordInventories(double tritium, double helium);
-
-
-  const int He3_id = 20030000;
-  const cyclus::CompMap He3 = {{He3_id, 1}};
-  const cyclus::Composition::Ptr He3_comp = cyclus::Composition::CreateFromAtom(He3);
 
   // And away we go!
 };
