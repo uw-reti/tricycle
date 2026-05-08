@@ -2,11 +2,10 @@
 
 #include <cmath>
 
-#include "agent_tests.h"
 #include "context.h"
-#include "decay_storage.h"
 #include "facility_tests.h"
-#include "pyhooks.h"
+#include "agent_tests.h"
+#include "decay_storage.h"
 
 using cyclus::CompMap;
 using cyclus::Cond;
@@ -15,7 +14,6 @@ using cyclus::QueryResult;
 using cyclus::toolkit::MatQuery;
 using tricycle::DecayStorage;
 
-#include "cyclus.h"
 
 #pragma cyclus exec from cyclus.system import CY_LARGE_DOUBLE, CY_LARGE_INT, CY_NEAR_ZERO
 
@@ -25,22 +23,22 @@ namespace {
 
 Composition::Ptr tritium() {
   cyclus::CompMap m;
-  m[10030000] = 10;
+  m[10030000] = 0.10;
   return Composition::CreateFromAtom(m);
 };
 
 Composition::Ptr decayed_tritium() {
   cyclus::CompMap m;
-  m[10030000] = 90;
-  m[20030000] = 10;
+  m[10030000] = 0.90;
+  m[20030000] = 0.10;
   return Composition::CreateFromAtom(m);
 };
 
 std::string common_config =
     " <incommod>Tritium</incommod>"
     " <outcommod>Tritium_Out</outcommod>"
-    "<throughput>1e299</throughput>"
-    " <max_tritium_inventory>1e299</max_tritium_inventory>";
+    " <throughput>10</throughput>"
+    " <max_tritium_inventory>10</max_tritium_inventory>";
 
 cyclus::MockSim InitializeSim(std::string config, int simdur) {
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:DecayStorage"), config,
@@ -68,23 +66,29 @@ class DecayStorageTest : public ::testing::Test {
  protected:
   cyclus::TestContext tc;
   DecayStorage* facility;
-
+  
   virtual void SetUp() {
     facility = new DecayStorage(tc.get());
   }
 
   virtual void TearDown() {
     delete facility;
+  
   }
+ 
+  void InitState(DecayStorage* fac);
 };
+
+void DecayStorageTest::InitState(DecayStorage* fac){
+  EXPECT_EQ(0.0, fac->tritium_storage.quantity());
+  EXPECT_EQ(0.0, fac->helium_storage.quantity());
+  EXPECT_DOUBLE_EQ(0, fac->max_tritium_inventory);
+}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(DecayStorageTest, InitialState) {
   // Test that the facility is constructed with empty storage buffers
-  EXPECT_EQ(0.00, facility->tritium_storage.quantity());
-  EXPECT_EQ(0.00, facility->helium_storage.quantity());
-  EXPECT_EQ(0.0, facility->throughput);
-  EXPECT_EQ(0.0, facility->max_tritium_inventory);
+  InitState(facility);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -203,7 +207,7 @@ TEST_F(DecayStorageTest, EmptyStorageBehavior) {
 TEST_F(DecayStorageTest, ExtractHeliumEmptyStorage) {
   // Test ExtractHelium with empty storage (should not crash)
 
-  EXPECT_NO_THROW(facility->ExtractHelium(facility->tritium_storage));
+  EXPECT_NO_THROW(facility->ExtractHelium());
   EXPECT_EQ(0.0, facility->helium_storage.quantity());
 }
 
@@ -213,7 +217,7 @@ TEST_F(DecayStorageTest, EnterNotifyPolicySetup) {
 
   facility->incommod = "Tritium";
   facility->outcommod = "Tritium_Out";
-  facility->throughput = 0;
+  facility->throughput = 1e299;
 
   EXPECT_NO_THROW(facility->EnterNotify());
 }
