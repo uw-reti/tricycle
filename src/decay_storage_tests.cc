@@ -2,6 +2,8 @@
 
 #include <cmath>
 
+
+#include <string>
 #include "context.h"
 #include "facility_tests.h"
 #include "agent_tests.h"
@@ -19,7 +21,7 @@ using tricycle::DecayStorage;
 
 // Use an anonymous namespace to avoid polluting the global namespace with 
 // test-specific code.
-namespace {
+namespace tricycle {
 
 Composition::Ptr tritium() {
   cyclus::CompMap m;
@@ -59,7 +61,6 @@ QueryResult TimeInventoryQuery(cyclus::MockSim& sim, std::string time) {
   return qr;
 }
 
-}  // namespace
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 class DecayStorageTest : public ::testing::Test {
@@ -69,6 +70,8 @@ class DecayStorageTest : public ::testing::Test {
   
   virtual void SetUp() {
     facility = new DecayStorage(tc.get());
+    InitParameters();
+    SetUpStorage();
   }
 
   virtual void TearDown() {
@@ -77,12 +80,37 @@ class DecayStorageTest : public ::testing::Test {
   }
  
   void InitState(DecayStorage* fac);
+  void InitParameters();
+  void SetUpStorage();
+  void ExtractEmptyHeliumTest();
+  std::string incommod, outcommod;
+  double max_tritium_inventory, throughput;
 };
+
+void DecayStorageTest::InitParameters(){
+  double max_tritium_inventory = cyclus::CY_LARGE_DOUBLE;
+  double throughput = cyclus::CY_LARGE_DOUBLE;
+  std::string incommod =  "Tritium";
+  std::string outcommod = "Tritium_Out";
+}
+
+void DecayStorageTest::SetUpStorage(){
+  facility->max_tritium_inventory = max_tritium_inventory;
+  facility->fuel_tracker.set_capacity(max_tritium_inventory);
+  facility->throughput = throughput;
+  facility->incommod = incommod;
+  facility->outcommod = outcommod;
+}
 
 void DecayStorageTest::InitState(DecayStorage* fac){
   EXPECT_EQ(0.0, fac->tritium_storage.quantity());
   EXPECT_EQ(0.0, fac->helium_storage.quantity());
-  EXPECT_DOUBLE_EQ(0, fac->max_tritium_inventory);
+  EXPECT_DOUBLE_EQ(max_tritium_inventory, fac->max_tritium_inventory);
+}
+
+void DecayStorageTest::ExtractEmptyHeliumTest(){
+  EXPECT_NO_THROW(facility->ExtractHelium());
+  EXPECT_EQ(0.0, facility->helium_storage.quantity());
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -207,17 +235,12 @@ TEST_F(DecayStorageTest, EmptyStorageBehavior) {
 TEST_F(DecayStorageTest, ExtractHeliumEmptyStorage) {
   // Test ExtractHelium with empty storage (should not crash)
 
-  EXPECT_NO_THROW(facility->ExtractHelium());
-  EXPECT_EQ(0.0, facility->helium_storage.quantity());
+  ExtractEmptyHeliumTest();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(DecayStorageTest, EnterNotifyPolicySetup) {
   // Test that EnterNotify sets up buy and sell policies correctly
-
-  facility->incommod = "Tritium";
-  facility->outcommod = "Tritium_Out";
-  facility->throughput = 1e299;
 
   EXPECT_NO_THROW(facility->EnterNotify());
 }
@@ -243,6 +266,8 @@ TEST_F(DecayStorageTest, MaterialWithDecay) {
   // Should extract helium-3 from the already decayed material
   EXPECT_LE(0.0, helium_qty);
 }
+
+}  // namespace tricycle
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Do Not Touch! Below section required for connection with Cyclus
