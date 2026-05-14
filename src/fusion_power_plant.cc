@@ -83,7 +83,7 @@ void FusionPowerPlant::EnterNotify() {
   }
 
   tritium_sell_policy.Init(this, &tritium_excess, std::string("Excess Tritium"))
-      .Set(fuel_incommod)
+      .Set(fuel_outcommod)
       .Start();
 
   helium_sell_policy.Init(this, &helium_excess, std::string("Helium-3"))
