@@ -361,7 +361,8 @@ TEST_F(FusionPowerPlantTest, EnterNotifySellPolicy) {
 
   std::string config = common_config +
                        " <TBR>1.30</TBR> "
-                       " <fuel_incommod>Tritium</fuel_incommod>";
+                       " <fuel_incommod>Tritium</fuel_incommod>"
+                        "<fuel_outcommod>TritiumFuel</fuel_outcommod>";
 
   int simdur = 10;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:FusionPowerPlant"), config,
@@ -371,7 +372,7 @@ TEST_F(FusionPowerPlantTest, EnterNotifySellPolicy) {
   sim.AddRecipe("enriched_lithium", enriched_lithium());
 
   sim.AddSource("Tritium").capacity(100).recipe("tritium").Finalize();
-  sim.AddSink("Tritium").Finalize();
+  sim.AddSink("TritiumFuel").Finalize();
   sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
 
   int id = sim.Run();
