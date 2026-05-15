@@ -178,6 +178,7 @@ bool FusionPowerPlant::ReadyToOperate() {
   double required_storage_inventory = SequesteredTritiumGap();
   if (sequestered_tritium->quantity() < cyclus::eps_rsrc()) {
     required_storage_inventory += reserve_inventory;
+    required_storage_inventory *= tritium_startup_fraction;
   } else {
     required_storage_inventory += fuel_usage_mass;
   }
