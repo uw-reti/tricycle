@@ -1,290 +1,298 @@
-#ifndef CYCLUS_TRICYCLE_FUSION_POWER_PLANT_H_
-#define CYCLUS_TRICYCLE_FUSION_POWER_PLANT_H_
+#include "fusion_power_plant.h"
 
-#include <string>
-
-#include "cyclus.h"
-#include "boost/shared_ptr.hpp"
-#include "pyne.h"
-
+using cyclus::CompMap;
+using cyclus::Composition;
+using cyclus::DoubleDistribution;
+using cyclus::FixedDoubleDist;
+using cyclus::FixedIntDist;
+using cyclus::IntDistribution;
+using cyclus::KeyError;
 using cyclus::Material;
+using cyclus::toolkit::ResBuf;
 
 namespace tricycle {
 
-/// @class FusionPowerPlant
-/// The FusionPowerPlant class inherits from the Facility class and is
-/// dynamically loaded by the Agent class when requested.
-///
-/// @section intro Introduction
-/// This agent is designed to function as a basic representation of a fusion
-/// power plant with respect to tritium flows. This is currently the alpha
-/// version of the agent, and as such some simplifying assumptions were made.
-///
-/// @section agentparams Agent Parameters
-/// Place a description of the required input parameters which define the
-/// agent implementation. Saving for Later.
-///
-/// @section optionalparams Optional Parameters
-/// Place a description of the optional input parameters to define the
-/// agent implementation. Saving for later.
-///
-/// @section detailed Detailed Behavior
-/// Place a description of the detailed behavior of the agent. Consider
-/// describing the behavior at the tick and tock as well as the behavior
-/// upon sending and receiving materials and messages.
-///
-/// This section needs to be filled out once there is some behavior to describe.
-///
-class FusionPowerPlant : public cyclus::Facility  {
- public:
-  /// Constructor for FusionPowerPlant Class
-  /// @param ctx the cyclus context for access to simulation-wide parameters
-  explicit FusionPowerPlant(cyclus::Context* ctx);
+const double FusionPowerPlant::burn_rate = 55.8;
+const double MW_to_GW = 1000;
 
-  /// The Prime Directive
-  /// Generates code that handles all input file reading and restart operations
-  /// (e.g., reading from the database, instantiating a new object, etc.).
-  /// @warning The Prime Directive must have a space before it! (A fix will be
-  /// in 2.0 ^TM)
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+FusionPowerPlant::FusionPowerPlant(cyclus::Context* ctx)
+    : cyclus::Facility(ctx) {
+  fuel_tracker.Init({&tritium_storage}, fuel_limit);
+  blanket_tracker.Init({&blanket_feed}, blanket_limit);
 
-  #pragma cyclus
+  tritium_storage = ResBuf<Material>(true);
+  tritium_excess = ResBuf<Material>(true);
+  helium_excess = ResBuf<Material>(true);
+  blanket_feed = ResBuf<Material>(true);
+  blanket_waste = ResBuf<Material>(true);
+}
 
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+std::string FusionPowerPlant::str() {
+  return Facility::str();
+}
 
-  #pragma cyclus note {"doc": "A stub facility is provided as a skeleton " \
-                              "for the design of new facility agents."}
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void FusionPowerPlant::EnterNotify() {
+  cyclus::Facility::EnterNotify();
 
-  /// Set up policies and buffers:
-  virtual void EnterNotify();
+  fuel_usage_mass = (burn_rate * (fusion_power / MW_to_GW) /
+                     (kDefaultTimeStepDur * 12) * context()->dt());
+  blanket_turnover = blanket_size * blanket_turnover_fraction;
 
-  virtual ~FusionPowerPlant() {};
+  // Create the blanket material for use in the core, no idea if this works...
+  blanket = Material::Create(this, 0.0, context()->GetRecipe(blanket_inrecipe));
 
-  /// The handleTick function specific to the FusionPowerPlant.
-  /// @param time the time of the tick
-  virtual void Tick();
+  fuel_startup_policy
+      .Init(this, &tritium_storage, std::string("Tritium Storage"),
+            &fuel_tracker, std::string("ss"),
+            reserve_inventory + sequestered_equilibrium,
+            reserve_inventory + sequestered_equilibrium)
+      .Set(fuel_incommod, tritium_comp)
+      .Start();
 
-  /// The handleTick function specific to the FusionPowerPlant.
-  /// @param time the time of the tock
-  virtual void Tock();
+  blanket_fill_policy
+      .Init(this, &blanket_feed, std::string("Blanket Startup"),
+            &blanket_tracker, std::string("ss"), blanket_size, blanket_size)
+      .Set(blanket_incommod)
+      .Start();
 
-  /// A verbose printer for the FusionPowerPlant
-  virtual std::string str();
+  // Tritium Buy Policy Selection:
+  if (refuel_mode == "schedule") {
+    IntDistribution::Ptr active_dist = FixedIntDist::Ptr(new FixedIntDist(1));
+    IntDistribution::Ptr dormant_dist =
+        FixedIntDist::Ptr(new FixedIntDist(buy_frequency - 1));
+    DoubleDistribution::Ptr size_dist =
+        FixedDoubleDist::Ptr(new FixedDoubleDist(1));
 
-  //State Variables:
-  #pragma cyclus var { \
-    "doc": "Nameplate fusion power of the reactor", \
-    "tooltip": "Nameplate fusion power", \
-    "units": "MW", \
-    "uitype": "range", \
-    "range": [0, 1e299], \
-    "uilabel": "Fusion Power" \
+    fuel_refill_policy
+        .Init(this, &tritium_storage, std::string("Input"), &fuel_tracker,
+              buy_quantity, active_dist, dormant_dist, size_dist)
+        .Set(fuel_incommod, tritium_comp);
+
+  } else if (refuel_mode == "fill") {
+    fuel_refill_policy
+        .Init(this, &tritium_storage, std::string("Input"), &fuel_tracker,
+              std::string("ss"), reserve_inventory, reserve_inventory)
+        .Set(fuel_incommod, tritium_comp);
+
+  } else {
+    throw KeyError("Refuel mode " + refuel_mode +
+                   " not recognized! Try 'schedule' or 'fill'.");
   }
-  double fusion_power;
 
-  #pragma cyclus var { \
-    "doc": "Achievable system tritium breeding ratio before decay", \
-    "tooltip": "Achievable system tritium breeding ratio before decay", \
-    "units": "non-dimensional", \
-    "uitype": "range", \
-    "range": [0, 1e299], \
-    "uilabel": "Tritium Breeding Ratio" \
+  tritium_sell_policy.Init(this, &tritium_excess, std::string("Excess Tritium"))
+      .Set(fuel_outcommod)
+      .Start();
+
+  helium_sell_policy.Init(this, &helium_excess, std::string("Helium-3"))
+      .Set(he3_outcommod)
+      .Start();
+
+  blanket_waste_sell_policy
+      .Init(this, &blanket_waste, std::string("Blanket Waste"))
+      .Set(blanket_outcommod)
+      .Start();
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void FusionPowerPlant::Tick() {
+
+  DecayInventories();
+  ExtractHelium();
+
+  if (ReadyToOperate()) {
+    fuel_startup_policy.Stop();
+    fuel_refill_policy.Start();
+
+    LoadCore();
+    OperateReactor();
+
+  } else {
+    // Some way of leaving a record of what is going wrong is helpful info I
+    // think Use the cyclus logger
   }
-  double TBR;
-
-  #pragma cyclus var { \
-    "doc": "Minimum tritium inventory to hold in reserve in case of tritium recovery system failure", \
-    "tooltip": "Minimum tritium inventory to hold in reserve", \
-    "units": "kg", \
-    "uilabel": "Reserve Inventory" \
+  
+  double excess_tritium = std::max(tritium_storage.quantity() - 
+                                  (reserve_inventory + SequesteredTritiumGap())
+                                  , 0.0);
+  
+  // Otherwise the ResBuf encounters an error when it tries to squash
+  if (excess_tritium > cyclus::eps_rsrc()) {
+    tritium_excess.Push(tritium_storage.Pop(excess_tritium));
   }
-  double reserve_inventory;  
 
-  #pragma cyclus var { \
-    "doc": "Equilibrium quantity of tritium which is sequestered in the system and no longer accessable", \
-    "tooltip": "sequestered tritium equilibrium quantity, should be startup-reserve inventory", \
-    "units": "kg", \
-    "uilabel": "Equilibrium Quantity of Sequestered Tritium" \
+  if (sequestered_tritium->quantity() != 0) {
+    fuel_startup_policy.Stop();
+    fuel_refill_policy.Start();
   }
-  double sequestered_equilibrium; 
+}
 
-  #pragma cyclus var { \
-    "doc": "Fresh fuel commodity", \
-    "tooltip": "Name of fuel commodity requested", \
-    "uilabel": "Fuel input commodity" \
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void FusionPowerPlant::Tock() {
+  // ExplicitInventories wasn't working. If possible, may be best to use that
+  // down the road.
+  RecordInventories(tritium_storage.quantity(), tritium_excess.quantity(),
+                    sequestered_tritium->quantity(), blanket_feed.quantity(),
+                    blanket_waste.quantity(), helium_excess.quantity());
+}
+
+void FusionPowerPlant::RecordInventories(double tritium_storage,
+                                         double tritium_excess,
+                                         double sequestered_tritium,
+                                         double blanket_feed,
+                                         double blanket_waste,
+                                         double helium_excess) {
+  context()
+      ->NewDatum("FPPInventories")
+      ->AddVal("AgentId", id())
+      ->AddVal("Time", context()->time())
+      ->AddVal("TritiumStorage", tritium_storage)
+      ->AddVal("TritiumExcess", tritium_excess)
+      ->AddVal("TritiumSequestered", sequestered_tritium)
+      ->AddVal("BlanketFeed", blanket_feed)
+      ->AddVal("BlanketWaste", blanket_waste)
+      ->AddVal("HeliumExcess", helium_excess)
+      ->Record();
+}
+
+double FusionPowerPlant::SequesteredTritiumGap() {
+  double current_sequestered_tritium = 0.0;
+
+  if (sequestered_tritium->quantity() > cyclus::eps_rsrc()) {
+    cyclus::toolkit::MatQuery mq(sequestered_tritium);
+    current_sequestered_tritium = mq.mass(tritium_id);
   }
-  std::string fuel_incommod;
+  return std::max(sequestered_equilibrium - current_sequestered_tritium, 0.0);
+}
 
-  #pragma cyclus var { "default":"",\
-    "doc": "Fresh fuel commodity", \
-    "tooltip": "Name of fuel commodity offered", \
-    "uilabel": "Fuel output commodity" \
- }
-  std::string fuel_outcommod;
+bool FusionPowerPlant::TritiumStorageClean() {
+  cyclus::toolkit::MatQuery mq(tritium_storage.Peek());
+  return cyclus::AlmostEq(mq.mass(tritium_id), tritium_storage.quantity());
+}
 
-  #pragma cyclus var { \
-    "default": 0.03, \
-    "doc": "Fraction of tritium that comes from the (n + Li-7 --> T + He + n) reaction", \
-    "tooltip": "Fraction of tritium from Li-7 breeding", \
-    "units": "dimensionless", \
-    "uitype": "range", \
-    "range": [0, 1], \
-    "uilabel": "Li-7 Contribution" \
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+bool FusionPowerPlant::ReadyToOperate() {
+  // Determine tritium inventory required to operate
+  double required_storage_inventory = SequesteredTritiumGap();
+  if (sequestered_tritium->quantity() < cyclus::eps_rsrc()) {
+    required_storage_inventory += reserve_inventory;
+    required_storage_inventory *= tritium_startup_fraction;
+  } else {
+    required_storage_inventory += fuel_usage_mass;
   }
-  double Li7_contribution;
 
-  #pragma cyclus var { \
-    "default": 'fill', \
-    "doc": "Method of refueling the reactor", \
-    "tooltip": "Options: 'schedule' or 'fill'", \
-    "uitype": "combobox", \
-    "categorical": ['schedule', 'fill'], \
-    "uilabel": "Refuel Mode" \
+  // check  tritium storage quantity requirement
+  if (tritium_storage.quantity() < required_storage_inventory ||
+      !TritiumStorageClean()) {
+    return false;
   }
-  std::string refuel_mode;
-
-  #pragma cyclus var { \
-    "default": 0.1, \
-    "doc": "Quantity of fuel reactor tries to purchase in schedule mode", \
-    "tooltip": "Defaults to 100g/purchase", \
-    "units": "kg", \
-    "uitype": "range", \
-    "range": [0, 1e299], \
-    "uilabel": "Buy quantity" \
+  if (BlanketCycleTime() && blanket_feed.quantity() < blanket_turnover) {
+    return false;
   }
-  double buy_quantity;
+  return true;
+}
 
-  #pragma cyclus var { \
-    "default": 1, \
-    "doc": "Frequency which reactor tries to purchase new fuel", \
-    "tooltip": "Reactor is active for 1 timestep, then dormant for buy_frequency-1 timesteps", \
-    "units": "Timesteps", \
-    "uitype": "range", \
-    "range": [0, 1e299], \
-    "uilabel": "Buy frequency" \
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void FusionPowerPlant::LoadCore() {
+
+  // Squash runs into issues when you give it zero, so we need to check frist
+  if (SequesteredTritiumGap() > cyclus::eps_rsrc()) {
+    sequestered_tritium->Absorb(tritium_storage.Pop(SequesteredTritiumGap()));
   }
-  int buy_frequency;
 
-  #pragma cyclus var { \
-    "doc": "Helium-3 output commodity Designation", \
-    "tooltip": "He-3 output commodity", \
-    "uilabel": "He-3 output commodity" \
+  CycleBlanket();
+  incore_fuel->Absorb(tritium_storage.Pop(fuel_usage_mass));
+
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void FusionPowerPlant::BreedTritium(double T_burned) {
+  int Li6_id = pyne::nucname::id("Li-6");
+  int Li7_id = pyne::nucname::id("Li-7");
+  int He4_id = pyne::nucname::id("He-4");
+
+  double Li6_molar_mass = pyne::atomic_mass(Li6_id);
+  double Li7_molar_mass = pyne::atomic_mass(Li7_id);
+  double T_molar_mass = pyne::atomic_mass(tritium_id);
+  double He4_molar_mass = pyne::atomic_mass(He4_id);
+
+  Composition::Ptr Li6 = Composition::CreateFromAtom(CompMap({{Li6_id, 1.0}}));
+  Composition::Ptr Li7 = Composition::CreateFromAtom(CompMap({{Li7_id, 1.0}}));
+  Composition::Ptr Tritium =
+      Composition::CreateFromAtom(CompMap({{tritium_id, 1.0}}));
+  Composition::Ptr He4 = Composition::CreateFromAtom(CompMap({{He4_id, 1.0}}));
+
+  // Breed tritium
+  Material::Ptr T_created = Material::Create(this, T_burned * TBR, Tritium);
+  double T_created_atoms = T_created->quantity() * T_molar_mass;
+  Material::Ptr Li7_burned = Material::CreateUntracked(
+      T_created_atoms * Li7_contribution / Li7_molar_mass, Li7);
+  Material::Ptr Li6_burned = Material::CreateUntracked(
+      T_created_atoms * (1 - Li7_contribution) / Li6_molar_mass, Li6);
+  Material::Ptr He4_generated =
+      Material::CreateUntracked(T_created_atoms / He4_molar_mass, He4);
+
+  Material::Ptr consumed_Li = blanket->ExtractComp(Li7_burned->quantity(), Li7);
+  consumed_Li->Absorb(blanket->ExtractComp(Li6_burned->quantity(), Li6));
+  blanket->Absorb(He4_generated);
+
+  tritium_storage.Push(T_created);
+}
+
+void FusionPowerPlant::OperateReactor() {
+  Material::Ptr consumed_fuel = incore_fuel->ExtractQty(fuel_usage_mass);
+  BreedTritium(fuel_usage_mass);
+}
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void FusionPowerPlant::DecayInventories() {
+  tritium_storage.Decay();
+  tritium_excess.Decay();
+  sequestered_tritium->Decay(context()->time());
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void FusionPowerPlant::ExtractHelium() {
+  int He3_id = pyne::nucname::id("He-3");
+  Composition::Ptr He3 = Composition::CreateFromAtom(CompMap({{He3_id, 1.0}}));
+
+  std::vector<ResBuf<Material>*> tritium_buffers = {&tritium_storage,
+                                                    &tritium_excess};
+
+  for (auto* inventory : tritium_buffers) {
+    if (!inventory->empty()) {
+      Material::Ptr mat = inventory->Pop();
+      cyclus::toolkit::MatQuery mq(mat);
+
+      Material::Ptr helium = mat->ExtractComp(mq.mass(He3_id), He3);
+
+      helium_excess.Push(helium);
+      inventory->Push(mat);
+    }
   }
-  std::string he3_outcommod;
+}
 
-  #pragma cyclus var { \
-    "doc": "Recipe for blanket feed material", \
-    "tooltip": "Recipe for blanket feed material", \
-    "uilabel": "Recipe for blanket feed material" \
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void FusionPowerPlant::CycleBlanket() {
+  if (blanket->quantity() < cyclus::eps_rsrc()) {
+    blanket->Absorb(blanket_feed.Pop(blanket_size));
+  } else if (BlanketCycleTime()) {
+    blanket_waste.Push(blanket->ExtractQty(blanket_turnover));
+    blanket->Absorb(blanket_feed.Pop(blanket_turnover));
   }
-  std::string blanket_inrecipe;
+}
 
-  #pragma cyclus var { \
-    "doc": "Blanket feed commodity designation", \
-    "tooltip": "Blanket feed commodity", \
-    "uilabel": "Blanket feed commodity" \
-  }
-  std::string blanket_incommod;
+bool FusionPowerPlant::BlanketCycleTime() {
+  return ((context()->time() > 0) &&
+          (context()->time() % blanket_turnover_frequency == 0));
+}
 
-  #pragma cyclus var { \
-    "doc": "Blanket waste commodity designation", \
-    "tooltip": "Blanket waste commodity", \
-    "uilabel": "Blanket waste commodity" \
-  }
-  std::string blanket_outcommod;
-
-  #pragma cyclus var { \
-    "default": 1000.0, \
-    "doc": "Initial mass of full blanket material", \
-    "tooltip": "Only blanket material mass, not structural mass", \
-    "units": "kg", \
-    "uitype": "range", \
-    "range": [0, 10000], \
-    "uilabel": "Initial Mass of Blanket" \
-  }
-  double blanket_size;
-
-  #pragma cyclus var { \
-    "default": 0.05, \
-    "doc": "Percent of blanket that gets recycled every blanket turnover period", \
-    "tooltip": "Defaults to 0.05 (5%), must be between 0 and 15%", \
-    "units": "dimensionless", \
-    "uitype": "range", \
-    "range": [0, 0.15], \
-    "uilabel": "Blanket Turnover Rate" \
-  }
-  double blanket_turnover_fraction;
-
-  #pragma cyclus var { \
-    "default": 1, \
-    "doc": "number of timesteps between blanket recycles", \
-    "tooltip": "Defaults to 0.05 (5%), must be between 0 and 15%", \
-    "units": "dimensionless", \
-    "uitype": "range", \
-    "range": [0, 1000], \
-    "uilabel": "Blanket Turnover Rate" \
-  }
-  int blanket_turnover_frequency;
-
-  //Functions:
-  void CycleBlanket();
-  bool BlanketCycleTime();
-  bool ReadyToOperate();
-  void LoadCore();
-  void BreedTritium(double T_burned);
-  void OperateReactor();
-  void DecayInventories();
-  void ExtractHelium();
-  double SequesteredTritiumGap();
-  bool TritiumStorageClean();
-  void RecordInventories(double tritium_storage, double tritium_excess, 
-                         double sequestered_tritium, double blanket_feed, 
-                         double blanket_excess, double helium_excess);
-
-
- private:
-  //Resource Buffers and Trackers:
-  cyclus::toolkit::ResBuf<cyclus::Material> tritium_storage;
-  cyclus::toolkit::ResBuf<cyclus::Material> tritium_excess;
-  cyclus::toolkit::ResBuf<cyclus::Material> helium_excess;
-  cyclus::toolkit::ResBuf<cyclus::Material> blanket_feed;
-  cyclus::toolkit::ResBuf<cyclus::Material> blanket_waste;
-
-  cyclus::toolkit::MatlBuyPolicy fuel_startup_policy;
-  cyclus::toolkit::MatlBuyPolicy fuel_refill_policy;
-  cyclus::toolkit::MatlBuyPolicy blanket_fill_policy;
-
-  cyclus::toolkit::MatlSellPolicy tritium_sell_policy;
-  cyclus::toolkit::MatlSellPolicy helium_sell_policy;
-  cyclus::toolkit::MatlSellPolicy blanket_waste_sell_policy;
-
-  cyclus::toolkit::TotalInvTracker fuel_tracker;
-  cyclus::toolkit::TotalInvTracker blanket_tracker;
-
-  //This is to correctly instantiate the TotalInvTracker(s)
-  double fuel_limit = 1000.0;
-  double blanket_limit = 100000.0; 
-  Material::Ptr blanket;
-  double blanket_turnover;
-  double fuel_usage_mass;
-
-
-  //NucIDs for Pyne
-  const int tritium_id = 10030000;
-
-  //Compositions:
-  const cyclus::CompMap T = {{tritium_id, 1}};
-  const cyclus::Composition::Ptr tritium_comp = cyclus::Composition::CreateFromAtom(T);
-
-  //Materials:
-  cyclus::Material::Ptr sequestered_tritium = cyclus::Material::CreateUntracked(0.0, tritium_comp);
-  cyclus::Material::Ptr incore_fuel = cyclus::Material::CreateUntracked(0.0, tritium_comp);
-
-  // Constants
-  static const double burn_rate; // kg/GW-y
-
-  // And away we go!
-};
+// WARNING! Do not change the following this function!!! This enables your
+// archetype to be dynamically loaded and any alterations will cause your
+// archetype to fail.
+extern "C" cyclus::Agent* ConstructFusionPowerPlant(cyclus::Context* ctx) {
+  return new FusionPowerPlant(ctx);
+}
 
 }  // namespace tricycle
-
-#endif  // CYCLUS_TRICYCLE_FUSION_POWER_PLANT_H_
-
