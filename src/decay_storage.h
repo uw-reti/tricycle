@@ -64,7 +64,7 @@ class DecayStorage : public cyclus::Facility {
   void ExtractHelium();
   
   /// Records current tritium and helium-3 inventory quantities
-  void RecordInventories(double tritium, double helium);
+  void RecordInventories();
 
   const int He3_id = 20030000;
   const cyclus::CompMap He3 = {{He3_id, 1}};

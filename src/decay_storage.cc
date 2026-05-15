@@ -2,14 +2,12 @@
 
 #include "decay_storage.h"
 
-#pragma cyclus exec from cyclus.system import CY_LARGE_DOUBLE, CY_LARGE_INT, CY_NEAR_ZERO
-
 namespace tricycle {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 DecayStorage::DecayStorage(cyclus::Context* ctx) : cyclus::Facility(ctx) {
   // Required by DRE policies
-  fuel_tracker.Init({&tritium_storage, &helium_storage}, cyclus::CY_LARGE_DOUBLE);
+  fuel_tracker.Init({&tritium_storage}, cyclus::CY_LARGE_DOUBLE);
 
   bool is_bulk = true;
 
@@ -22,18 +20,17 @@ DecayStorage::DecayStorage(cyclus::Context* ctx) : cyclus::Facility(ctx) {
 void DecayStorage::EnterNotify() {
   cyclus::Facility::EnterNotify(); // call base function first
   fuel_tracker.set_capacity(max_tritium_inventory);
-  buy_policy.Init(this, &tritium_storage, std::string("input"), &fuel_tracker).Set(incommod).Start();
+  buy_policy.Init(this, &tritium_storage, std::string("input"), &fuel_tracker, throughput).Set(incommod).Start();
   sell_policy.Init(this, &tritium_storage, std::string("output")).Set(outcommod).Start();
 }
 
-void DecayStorage::RecordInventories(double tritium, double helium) {
+void DecayStorage::RecordInventories() {
   context()
       ->NewDatum("StorageInventories")
       ->AddVal("AgentId", id())
       ->AddVal("Time", context()->time())
-      ->AddVal("TritiumStorage", tritium)
-      ->AddVal("HeliumStorage", helium)
-
+      ->AddVal("TritiumStorage", tritium_storage.quantity())
+      ->AddVal("HeliumStorage", helium_storage.quantity())
       ->Record();
 }
 
@@ -46,7 +43,7 @@ void DecayStorage::ExtractHelium() {
 
     helium_storage.Push(helium);
     tritium_storage.Push(mat);
-  }
+  };
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -58,7 +55,7 @@ void DecayStorage::Tick() {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void DecayStorage::Tock() {
-  RecordInventories(tritium_storage.quantity(), helium_storage.quantity());
+  RecordInventories();
 }
 
 // WARNING! Do not change the following this function!!! This enables your

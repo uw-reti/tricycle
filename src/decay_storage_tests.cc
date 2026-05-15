@@ -141,10 +141,8 @@ TEST_F(DecayStorageTest, Tock) {
 TEST_F(DecayStorageTest, DatabaseRecording) {
     // Test that inventories are properly recorded to the database
   
-    std::string config = common_config;
-  
     int simdur = 2;
-    cyclus::MockSim sim = InitializeSim(config, simdur);
+    cyclus::MockSim sim = InitializeSim(common_config, simdur);
   
     int id = sim.Run();
   
@@ -164,10 +162,8 @@ TEST_F(DecayStorageTest, DatabaseRecording) {
 TEST_F(DecayStorageTest, BasicMaterialFlow) {
   // Test basic material flow: receiving tritium, storing it, and recording
 
-  std::string config = common_config;
-
   int simdur = 2;
-  cyclus::MockSim sim = InitializeSim(config, simdur);
+  cyclus::MockSim sim = InitializeSim(common_config, simdur);
 
   int id = sim.Run();
 
@@ -185,10 +181,8 @@ TEST_F(DecayStorageTest, DecayAndExtractHelium) {
   // material accumulates and we can observe both the tritium decrease and
   // helium-3 accumulation from decay.
 
-  std::string config = common_config;
-
   int simdur = 3;
-  cyclus::MockSim sim = InitializeSim(config, simdur);
+  cyclus::MockSim sim = InitializeSim(common_config, simdur);
   // No sink added, so material will not be sold and will accumulate
 
   int id = sim.Run();
@@ -212,10 +206,8 @@ TEST_F(DecayStorageTest, DecayAndExtractHelium) {
 TEST_F(DecayStorageTest, EmptyStorageBehavior) {
   // Test behavior when storage is empty
 
-  std::string config = common_config;
-
   int simdur = 2;
-  cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:DecayStorage"), config,
+  cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:DecayStorage"), common_config,
                       simdur);
 
   // No source added, so no material flows
@@ -249,10 +241,8 @@ TEST_F(DecayStorageTest, EnterNotifyPolicySetup) {
 TEST_F(DecayStorageTest, MaterialWithDecay) {
   // Test with material that already contains some decay products
 
-  std::string config = common_config;
-
   int simdur = 2;
-  cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:DecayStorage"), config,
+  cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:DecayStorage"), common_config,
                       simdur);
 
   sim.AddRecipe("decayed_tritium", decayed_tritium());
