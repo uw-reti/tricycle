@@ -209,8 +209,8 @@ TEST_F(FusionPowerPlantTest, DecayInventoryExtractHelium) {
   double lambda = 2.57208504984001213e-09;
   double t = 2629846;
 
-  double expected_decay = (init_quant) -
-                          (init_quant) * std::pow(2, -lambda * t);
+  double expected_decay = (init_quant - sequestered) -
+                          (init_quant - sequestered) * std::pow(2, -lambda * t);
 
   EXPECT_NEAR(expected_decay, he3, 1e-6);
 }
@@ -362,8 +362,7 @@ TEST_F(FusionPowerPlantTest, EnterNotifySellPolicy) {
 
   std::string config = common_config +
                        " <TBR>1.30</TBR> "
-                       " <fuel_incommod>Tritium</fuel_incommod>"
-                        "<fuel_outcommod>TritiumFuel</fuel_outcommod>";
+                       " <fuel_incommod>Tritium</fuel_incommod>";
 
   int simdur = 10;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:FusionPowerPlant"), config,
@@ -373,7 +372,7 @@ TEST_F(FusionPowerPlantTest, EnterNotifySellPolicy) {
   sim.AddRecipe("enriched_lithium", enriched_lithium());
 
   sim.AddSource("Tritium").capacity(100).recipe("tritium").Finalize();
-  sim.AddSink("TritiumFuel").Finalize();
+  sim.AddSink("Tritium").Finalize();
   sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
 
   int id = sim.Run();

@@ -83,7 +83,7 @@ void FusionPowerPlant::EnterNotify() {
   }
 
   tritium_sell_policy.Init(this, &tritium_excess, std::string("Excess Tritium"))
-      .Set(fuel_outcommod)
+      .Set(fuel_incommod)
       .Start();
 
   helium_sell_policy.Init(this, &helium_excess, std::string("Helium-3"))
@@ -98,10 +98,6 @@ void FusionPowerPlant::EnterNotify() {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FusionPowerPlant::Tick() {
-
-  DecayInventories();
-  ExtractHelium();
-
   if (ReadyToOperate()) {
     fuel_startup_policy.Stop();
     fuel_refill_policy.Start();
@@ -113,11 +109,15 @@ void FusionPowerPlant::Tick() {
     // Some way of leaving a record of what is going wrong is helpful info I
     // think Use the cyclus logger
   }
-  
-  double excess_tritium = std::max(tritium_storage.quantity() - 
-                                  (reserve_inventory + SequesteredTritiumGap())
-                                  , 0.0);
-  
+
+  DecayInventories();
+  ExtractHelium();
+
+  double excess_tritium =
+      std::max(tritium_storage.quantity() -
+                   (reserve_inventory + SequesteredTritiumGap()),
+               0.0);
+
   // Otherwise the ResBuf encounters an error when it tries to squash
   if (excess_tritium > cyclus::eps_rsrc()) {
     tritium_excess.Push(tritium_storage.Pop(excess_tritium));
@@ -178,7 +178,6 @@ bool FusionPowerPlant::ReadyToOperate() {
   double required_storage_inventory = SequesteredTritiumGap();
   if (sequestered_tritium->quantity() < cyclus::eps_rsrc()) {
     required_storage_inventory += reserve_inventory;
-    required_storage_inventory *= tritium_startup_fraction;
   } else {
     required_storage_inventory += fuel_usage_mass;
   }
@@ -196,15 +195,13 @@ bool FusionPowerPlant::ReadyToOperate() {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FusionPowerPlant::LoadCore() {
+  CycleBlanket();
 
   // Squash runs into issues when you give it zero, so we need to check frist
   if (SequesteredTritiumGap() > cyclus::eps_rsrc()) {
     sequestered_tritium->Absorb(tritium_storage.Pop(SequesteredTritiumGap()));
   }
-
-  CycleBlanket();
   incore_fuel->Absorb(tritium_storage.Pop(fuel_usage_mass));
-
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

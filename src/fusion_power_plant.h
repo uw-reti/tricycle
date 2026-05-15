@@ -107,30 +107,13 @@ class FusionPowerPlant : public cyclus::Facility  {
   double sequestered_equilibrium; 
 
   #pragma cyclus var { \
-    "default": 0.9, \
-    "doc": "Fraction of desired startup ( = reserve + sequestered) tritium inventory required for initial startup. ", \
-    "tooltip": "Fraction of reserve required for startup", \
-    "units": "dimensionless", \
-    "range": [0, 1], \
-    "uilabel": "Tritium Startup Fraction" \
-  }
-  double tritium_startup_fraction; 
-
-  #pragma cyclus var { \
     "doc": "Fresh fuel commodity", \
     "tooltip": "Name of fuel commodity requested", \
     "uilabel": "Fuel input commodity" \
   }
   std::string fuel_incommod;
 
-  #pragma cyclus var { "default":"",\
-    "doc": "Fresh fuel commodity", \
-    "tooltip": "Name of fuel commodity offered", \
-    "uilabel": "Fuel output commodity" \
-  }
-  std::string fuel_outcommod;
-
-  #pragma cyclus var { \
+    #pragma cyclus var { \
     "default": 0.03, \
     "doc": "Fraction of tritium that comes from the (n + Li-7 --> T + He + n) reaction", \
     "tooltip": "Fraction of tritium from Li-7 breeding", \
@@ -297,3 +280,4 @@ class FusionPowerPlant : public cyclus::Facility  {
 }  // namespace tricycle
 
 #endif  // CYCLUS_TRICYCLE_FUSION_POWER_PLANT_H_
+
