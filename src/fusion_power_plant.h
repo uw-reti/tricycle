@@ -82,6 +82,7 @@ class FusionPowerPlant : public cyclus::Facility  {
     "units": "MW", \
     "uitype": "range", \
     "range": [0, 1e299], \
+    "default": 300, \
     "uilabel": "Fusion Power" \
   }
   double fusion_power;
@@ -122,14 +123,17 @@ class FusionPowerPlant : public cyclus::Facility  {
   #pragma cyclus var {"tooltip":"Compartment names"}
   std::vector<std::string> compartments;
 
-  #pragma cyclus var {"tooltip":"Transfer source compartments"}
+  #pragma cyclus var {"tooltip":"Transfer source compartments",\
+                      "default": []}
   std::vector<std::string> transfer_from;
 
-  #pragma cyclus var {"tooltip":"Transfer destination compartments"}
+  #pragma cyclus var {"tooltip":"Transfer destination compartments",\
+                      "default": []}
   std::vector<std::string> transfer_to;
 
   #pragma cyclus var {"tooltip":"Transfer rates",\
                       "units": "s^-1",\
+                      "default": [],\
                       "range": [0, 1e299]}
   std::vector<double> transfer_rate;
   
@@ -138,11 +142,13 @@ class FusionPowerPlant : public cyclus::Facility  {
 	   "should sum to 1, otherwise tritium will be lost without being recorded.",\
     "tooltip":"Fractions of unburned tritium",\
     "units": "dimensionless",\
+    "default": [],\
     "range": [0, 1]}
   std::vector<double> escape_fractions;
   
   #pragma cyclus var {\
     "doc": "Names of compartments to which tritium escapes from the plasma", \
+    "default": [],\
     "tooltip": "Tritium from plasma destination compartments"}
   std::vector<std::string> escape_to;
 
@@ -163,7 +169,7 @@ class FusionPowerPlant : public cyclus::Facility  {
   std::string fuel_incommod;
 
   #pragma cyclus var { \
-    "default": 'fill', \
+    "default": 'schedule', \
     "doc": "Method of refueling the reactor", \
     "tooltip": "Options: 'schedule' or 'fill'", \
     "uitype": "combobox", \
@@ -197,10 +203,9 @@ class FusionPowerPlant : public cyclus::Facility  {
 
   //Functions:
   bool ReadyToOperate();
-  void OperateReactor();
+  void OperateReactor(bool burn_tritium = true);
   void DecayInventories();
   void BuildMatrix(double tritium_consumption_rate);
-  bool TritiumStorageClean();
   double SequesteredTritium();
   void RecordInventories(double tritium_storage, double tritium_excess, 
                          double sequestered_tritium);

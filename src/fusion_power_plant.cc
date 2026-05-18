@@ -13,7 +13,7 @@ using cyclus::toolkit::ResBuf;
 namespace tricycle {
 
 const double MW_to_GW = 1000;
-const double lambda_T = std::log(2.0) / (12.32 * 365 * 24 * 3600)
+const double lambda_T = std::log(2.0) / (12.32 * 365 * 24 * 3600);
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 FusionPowerPlant::FusionPowerPlant(cyclus::Context* ctx)
@@ -23,8 +23,6 @@ FusionPowerPlant::FusionPowerPlant(cyclus::Context* ctx)
   tritium_storage = ResBuf<Material>(true);
   tritium_excess = ResBuf<Material>(true);
 
-  // Size vector of intermediate buffers
-  tritium_elsewhere = std::vector<ResBuf<Material>(true)>(compartments.size());
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -40,6 +38,9 @@ void FusionPowerPlant::EnterNotify() {
                      (kDefaultTimeStepDur * 12) * context()->dt());
 
   int N = compartments.size();
+  
+  // Size vector of intermediate buffers
+  tritium_elsewhere = std::vector<ResBuf<Material>>(N, ResBuf<Material>(true));
 
   // Build compartment lookup map
   for (int i = 0; i < N; ++i) {
@@ -50,8 +51,7 @@ void FusionPowerPlant::EnterNotify() {
   std::vector<std::string> required = {
       "breeder",
       "plasma",
-      "storage",
-      "divertor"
+      "storage"
   };
 
   for (auto const& name : required) {
@@ -70,27 +70,36 @@ void FusionPowerPlant::EnterNotify() {
     throw cyclus::ValueError(
         "Transfer vectors must have equal length.");
   }
+  
+  // And escape fractions
+  if (escape_to.size() != escape_fractions.size()) {
 
-  // Ensure tritium escape fraction sums to less than one
-  double total = 0.0;
-
-  for (int i = 0; i < escape_fractions.size(); i++) {
-
-    double x = escape_fractions[i];
-
-    // Check positivity
-    if (x < 0.0) {
-      throw cyclus::ValueError(
-          "All escape fractions must be non-negative.");
-    }
-
-    total += x;
+    throw cyclus::ValueError(
+        "Escape vectors must have equal length.");
   }
 
-  // Check total
-  if (total > 1.0) {
-    throw cyclus::ValueError(
-      "Escape fractions must sum to <= 1.");
+  // Ensure tritium escape fraction sums to less than one
+  if (escape_fractions.size() > 0) {
+    double total = 0.0;
+
+    for (int i = 0; i < escape_fractions.size(); i++) {
+
+      double x = escape_fractions[i];
+
+      // Check positivity
+      if (x < 0.0) {
+        throw cyclus::ValueError(
+            "All escape fractions must be non-negative.");
+      }
+
+      total += x;
+    }
+
+    // Check total
+    if (total > 1.0) {
+      throw cyclus::ValueError(
+        "Escape fractions must sum to <= 1.");
+    }
   }
 
   // Create matrix
@@ -174,8 +183,8 @@ void FusionPowerPlant::BuildMatrix(double tritium_consumption_rate) {
   }
 
   // Fill plasma escape terms
-  if (escape_fraction.size() > 0) {
-    for (int k = 0; k < escape_fraction.size(); k++) {
+  if (escape_fractions.size() > 0) {
+    for (int k = 0; k < escape_fractions.size(); k++) {
   
       if (comp_index.count(escape_to[k]) == 0) {
         throw cyclus::ValueError(
@@ -186,9 +195,9 @@ void FusionPowerPlant::BuildMatrix(double tritium_consumption_rate) {
       int to   = comp_index[escape_to[k]];
       int plasma = comp_index["plasma"];
 
-      double fraction = escape_fraction[k];
+      double fraction = escape_fractions[k];
 
-      A(to, plasma) = fraction * (1 - TBE) * tritium_consumption_rate / TBE
+      A(to, plasma) = fraction * (1 - TBE) * tritium_consumption_rate / TBE;
 	
     }
   }
@@ -203,7 +212,8 @@ void FusionPowerPlant::BuildMatrix(double tritium_consumption_rate) {
   A(breeder, plasma) = TBR * tritium_consumption_rate;
 
   // Also add diagonal tritium decay term
-  for (int k = 0; k < N; k++) {
+  for (int k = 0; k < compartments.size(); k++) {
+    if (k == comp_index["plasma"]) {continue;}
     A(k, k) -= lambda_T;
   }
 
@@ -266,18 +276,13 @@ void FusionPowerPlant::RecordInventories(double tritium_storage,
 double FusionPowerPlant::SequesteredTritium() {
   double current_sequestered_tritium = 0.0;
 
-  for (int i = 0; i < compartmens.size(); i++) {
-    if (i == comp_index["plasma"]) {continue;}
-    cyclus::toolkit::MatQuery mq(tritium_elsewhere[i].Peek())
+  for (int i = 0; i < compartments.size(); i++) {
+    if (i == comp_index["plasma"] || tritium_elsewhere[i].empty()) {continue;}
+    cyclus::toolkit::MatQuery mq(tritium_elsewhere[i].Peek());
     current_sequestered_tritium += mq.mass(tritium_id);
   }
 
-  return current_sequestered_tritium
-}
-
-bool FusionPowerPlant::TritiumStorageClean() {
-  cyclus::toolkit::MatQuery mq(tritium_storage.Peek());
-  return cyclus::AlmostEq(mq.mass(tritium_id), tritium_storage.quantity());
+  return current_sequestered_tritium;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -287,14 +292,14 @@ bool FusionPowerPlant::ReadyToOperate() {
 
   // check  tritium storage quantity requirement
   if (tritium_storage.quantity() < required_storage_inventory ||
-      !TritiumStorageClean()) {
+		  tritium_storage.quantity() < cyclus::eps_rsrc()) {
     return false;
   }
   return true;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FusionPowerPlant::OperateReactor(bool burn_tritium = true;) {
+void FusionPowerPlant::OperateReactor(bool burn_tritium) {
 
   double dt = context()->dt();
   double Q = 0;
@@ -307,7 +312,7 @@ void FusionPowerPlant::OperateReactor(bool burn_tritium = true;) {
   }
 
   // Construct tritium vector and evolve it according to burn rate and transition rates
-  N = compartments.size()
+  int N = compartments.size();
   Eigen::VectorXd tritium_vector(N);
   std::vector<cyclus::Material::Ptr> popped_mats(N);
   
@@ -340,7 +345,8 @@ void FusionPowerPlant::OperateReactor(bool burn_tritium = true;) {
   BuildMatrix(Q);
 
   // Evolve the densities of tritium
-  Eigen::VectorXd new_tritium = (A*dt).exp() * tritium_vector;
+  Eigen::MatrixXd M = (A * dt).exp();
+  Eigen::VectorXd new_tritium = M * tritium_vector;
 
   // Replace the densities back in the buffer
   for (int i = 0; i < N; i++) {
@@ -351,6 +357,7 @@ void FusionPowerPlant::OperateReactor(bool burn_tritium = true;) {
     
     double new_mass = new_tritium(i);
     
+    // Remove anything there erronesously
     if (!tritium_elsewhere[i].empty()) {
       tritium_elsewhere[i].Pop();
     }
