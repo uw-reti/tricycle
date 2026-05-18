@@ -2,7 +2,7 @@
 #define CYCLUS_TRICYCLE_DECAYSTORAGE_FACILITY_H_
 
 #include <string>
-#include <gtest/gtest.h>
+
 #include "cyclus.h"
 
 #include "boost/shared_ptr.hpp"
@@ -48,7 +48,9 @@ class DecayStorage : public cyclus::Facility {
 
   #pragma cyclus note {"doc": "A DecayStorage facility provides tritium storage " \
                               "and tracking with proper radioactive decay accounting."}
-
+  
+  /// A verbose printer for the DecayStorage facility
+  virtual std::string str();
   
   /// Set up policies and buffers
   virtual void EnterNotify();
@@ -60,6 +62,7 @@ class DecayStorage : public cyclus::Facility {
   virtual void Tock();
 
  protected:
+
   /// Extracts helium-3 byproduct from decayed tritium and stores it separately
   void ExtractHelium();
   
@@ -113,13 +116,14 @@ class DecayStorage : public cyclus::Facility {
   #pragma cyclus var {"tooltip":"Tracker to handle on-hand tritium"}
   cyclus::toolkit::TotalInvTracker fuel_tracker;
 
+  friend class DecayStorageTest;
+
+ private:
   /// Policy for requesting tritium material
   cyclus::toolkit::MatlBuyPolicy buy_policy;
 
   /// Policy for offering tritium material
   cyclus::toolkit::MatlSellPolicy sell_policy;
-
-  friend class DecayStorageTest;
 
   // And away we go!
 };
