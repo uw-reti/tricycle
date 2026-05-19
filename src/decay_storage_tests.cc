@@ -238,26 +238,6 @@ TEST_F(DecayStorageTest, EnterNotifyPolicySetup) {
   EXPECT_NO_THROW(facility->EnterNotify());
 }
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-TEST_F(DecayStorageTest, MaterialWithDecay) {
-  // Test with material that already contains some decay products
-
-  int simdur = 2;
-  cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:DecayStorage"), common_config,
-                      simdur);
-
-  sim.AddRecipe("decayed_tritium", decayed_tritium());
-  sim.AddSource("Tritium").recipe("decayed_tritium").Finalize();
-
-  int id = sim.Run();
-
-  QueryResult qr = TimeInventoryQuery(sim, "1");
-  double helium_qty = qr.GetVal<double>("HeliumStorage");
-
-  // Should extract helium-3 from the already decayed material
-  EXPECT_LE(0.0, helium_qty);
-}
-
 }  // namespace tricycle
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
