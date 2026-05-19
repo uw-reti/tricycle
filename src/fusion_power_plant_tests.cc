@@ -152,7 +152,7 @@ TEST_F(FusionPowerPlantTest, OperateReactorSustainingTBR) {
 		       " <reserve_inventory>0.1</reserve_inventory>"
 		       " <transfer_to><val>storage</val></transfer_to>"
 		       " <transfer_from><val>breeder</val></transfer_from>"
-		       " <transfer_rate><val>10.0</val></transfer_rate>"
+		       " <transfer_rate><val>0.01</val></transfer_rate>"
                        " <fuel_incommod>Tritium</fuel_incommod>";
 
   int simdur = 10;
@@ -168,7 +168,6 @@ TEST_F(FusionPowerPlantTest, OperateReactorSustainingTBR) {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-/* CURRENTLY ONLY USING SCHEDULE FILL
 TEST_F(FusionPowerPlantTest, EnterNotifyInitialFillDefault) {
   // Test default fill behavior of EnterNotify. Specifically look that
   // tritium is transacted in the appropriate amounts.
@@ -193,9 +192,8 @@ TEST_F(FusionPowerPlantTest, EnterNotifyInitialFillDefault) {
   QueryResult qr_2 = sim.db().Query("Resources", &conds_2);
   double quantity = qr_2.GetVal<double>("Quantity");
 
-  EXPECT_EQ(8.121, quantity);
+  EXPECT_EQ(6.0, quantity);
 }
-*/
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(FusionPowerPlantTest, EnterNotifyScheduleFill) {
   // Test schedule fill behavior of EnterNotify.
@@ -223,7 +221,7 @@ TEST_F(FusionPowerPlantTest, EnterNotifyScheduleFill) {
   QueryResult qr_2 = sim.db().Query("Resources", &conds_2);
   double quantity = qr_2.GetVal<double>("Quantity");
 
-  EXPECT_EQ(8.121, quantity);
+  EXPECT_EQ(6, quantity);
 
   std::vector<Cond> conds_3;
   conds_3.push_back(Cond("Time", "==", std::string("1")));
@@ -291,9 +289,9 @@ TEST_F(FusionPowerPlantTest, InvalidTransferVectorsLength) {
   std::string config = common_config +
                        " <TBR>1.00</TBR> "
                        " <fuel_incommod>Tritium</fuel_incommod>"
-                       " <transfer_from>breeder</transfer_from>"
-                       " <transfer_to>storage plasma</transfer_to>"
-                       " <transfer_rate>0.1 0.2</transfer_rate>";
+                       " <transfer_from><val>breeder</val></transfer_from>"
+                       " <transfer_to><val>storage</val><val> plasma</val></transfer_to>"
+                       " <transfer_rate><val>0.1</val><val>0.2</val></transfer_rate>";
 
   cyclus::MockSim sim = InitializeSim(config, 2);
   EXPECT_THROW(sim.Run(), cyclus::ValueError);
@@ -305,9 +303,9 @@ TEST_F(FusionPowerPlantTest, InvalidTransferUnknownCompartment) {
   std::string config = common_config +
                        " <TBR>1.00</TBR> "
                        " <fuel_incommod>Tritium</fuel_incommod>"
-                       " <transfer_from>breeder</transfer_from>"
-                       " <transfer_to>nonexistent_compartment</transfer_to>"
-                       " <transfer_rate>0.1</transfer_rate>";
+                       " <transfer_from><val>breeder</val></transfer_from>"
+                       " <transfer_to><val>nonexistent_compartment</val></transfer_to>"
+                       " <transfer_rate><val>0.1</val></transfer_rate>";
 
   cyclus::MockSim sim = InitializeSim(config, 2);
   EXPECT_THROW(sim.Run(), cyclus::ValueError);
@@ -319,8 +317,8 @@ TEST_F(FusionPowerPlantTest, InvalidEscapeFractionsSum) {
   std::string config = common_config +
                        " <TBR>1.00</TBR> "
                        " <fuel_incommod>Tritium</fuel_incommod>"
-                       " <escape_fractions>0.6 0.5</escape_fractions>"
-                       " <escape_to>storage breeder</escape_to>";
+                       " <escape_fractions><val>0.6</val><val>0.5</val></escape_fractions>"
+                       " <escape_to><val>storage</val><val>breeder</val></escape_to>";
 
   cyclus::MockSim sim = InitializeSim(config, 2);
   EXPECT_THROW(sim.Run(), cyclus::ValueError);
@@ -332,8 +330,8 @@ TEST_F(FusionPowerPlantTest, InvalidEscapeFractionsNegative) {
   std::string config = common_config +
                        " <TBR>1.00</TBR> "
                        " <fuel_incommod>Tritium</fuel_incommod>"
-                       " <escape_fractions>-0.1</escape_fractions>"
-                       " <escape_to>storage</escape_to>";
+                       " <escape_fractions><val>-0.1</val></escape_fractions>"
+                       " <escape_to><val>storage</val></escape_to>";
 
   cyclus::MockSim sim = InitializeSim(config, 2);
   EXPECT_THROW(sim.Run(), cyclus::ValueError);
@@ -346,9 +344,9 @@ TEST_F(FusionPowerPlantTest, ValidTritiumTransferMovement) {
   std::string config = common_config +
                        " <TBR>1.10</TBR> "
                        " <fuel_incommod>Tritium</fuel_incommod>"
-                       " <transfer_from>breeder</transfer_from>"
-                       " <transfer_to>storage</transfer_to>"
-                       " <transfer_rate>0.25</transfer_rate>";
+                       " <transfer_from><val>breeder</val></transfer_from>"
+                       " <transfer_to><val>storage</val></transfer_to>"
+                       " <transfer_rate><val>0.25</val></transfer_rate>";
 
   int simdur = 5;
   cyclus::MockSim sim = InitializeSim(config, simdur);
@@ -371,8 +369,8 @@ TEST_F(FusionPowerPlantTest, ValidEscapeFractionMovement) {
   std::string config = common_config +
                        " <TBR>1.00</TBR> "
                        " <fuel_incommod>Tritium</fuel_incommod>"
-                       " <escape_fractions>0.05</escape_fractions>"
-                       " <escape_to>storage</escape_to>";
+                       " <escape_fractions><val>0.05</val></escape_fractions>"
+                       " <escape_to><val>storage</val></escape_to>";
 
   int simdur = 5;
   cyclus::MockSim sim = InitializeSim(config, simdur);

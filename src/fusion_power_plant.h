@@ -86,6 +86,17 @@ class FusionPowerPlant : public cyclus::Facility  {
     "uilabel": "Fusion Power" \
   }
   double fusion_power;
+  
+  #pragma cyclus var { \
+    "doc": "Conversion efficiency from DT burning to electrical power", \
+    "tooltip": "Conversion efficiency", \
+    "units": "dimensionless", \
+    "uitype": "range", \
+    "range": [0, 1], \
+    "default": 1, \
+    "uilabel": "Conversion efficiency" \
+  }
+  double conversion_efficiency;
 
   #pragma cyclus var { \
     "doc": "Achievable system tritium breeding ratio before decay", \
@@ -108,17 +119,6 @@ class FusionPowerPlant : public cyclus::Facility  {
     "uilabel": "Tritium Burn Efficiency" \
   }
   double TBE;
-
-  #pragma cyclus var { \
-    "doc": "Amount of tritium consumed per ...", \
-    "default": 55.8, \
-    "tooltip": "Tritium consumption rate", \
-    "units": "FFFF", \
-    "uitype": "range", \
-    "range": [0, 1e299], \
-    "uilabel": "Tritium Burn Rate" \
-  }
-  double burn_rate;
 
   #pragma cyclus var {"tooltip":"Compartment names"}
   std::vector<std::string> compartments;
@@ -169,7 +169,7 @@ class FusionPowerPlant : public cyclus::Facility  {
   std::string fuel_incommod;
 
   #pragma cyclus var { \
-    "default": 'schedule', \
+    "default": 'fill', \
     "doc": "Method of refueling the reactor", \
     "tooltip": "Options: 'schedule' or 'fill'", \
     "uitype": "combobox", \
@@ -227,6 +227,7 @@ class FusionPowerPlant : public cyclus::Facility  {
   //This is to correctly instantiate the TotalInvTracker(s)
   double fuel_limit = 1000.0;
   double fuel_usage_mass;
+  double burn_rate;
 
   //NucIDs for Pyne
   const int tritium_id = 10030000;
@@ -237,7 +238,6 @@ class FusionPowerPlant : public cyclus::Facility  {
 
   //Materials:
   cyclus::Material::Ptr sequestered_tritium = cyclus::Material::CreateUntracked(0.0, tritium_comp);
-  cyclus::Material::Ptr incore_fuel = cyclus::Material::CreateUntracked(0.0, tritium_comp);
 
   // Transition rate matrix
   Eigen::MatrixXd A;
