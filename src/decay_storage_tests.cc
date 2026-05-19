@@ -199,6 +199,7 @@ TEST_F(DecayStorageTest, DecayAndExtractHelium) {
   EXPECT_LT(0.0, tritium_1);
 
   // Helium-3 should accumulate as tritium decays
+  EXPECT_LT(0.0, helium_1);
   EXPECT_LT(helium_1, helium_2);
 }
 
