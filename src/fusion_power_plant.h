@@ -88,6 +88,16 @@ class FusionPowerPlant : public cyclus::Facility  {
   double fusion_power;
   
   #pragma cyclus var { \
+    "doc": "Minimum mass of tritium before the reactor can startup", \
+    "units": "kg", \
+    "uitype": "range", \
+    "range": [0, 1e299], \
+    "default": 0, \
+    "uilabel": "Startup mass" \
+  }
+  double minimum_startup_mass;
+  
+  #pragma cyclus var { \
     "doc": "Conversion efficiency from DT burning to electrical power", \
     "tooltip": "Conversion efficiency", \
     "units": "dimensionless", \
@@ -144,7 +154,7 @@ class FusionPowerPlant : public cyclus::Facility  {
     "units": "dimensionless",\
     "default": [],\
     "range": [0, 1]}
-  std::vector<double> escape_fractions;
+  std::vector<double> escape_fraction;
   
   #pragma cyclus var {\
     "doc": "Names of compartments to which tritium escapes from the plasma", \
@@ -156,6 +166,7 @@ class FusionPowerPlant : public cyclus::Facility  {
     "doc": "Minimum tritium inventory to hold in reserve in case of tritium recovery system failure", \
     "tooltip": "Minimum tritium inventory to hold in reserve", \
     "units": "kg", \
+    "default": 0, \
     "uilabel": "Reserve Inventory" \
   }
   double reserve_inventory;  

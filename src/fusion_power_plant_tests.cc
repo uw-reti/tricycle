@@ -238,7 +238,6 @@ TEST_F(FusionPowerPlantTest, EnterNotifyScheduleFill) {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-/* CURRENTLY NOT CHECKING SCHEDULE OPTIONS
 TEST_F(FusionPowerPlantTest, EnterNotifyInvalidFill) {
   // Test catch for invalid fill behavior keyword in EnterNotify.
 
@@ -254,7 +253,6 @@ TEST_F(FusionPowerPlantTest, EnterNotifyInvalidFill) {
 
   EXPECT_THROW(int id = sim.Run(), cyclus::KeyError);
 }
-*/
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(FusionPowerPlantTest, EnterNotifySellPolicy) {
@@ -312,12 +310,12 @@ TEST_F(FusionPowerPlantTest, InvalidTransferUnknownCompartment) {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-TEST_F(FusionPowerPlantTest, InvalidEscapeFractionsSum) {
+TEST_F(FusionPowerPlantTest, InvalidEscapeFractionSum) {
   // Tests that escape fractions cannot physically exceed 100%
   std::string config = common_config +
                        " <TBR>1.00</TBR> "
                        " <fuel_incommod>Tritium</fuel_incommod>"
-                       " <escape_fractions><val>0.6</val><val>0.5</val></escape_fractions>"
+                       " <escape_fraction><val>0.6</val><val>0.5</val></escape_fraction>"
                        " <escape_to><val>storage</val><val>breeder</val></escape_to>";
 
   cyclus::MockSim sim = InitializeSim(config, 2);
@@ -330,7 +328,7 @@ TEST_F(FusionPowerPlantTest, InvalidEscapeFractionsNegative) {
   std::string config = common_config +
                        " <TBR>1.00</TBR> "
                        " <fuel_incommod>Tritium</fuel_incommod>"
-                       " <escape_fractions><val>-0.1</val></escape_fractions>"
+                       " <escape_fraction><val>-0.1</val></escape_fraction>"
                        " <escape_to><val>storage</val></escape_to>";
 
   cyclus::MockSim sim = InitializeSim(config, 2);
@@ -365,11 +363,11 @@ TEST_F(FusionPowerPlantTest, ValidTritiumTransferMovement) {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(FusionPowerPlantTest, ValidEscapeFractionMovement) {
   // Verify that an escape fraction from plasma correctly routes material
-  // into the designated target compartment (we'll route it back to storage).
+  // into the designated target compartment.
   std::string config = common_config +
                        " <TBR>1.00</TBR> "
                        " <fuel_incommod>Tritium</fuel_incommod>"
-                       " <escape_fractions><val>0.05</val></escape_fractions>"
+                       " <escape_fraction><val>0.05</val></escape_fraction>"
                        " <escape_to><val>storage</val></escape_to>";
 
   int simdur = 5;

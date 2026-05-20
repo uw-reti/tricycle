@@ -12,7 +12,7 @@ using cyclus::toolkit::ResBuf;
 
 namespace tricycle {
 
-const double MW_to_GW = 1000;
+const double MW_to_W = 1000000;
 const double lambda_T = std::log(2.0) / (12.32 * 365 * 24 * 3600);
 const double energy_DT = 17.6 * 1.6021766 * std::pow(10,-13);
 const double mass_tritium = 5.01 * std::pow(10,-27);
@@ -36,7 +36,8 @@ std::string FusionPowerPlant::str() {
 void FusionPowerPlant::EnterNotify() {
   cyclus::Facility::EnterNotify();
 
-  burn_rate = mass_tritium * fusion_power / (conversion_efficiency * energy_DT);
+  burn_rate = mass_tritium * fusion_power * MW_to_W/ 
+	  (conversion_efficiency * energy_DT);
   fuel_usage_mass = burn_rate * context()->dt();
 
   int N = compartments.size();
@@ -74,19 +75,19 @@ void FusionPowerPlant::EnterNotify() {
   }
   
   // And escape fractions
-  if (escape_to.size() != escape_fractions.size()) {
+  if (escape_to.size() != escape_fraction.size()) {
 
     throw cyclus::ValueError(
         "Escape vectors must have equal length.");
   }
 
   // Ensure tritium escape fraction sums to less than one
-  if (escape_fractions.size() > 0) {
+  if (escape_fraction.size() > 0) {
     double total = 0.0;
 
-    for (int i = 0; i < escape_fractions.size(); i++) {
+    for (int i = 0; i < escape_fraction.size(); i++) {
 
-      double x = escape_fractions[i];
+      double x = escape_fraction[i];
 
       // Check positivity
       if (x < 0.0) {
@@ -192,8 +193,8 @@ void FusionPowerPlant::BuildMatrix(double tritium_consumption_rate) {
   }
 
   // Fill plasma escape terms
-  if (escape_fractions.size() > 0) {
-    for (int k = 0; k < escape_fractions.size(); k++) {
+  if (escape_fraction.size() > 0) {
+    for (int k = 0; k < escape_fraction.size(); k++) {
   
       if (comp_index.count(escape_to[k]) == 0) {
         throw cyclus::ValueError(
@@ -208,7 +209,7 @@ void FusionPowerPlant::BuildMatrix(double tritium_consumption_rate) {
           "Cannot escape to the plasma");
       }
 
-      double fraction = escape_fractions[k];
+      double fraction = escape_fraction[k];
 
       A(to, plasma) = fraction * (1 - TBE) * tritium_consumption_rate;
 	
@@ -289,8 +290,10 @@ double FusionPowerPlant::SequesteredTritium() {
   double current_sequestered_tritium = 0.0;
 
   for (int i = 0; i < compartments.size(); i++) {
+    
     if (i == comp_index["plasma"] || tritium_elsewhere[i].empty()
 	|| i == comp_index["storage"]) {continue;}
+    
     cyclus::toolkit::MatQuery mq(tritium_elsewhere[i].Peek());
     current_sequestered_tritium += mq.mass(tritium_id);
   }
@@ -300,11 +303,10 @@ double FusionPowerPlant::SequesteredTritium() {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool FusionPowerPlant::ReadyToOperate() {
+  
   // Determine tritium inventory required to operate
-  double required_storage_inventory = fuel_usage_mass;
-
-  // check  tritium storage quantity requirement
-  if (tritium_storage.quantity() < required_storage_inventory ||
+  if (tritium_storage.quantity() < fuel_usage_mass ||
+		  tritium_storage.quantity() < minimum_startup_mass ||
 		  tritium_storage.quantity() < cyclus::eps_rsrc()) {
     return false;
   }
