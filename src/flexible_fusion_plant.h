@@ -89,16 +89,6 @@ class FlexibleFusionPlant : public cyclus::Facility  {
   double fusion_power;
   
   #pragma cyclus var { \
-    "doc": "Minimum mass of tritium before the reactor can startup", \
-    "units": "kg", \
-    "uitype": "range", \
-    "range": [0, 1e299], \
-    "default": 0, \
-    "uilabel": "Startup mass" \
-  }
-  double minimum_startup_mass;
-  
-  #pragma cyclus var { \
     "doc": "Conversion efficiency from DT burning to electrical power", \
     "tooltip": "Conversion efficiency", \
     "units": "dimensionless", \

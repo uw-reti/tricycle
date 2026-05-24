@@ -251,12 +251,10 @@ void FlexibleFusionPlant::Tick() {
   }
   
   double excess_tritium = std::max(tritium_storage.quantity() - 
-                                  (reserve_inventory + SequesteredTritium())
-                                  , 0.0);
+                                  reserve_inventory, 0.0);
   
   // Otherwise the ResBuf encounters an error when it tries to squash
   if (excess_tritium > cyclus::eps_rsrc()) {
-    //std::cout << "excess = " << excess_tritium << std::endl;
     tritium_excess.Push(tritium_storage.Pop(excess_tritium));
   }
 
@@ -307,7 +305,7 @@ bool FlexibleFusionPlant::ReadyToOperate() {
   
   // Determine tritium inventory required to operate
   if (tritium_storage.quantity() < fuel_usage_mass / TBE ||
-		  tritium_storage.quantity() < minimum_startup_mass ||
+		  tritium_storage.quantity() < reserve_inventory ||
 		  tritium_storage.quantity() < cyclus::eps_rsrc()) {
     return false;
   }
@@ -328,51 +326,23 @@ void FlexibleFusionPlant::OperateReactor(bool burn_tritium) {
   
   // Remove mass that will be consumed from storage,
   // including that which will not be burned.
-  // Meanwhile add the remainder in storage to the tritium vector
-  // in case stored tritium is expected to leak.
   if (burn_tritium) {
-    
-    Q = fuel_usage_mass / TBE;
-
-    //std::cout << "source pop = " << Q << std::endl;
-    tritium_storage.Pop(Q);
-
-    cyclus::toolkit::MatQuery mq(tritium_storage.Pop());
-
-    tritium_vector(comp_index["storage"]) = mq.mass(tritium_id) + Q;
-
+    Q = burn_rate / TBE;
   }
 
   for (int i = 0; i < N; i++) {
    
-    double T_mass = 0;
-
     // Skip the plasma - does not explicitly contain tritium
     // Essentially assumes tritium has zero residence time in
     // the plasma.
     // Contains '1' to act as an inhomogeneous source
     if (i == comp_index["plasma"]) {
       tritium_vector(i) = 1;
-      continue;
+    } else if (i == comp_index["storage"]) {
+      tritium_vector(i) = tritium_storage.quantity();
+    } else {
+      tritium_vector(i) = tritium_elsewhere[i].quantity();
     }
-
-    // Already filled the storage vector element
-    if (i == comp_index["storage"]) {
-      continue;
-    }
-
-    // Place tritium from other components
-    if (!tritium_elsewhere[i].empty()) {
-      
-      popped_mats[i] = tritium_elsewhere[i].Pop();
-      
-      cyclus::toolkit::MatQuery mq(popped_mats[i]);
-
-      T_mass = mq.mass(tritium_id);
-
-    }
-
-    tritium_vector(i) = T_mass;
 
   }
   
@@ -383,40 +353,32 @@ void FlexibleFusionPlant::OperateReactor(bool burn_tritium) {
   Eigen::MatrixXd M = (A * dt).exp();
   Eigen::VectorXd new_tritium = M * tritium_vector;
   
-  // Replace the densities back in the appropriate buffers
+  // Update the densities in the appropriate buffers
   for (int i = 0; i < N; i++) {
    
-    if (i == comp_index["plasma"]) {
-      continue;
-    }
+    if (i == comp_index["plasma"]) continue;
     
-    double new_mass = new_tritium(i);
+    double current_mass = tritium_vector(i);
+    double new_mass = std::max(new_tritium(i), 0.0);
+    double delta = new_mass - current_mass;
 
-    // Remove anything there erronesously
-    if (!tritium_elsewhere[i].empty()) {
-      tritium_elsewhere[i].Pop();
-    }
-
-    // Avoid tiny negative numerical noise
-    new_mass = std::max(new_mass, 0.0);
-
-    if (new_mass > cyclus::eps_rsrc()) {
-
-      cyclus::Material::Ptr mat =
-          cyclus::Material::Create(
-              this,
-              new_mass,
-              tritium_comp);
-
-      // Add surplus stored tritium back to storage
-      if (i == comp_index["storage"]) {
-        tritium_storage.Push(mat);
-
-      // Otherwise put in one of the N-2 buffers
-      } else {
-        tritium_elsewhere[i].Push(mat);
+    // Handle Storage Buffer
+    if (i == comp_index["storage"]) {
+      if (delta < -cyclus::eps_rsrc()) {
+        tritium_storage.Pop(-delta);
+      } else if (delta > cyclus::eps_rsrc()) {
+        tritium_storage.Push(cyclus::Material::Create(this, delta, tritium_comp));
       }
     }
+    // Handle Other Components (e.g., Breeder)
+    else {
+      if (delta < -cyclus::eps_rsrc()) {
+        tritium_elsewhere[i].Pop(-delta);
+      } else if (delta > cyclus::eps_rsrc()) {
+        tritium_elsewhere[i].Push(cyclus::Material::Create(this, delta, tritium_comp));
+      }
+    }
+
 
   }
 

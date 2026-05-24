@@ -381,6 +381,78 @@ TEST_F(FlexibleFusionPlantTest, ValidEscapeFractionMovement) {
   // Storage shouldn't be negative and should receive the escaped tritium
   EXPECT_GE(storage, 0.0);
 }
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+TEST_F(FlexibleFusionPlantTest, AnalyticalPureDecayVerification) {
+  // Verifies the ODE solver against the exact analytical solution for
+  // pure radioactive decay when fusion power is zero.
+  std::string config =
+      " <fusion_power>0</fusion_power>"
+      " <conversion_efficiency>1.0</conversion_efficiency>"
+      " <reserve_inventory>6.0</reserve_inventory>"
+      " <refuel_mode>schedule</refuel_mode>"
+      " <buy_quantity>6.0</buy_quantity>"
+      " <buy_frequency>100</buy_frequency>"
+      " <components><val>plasma</val><val>storage</val><val>breeder</val></components>"
+      " <TBR>1.00</TBR>"
+      " <TBE>1.00</TBE>"
+      " <fuel_incommod>Tritium</fuel_incommod>";
+
+  // Bypass InitializeSim to enforce a strictly limited market source
+  cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:FlexibleFusionPlant"), config, 2);
+  sim.AddRecipe("tritium", tritium());
+
+  // Cap the source at exactly 6.0 kg so the startup policy does not refill decayed mass
+  sim.AddSource("Tritium").recipe("tritium").capacity(6.0).Finalize();
+  sim.Run();
+
+  QueryResult qr = TimeInventoryQuery(sim, "1");
+  double storage = qr.GetVal<double>("TritiumStorage");
+
+  // Analytical Calculation: 6.0 * exp(-lambda_T * dt)
+  // lambda_T = ln(2)/(12.32*365*24*3600) = 1.78405e-9 /s
+  // dt = 2629800 s (1 default Cyclus month)
+  double expected_storage = 5.9719157;
+
+  // Use EXPECT_NEAR to accommodate minor floating point precision limits
+  EXPECT_NEAR(storage, expected_storage, 1e-5);
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+TEST_F(FlexibleFusionPlantTest, AnalyticalOdeBurnAndBreedVerification) {
+  // Verifies the coupled linear system of ODEs during active operation
+  // against a verified Scipy matrix exponential calculation.
+  std::string config =
+      " <fusion_power>300</fusion_power>"
+      " <conversion_efficiency>1.0</conversion_efficiency>"
+      " <reserve_inventory>6.0</reserve_inventory>"
+      " <refuel_mode>schedule</refuel_mode>"
+      " <buy_quantity>6.0</buy_quantity>"
+      " <buy_frequency>100</buy_frequency>"
+      " <components><val>plasma</val><val>storage</val><val>breeder</val></components>"
+      " <TBR>1.00</TBR>"
+      " <TBE>1.00</TBE>"
+      " <fuel_incommod>Tritium</fuel_incommod>";
+
+  // Bypass InitializeSim to enforce a strictly limited market source
+  cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:FlexibleFusionPlant"), config, 2);
+  sim.AddRecipe("tritium", tritium());
+
+  // Cap the source at exactly 6.0 kg so the startup policy does not refill decayed mass
+  sim.AddSource("Tritium").recipe("tritium").capacity(6.0).Finalize();
+  sim.Run();
+
+  QueryResult qr = TimeInventoryQuery(sim, "1");
+  double storage = qr.GetVal<double>("TritiumStorage");
+  double breeder = qr.GetVal<double>("TritiumSequestered");
+
+  // Expected analytical results calculated using the corrected rate-based
+  // matrix exponential: M = exp(A * dt)
+  double expected_storage = 4.573487;
+  double expected_breeder = 1.398428;
+
+  EXPECT_NEAR(storage, expected_storage, 1e-4);
+  EXPECT_NEAR(breeder, expected_breeder, 1e-4);
+}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Do Not Touch! Below section required for connection with Cyclus
