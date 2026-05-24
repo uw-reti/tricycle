@@ -12,19 +12,20 @@ using cyclus::toolkit::ResBuf;
 
 namespace tricycle {
 
-const double MW_to_W = 1000000;
-const double lambda_T = std::log(2.0) / (12.32 * 365 * 24 * 3600);
-const double energy_DT = 17.6 * 1.6021766 * std::pow(10,-13);
-const double mass_tritium = 5.01 * std::pow(10,-27);
+const double FusionPowerPlant::burn_rate = 55.8;
+const double MW_to_GW = 1000;
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 FusionPowerPlant::FusionPowerPlant(cyclus::Context* ctx)
     : cyclus::Facility(ctx) {
   fuel_tracker.Init({&tritium_storage}, fuel_limit);
+  blanket_tracker.Init({&blanket_feed}, blanket_limit);
 
   tritium_storage = ResBuf<Material>(true);
   tritium_excess = ResBuf<Material>(true);
-
+  helium_excess = ResBuf<Material>(true);
+  blanket_feed = ResBuf<Material>(true);
+  blanket_waste = ResBuf<Material>(true);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -36,90 +37,28 @@ std::string FusionPowerPlant::str() {
 void FusionPowerPlant::EnterNotify() {
   cyclus::Facility::EnterNotify();
 
-  burn_rate = mass_tritium * fusion_power * MW_to_W/ 
-	  (conversion_efficiency * energy_DT);
-  fuel_usage_mass = burn_rate * context()->dt();
+  fuel_usage_mass = (burn_rate * (fusion_power / MW_to_GW) /
+                     (kDefaultTimeStepDur * 12) * context()->dt());
+  blanket_turnover = blanket_size * blanket_turnover_fraction;
 
-  int N = compartments.size();
-  
-  // Size vector of intermediate buffers
-  tritium_elsewhere = std::vector<ResBuf<Material>>(N, ResBuf<Material>(true));
-
-  // Build compartment lookup map
-  for (int i = 0; i < N; ++i) {
-    comp_index[compartments[i]] = i;
-  }
-
-  // Ensure that the compartments contain plasma and breeder
-  std::vector<std::string> required = {
-      "breeder",
-      "plasma",
-      "storage"
-  };
-
-  for (auto const& name : required) {
-    if (comp_index.count(name) == 0) {
-      throw cyclus::ValueError(
-          "Required tritium compartment '" +
-          name +
-          "' was not defined in input.");
-    }
-  }
-
-  // Ensure transfer vectors have the same length
-  if (transfer_from.size() != transfer_to.size() ||
-    transfer_from.size() != transfer_rate.size()) {
-
-    throw cyclus::ValueError(
-        "Transfer vectors must have equal length.");
-  }
-  
-  // And escape fractions
-  if (escape_to.size() != escape_fraction.size()) {
-
-    throw cyclus::ValueError(
-        "Escape vectors must have equal length.");
-  }
-
-  // Ensure tritium escape fraction sums to less than one
-  if (escape_fraction.size() > 0) {
-    double total = 0.0;
-
-    for (int i = 0; i < escape_fraction.size(); i++) {
-
-      double x = escape_fraction[i];
-
-      // Check positivity
-      if (x < 0.0) {
-        throw cyclus::ValueError(
-            "All escape fractions must be non-negative.");
-      }
-
-      total += x;
-    }
-
-    // Check total
-    if (total > 1.0) {
-      throw cyclus::ValueError(
-        "Escape fractions must sum to <= 1.");
-    }
-  }
-
-  // Create matrix
-  A = Eigen::MatrixXd::Zero(N, N);
-
-  // Build the matrix
-  BuildMatrix(burn_rate);
+  // Create the blanket material for use in the core, no idea if this works...
+  blanket = Material::Create(this, 0.0, context()->GetRecipe(blanket_inrecipe));
 
   fuel_startup_policy
       .Init(this, &tritium_storage, std::string("Tritium Storage"),
             &fuel_tracker, std::string("ss"),
-            reserve_inventory, reserve_inventory)
+            reserve_inventory + sequestered_equilibrium,
+            reserve_inventory + sequestered_equilibrium)
       .Set(fuel_incommod, tritium_comp)
       .Start();
 
+  blanket_fill_policy
+      .Init(this, &blanket_feed, std::string("Blanket Startup"),
+            &blanket_tracker, std::string("ss"), blanket_size, blanket_size)
+      .Set(blanket_incommod)
+      .Start();
+
   // Tritium Buy Policy Selection:
-  // Keep it simple until I understand this better!
   if (refuel_mode == "schedule") {
     IntDistribution::Ptr active_dist = FixedIntDist::Ptr(new FixedIntDist(1));
     IntDistribution::Ptr dormant_dist =
@@ -146,112 +85,37 @@ void FusionPowerPlant::EnterNotify() {
   tritium_sell_policy.Init(this, &tritium_excess, std::string("Excess Tritium"))
       .Set(fuel_incommod)
       .Start();
-  
-}
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FusionPowerPlant::BuildMatrix(double tritium_consumption_rate) {
+  helium_sell_policy.Init(this, &helium_excess, std::string("Helium-3"))
+      .Set(he3_outcommod)
+      .Start();
 
-  // Wipe any existing elements
-  A.setZero();
-      
-  int plasma = comp_index["plasma"];
-
-  // Fill transfer terms
-  if (transfer_rate.size() > 0) {
-    for (int k = 0; k < transfer_rate.size(); k++) {
-
-      if (comp_index.count(transfer_from[k]) == 0) {
-        throw cyclus::ValueError(
-          "Unknown transfer source compartment: " +
-          transfer_from[k]);
-      }
-
-      if (comp_index.count(transfer_to[k]) == 0) {
-        throw cyclus::ValueError(
-          "Unknown transfer destination compartment: " +
-          transfer_to[k]);
-      }
-      
-      int from = comp_index[transfer_from[k]];
-      int to   = comp_index[transfer_to[k]];
-      
-      if (from == plasma || to == plasma) {
-        throw cyclus::ValueError(
-          "Cannot transfer to or from the plasma");
-      }
-
-      double rate = transfer_rate[k];
-
-      // Off-diagonal gain
-      A(to, from) += rate;
-
-      // Diagonal loss to other component
-      A(from, from) -= rate;
-
-    }
-  }
-
-  // Fill plasma escape terms
-  if (escape_fraction.size() > 0) {
-    for (int k = 0; k < escape_fraction.size(); k++) {
-  
-      if (comp_index.count(escape_to[k]) == 0) {
-        throw cyclus::ValueError(
-          "Unknown escape destination compartment: " +
-          escape_to[k]);
-      }
-
-      int to = comp_index[escape_to[k]];
-      
-      if (to == plasma) {
-        throw cyclus::ValueError(
-          "Cannot escape to the plasma");
-      }
-
-      double fraction = escape_fraction[k];
-
-      A(to, plasma) = fraction * (1 - TBE) * tritium_consumption_rate;
-	
-    }
-  }
-
-  // Add constant removal from storage into plasma
-  int storage = comp_index["storage"];
-  A(storage, plasma) = -tritium_consumption_rate;
-  
-  // Add the tritium source term
-  int breeder = comp_index["breeder"];
-  A(breeder, plasma) = TBR * TBE * tritium_consumption_rate;
-
-  // Also add diagonal tritium decay term
-  for (int k = 0; k < compartments.size(); k++) {
-    if (k == plasma) {continue;}
-    A(k, k) -= lambda_T;
-  }
-
+  blanket_waste_sell_policy
+      .Init(this, &blanket_waste, std::string("Blanket Waste"))
+      .Set(blanket_outcommod)
+      .Start();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FusionPowerPlant::Tick() {
 
+  DecayInventories();
+  ExtractHelium();
+
   if (ReadyToOperate()) {
     fuel_startup_policy.Stop();
     fuel_refill_policy.Start();
 
+    LoadCore();
     OperateReactor();
 
   } else {
-
-    // Tritium in the system leaks and decays, but no burning plasma
-    OperateReactor(false);
-
     // Some way of leaving a record of what is going wrong is helpful info I
     // think Use the cyclus logger
   }
   
   double excess_tritium = std::max(tritium_storage.quantity() - 
-                                  (reserve_inventory + SequesteredTritium())
+                                  (reserve_inventory + SequesteredTritiumGap())
                                   , 0.0);
   
   // Otherwise the ResBuf encounters an error when it tries to squash
@@ -259,7 +123,7 @@ void FusionPowerPlant::Tick() {
     tritium_excess.Push(tritium_storage.Pop(excess_tritium));
   }
 
-  if (SequesteredTritium() != 0) {
+  if (sequestered_tritium->quantity() != 0) {
     fuel_startup_policy.Stop();
     fuel_refill_policy.Start();
   }
@@ -270,12 +134,16 @@ void FusionPowerPlant::Tock() {
   // ExplicitInventories wasn't working. If possible, may be best to use that
   // down the road.
   RecordInventories(tritium_storage.quantity(), tritium_excess.quantity(),
-                    SequesteredTritium());
+                    sequestered_tritium->quantity(), blanket_feed.quantity(),
+                    blanket_waste.quantity(), helium_excess.quantity());
 }
 
 void FusionPowerPlant::RecordInventories(double tritium_storage,
                                          double tritium_excess,
-                                         double sequestered_tritium) {
+                                         double sequestered_tritium,
+                                         double blanket_feed,
+                                         double blanket_waste,
+                                         double helium_excess) {
   context()
       ->NewDatum("FPPInventories")
       ->AddVal("AgentId", id())
@@ -283,148 +151,141 @@ void FusionPowerPlant::RecordInventories(double tritium_storage,
       ->AddVal("TritiumStorage", tritium_storage)
       ->AddVal("TritiumExcess", tritium_excess)
       ->AddVal("TritiumSequestered", sequestered_tritium)
+      ->AddVal("BlanketFeed", blanket_feed)
+      ->AddVal("BlanketWaste", blanket_waste)
+      ->AddVal("HeliumExcess", helium_excess)
       ->Record();
 }
 
-double FusionPowerPlant::SequesteredTritium() {
+double FusionPowerPlant::SequesteredTritiumGap() {
   double current_sequestered_tritium = 0.0;
 
-  for (int i = 0; i < compartments.size(); i++) {
-    
-    if (i == comp_index["plasma"] || tritium_elsewhere[i].empty()
-	|| i == comp_index["storage"]) {continue;}
-    
-    cyclus::toolkit::MatQuery mq(tritium_elsewhere[i].Peek());
-    current_sequestered_tritium += mq.mass(tritium_id);
+  if (sequestered_tritium->quantity() > cyclus::eps_rsrc()) {
+    cyclus::toolkit::MatQuery mq(sequestered_tritium);
+    current_sequestered_tritium = mq.mass(tritium_id);
   }
+  return std::max(sequestered_equilibrium - current_sequestered_tritium, 0.0);
+}
 
-  return current_sequestered_tritium;
+bool FusionPowerPlant::TritiumStorageClean() {
+  cyclus::toolkit::MatQuery mq(tritium_storage.Peek());
+  return cyclus::AlmostEq(mq.mass(tritium_id), tritium_storage.quantity());
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool FusionPowerPlant::ReadyToOperate() {
-  
   // Determine tritium inventory required to operate
-  if (tritium_storage.quantity() < fuel_usage_mass ||
-		  tritium_storage.quantity() < minimum_startup_mass ||
-		  tritium_storage.quantity() < cyclus::eps_rsrc()) {
+  double required_storage_inventory = SequesteredTritiumGap();
+  if (sequestered_tritium->quantity() < cyclus::eps_rsrc()) {
+    required_storage_inventory += reserve_inventory;
+    required_storage_inventory *= tritium_startup_fraction;
+  } else {
+    required_storage_inventory += fuel_usage_mass;
+  }
+
+  // check  tritium storage quantity requirement
+  if (tritium_storage.quantity() < required_storage_inventory ||
+      !TritiumStorageClean()) {
+    return false;
+  }
+  if (BlanketCycleTime() && blanket_feed.quantity() < blanket_turnover) {
     return false;
   }
   return true;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void FusionPowerPlant::OperateReactor(bool burn_tritium) {
+void FusionPowerPlant::LoadCore() {
 
-  double dt = context()->dt();
-  double Q = 0;
-  
-  // Construct tritium vector and evolve it according to 
-  // burn rate and transition rates
-  int N = compartments.size();
-  Eigen::VectorXd tritium_vector(N);
-  std::vector<cyclus::Material::Ptr> popped_mats(N);
-  
-  // Remove mass that will be consumed from storage,
-  // including that which will not be burned.
-  // Meanwhile add the remainder in storage to the tritium vector
-  // in case stored tritium is expected to leak.
-  if (burn_tritium) {
-    
-    Q = fuel_usage_mass / TBE;
-
-    tritium_storage.Pop(Q);
-
-    cyclus::toolkit::MatQuery mq(tritium_storage.Pop());
-
-    tritium_vector(comp_index["storage"]) = mq.mass(tritium_id) + Q;
-
+  // Squash runs into issues when you give it zero, so we need to check frist
+  if (SequesteredTritiumGap() > cyclus::eps_rsrc()) {
+    sequestered_tritium->Absorb(tritium_storage.Pop(SequesteredTritiumGap()));
   }
 
-  for (int i = 0; i < N; i++) {
-   
-    double T_mass = 0;
-
-    // Skip the plasma - does not explicitly contain tritium
-    // Contains '1' to act as an inhomogeneous source
-    if (i == comp_index["plasma"]) {
-      tritium_vector(i) = 1;
-      continue;
-    }
-
-    // Already filled the storage vector element
-    if (i == comp_index["storage"]) {
-      continue;
-    }
-
-    // Place tritium from other components
-    if (!tritium_elsewhere[i].empty()) {
-      
-      popped_mats[i] = tritium_elsewhere[i].Pop();
-      
-      cyclus::toolkit::MatQuery mq(popped_mats[i]);
-
-      T_mass = mq.mass(tritium_id);
-
-    }
-
-    tritium_vector(i) = T_mass;
-
-  }
-  
-  // Set the source term
-  BuildMatrix(Q);
-
-  // Evolve the densities of tritium
-  Eigen::MatrixXd M = (A * dt).exp();
-  Eigen::VectorXd new_tritium = M * tritium_vector;
-  
-  // Replace the densities back in the buffer
-  for (int i = 0; i < N; i++) {
-   
-    if (i == comp_index["plasma"]) {
-      continue;
-    }
-    
-    double new_mass = new_tritium(i);
-
-    // Remove anything there erronesously
-    if (!tritium_elsewhere[i].empty()) {
-      tritium_elsewhere[i].Pop();
-    }
-
-    // Avoid tiny negative numerical noise
-    new_mass = std::max(new_mass, 0.0);
-
-    if (new_mass > cyclus::eps_rsrc()) {
-
-      cyclus::Material::Ptr mat =
-          cyclus::Material::Create(
-              this,
-              new_mass,
-              tritium_comp);
-
-      // Add surplus stored tritium back to storage
-      if (i == comp_index["storage"]) {
-        tritium_storage.Push(mat);
-
-      // Otherwise put in one of the N buffers
-      } else {
-        tritium_elsewhere[i].Push(mat);
-      }
-    }
-
-  }
+  CycleBlanket();
+  incore_fuel->Absorb(tritium_storage.Pop(fuel_usage_mass));
 
 }
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Not sure if this function is needed!
+void FusionPowerPlant::BreedTritium(double T_burned) {
+  int Li6_id = pyne::nucname::id("Li-6");
+  int Li7_id = pyne::nucname::id("Li-7");
+  int He4_id = pyne::nucname::id("He-4");
+
+  double Li6_molar_mass = pyne::atomic_mass(Li6_id);
+  double Li7_molar_mass = pyne::atomic_mass(Li7_id);
+  double T_molar_mass = pyne::atomic_mass(tritium_id);
+  double He4_molar_mass = pyne::atomic_mass(He4_id);
+
+  Composition::Ptr Li6 = Composition::CreateFromAtom(CompMap({{Li6_id, 1.0}}));
+  Composition::Ptr Li7 = Composition::CreateFromAtom(CompMap({{Li7_id, 1.0}}));
+  Composition::Ptr Tritium =
+      Composition::CreateFromAtom(CompMap({{tritium_id, 1.0}}));
+  Composition::Ptr He4 = Composition::CreateFromAtom(CompMap({{He4_id, 1.0}}));
+
+  // Breed tritium
+  Material::Ptr T_created = Material::Create(this, T_burned * TBR, Tritium);
+  double T_created_atoms = T_created->quantity() * T_molar_mass;
+  Material::Ptr Li7_burned = Material::CreateUntracked(
+      T_created_atoms * Li7_contribution / Li7_molar_mass, Li7);
+  Material::Ptr Li6_burned = Material::CreateUntracked(
+      T_created_atoms * (1 - Li7_contribution) / Li6_molar_mass, Li6);
+  Material::Ptr He4_generated =
+      Material::CreateUntracked(T_created_atoms / He4_molar_mass, He4);
+
+  Material::Ptr consumed_Li = blanket->ExtractComp(Li7_burned->quantity(), Li7);
+  consumed_Li->Absorb(blanket->ExtractComp(Li6_burned->quantity(), Li6));
+  blanket->Absorb(He4_generated);
+
+  tritium_storage.Push(T_created);
+}
+
+void FusionPowerPlant::OperateReactor() {
+  Material::Ptr consumed_fuel = incore_fuel->ExtractQty(fuel_usage_mass);
+  BreedTritium(fuel_usage_mass);
+}
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FusionPowerPlant::DecayInventories() {
   tritium_storage.Decay();
   tritium_excess.Decay();
-  for (int i = 0; i < compartments.size(); i++) {
-    tritium_elsewhere[i].Decay();
+  sequestered_tritium->Decay(context()->time());
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void FusionPowerPlant::ExtractHelium() {
+  int He3_id = pyne::nucname::id("He-3");
+  Composition::Ptr He3 = Composition::CreateFromAtom(CompMap({{He3_id, 1.0}}));
+
+  std::vector<ResBuf<Material>*> tritium_buffers = {&tritium_storage,
+                                                    &tritium_excess};
+
+  for (auto* inventory : tritium_buffers) {
+    if (!inventory->empty()) {
+      Material::Ptr mat = inventory->Pop();
+      cyclus::toolkit::MatQuery mq(mat);
+
+      Material::Ptr helium = mat->ExtractComp(mq.mass(He3_id), He3);
+
+      helium_excess.Push(helium);
+      inventory->Push(mat);
+    }
   }
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void FusionPowerPlant::CycleBlanket() {
+  if (blanket->quantity() < cyclus::eps_rsrc()) {
+    blanket->Absorb(blanket_feed.Pop(blanket_size));
+  } else if (BlanketCycleTime()) {
+    blanket_waste.Push(blanket->ExtractQty(blanket_turnover));
+    blanket->Absorb(blanket_feed.Pop(blanket_turnover));
+  }
+}
+
+bool FusionPowerPlant::BlanketCycleTime() {
+  return ((context()->time() > 0) &&
+          (context()->time() % blanket_turnover_frequency == 0));
 }
 
 // WARNING! Do not change the following this function!!! This enables your

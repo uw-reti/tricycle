@@ -1,45 +1,52 @@
-#ifndef CYCLUS_TRICYCLE_FUSION_POWER_PLANT_H_
-#define CYCLUS_TRICYCLE_FUSION_POWER_PLANT_H_
+#ifndef CYCLUS_TRICYCLE_FLEXIBLE_FUSION_PLANT_H_
+#define CYCLUS_TRICYCLE_FLEXIBLE_FUSION_PLANT_H_
 
 #include <string>
 
 #include "cyclus.h"
 #include "boost/shared_ptr.hpp"
 #include "pyne.h"
+#include <Eigen/Dense>
+#include <unsupported/Eigen/MatrixFunctions>
 
 using cyclus::Material;
 
 namespace tricycle {
 
-/// @class FusionPowerPlant
-/// The FusionPowerPlant class inherits from the Facility class and is
+/// @class FlexibleFusionPlant
+/// The FlexibleFusionPlant class inherits from the Facility class and is
 /// dynamically loaded by the Agent class when requested.
 ///
 /// @section intro Introduction
 /// This agent is designed to function as a basic representation of a fusion
 /// power plant with respect to tritium flows. This is currently the alpha
 /// version of the agent, and as such some simplifying assumptions were made.
+/// This version only tracks tritium; not lithium or He. Allows an arbitrary
+/// number of components where tritium may reside and migrate to and from.
 ///
 /// @section agentparams Agent Parameters
+/// .... e.g., power?
 /// Place a description of the required input parameters which define the
 /// agent implementation. Saving for Later.
 ///
 /// @section optionalparams Optional Parameters
+/// ... e.g., specific plant type
 /// Place a description of the optional input parameters to define the
 /// agent implementation. Saving for later.
 ///
 /// @section detailed Detailed Behavior
+/// ... 
 /// Place a description of the detailed behavior of the agent. Consider
 /// describing the behavior at the tick and tock as well as the behavior
 /// upon sending and receiving materials and messages.
 ///
 /// This section needs to be filled out once there is some behavior to describe.
 ///
-class FusionPowerPlant : public cyclus::Facility  {
+class FlexibleFusionPlant : public cyclus::Facility  {
  public:
-  /// Constructor for FusionPowerPlant Class
+  /// Constructor for FlexibleFusionPlant Class
   /// @param ctx the cyclus context for access to simulation-wide parameters
-  explicit FusionPowerPlant(cyclus::Context* ctx);
+  explicit FlexibleFusionPlant(cyclus::Context* ctx);
 
   /// The Prime Directive
   /// Generates code that handles all input file reading and restart operations
@@ -56,17 +63,17 @@ class FusionPowerPlant : public cyclus::Facility  {
   /// Set up policies and buffers:
   virtual void EnterNotify();
 
-  virtual ~FusionPowerPlant() {};
+  virtual ~FlexibleFusionPlant() {};
 
-  /// The handleTick function specific to the FusionPowerPlant.
+  /// The handleTick function specific to the FlexibleFusionPlant.
   /// @param time the time of the tick
   virtual void Tick();
 
-  /// The handleTick function specific to the FusionPowerPlant.
+  /// The handleTick function specific to the FlexibleFusionPlant.
   /// @param time the time of the tock
   virtual void Tock();
 
-  /// A verbose printer for the FusionPowerPlant
+  /// A verbose printer for the FlexibleFusionPlant
   virtual std::string str();
 
   //State Variables:
@@ -76,12 +83,35 @@ class FusionPowerPlant : public cyclus::Facility  {
     "units": "MW", \
     "uitype": "range", \
     "range": [0, 1e299], \
+    "default": 300, \
     "uilabel": "Fusion Power" \
   }
   double fusion_power;
+  
+  #pragma cyclus var { \
+    "doc": "Minimum mass of tritium before the reactor can startup", \
+    "units": "kg", \
+    "uitype": "range", \
+    "range": [0, 1e299], \
+    "default": 0, \
+    "uilabel": "Startup mass" \
+  }
+  double minimum_startup_mass;
+  
+  #pragma cyclus var { \
+    "doc": "Conversion efficiency from DT burning to electrical power", \
+    "tooltip": "Conversion efficiency", \
+    "units": "dimensionless", \
+    "uitype": "range", \
+    "range": [0, 1], \
+    "default": 1, \
+    "uilabel": "Conversion efficiency" \
+  }
+  double conversion_efficiency;
 
   #pragma cyclus var { \
     "doc": "Achievable system tritium breeding ratio before decay", \
+    "default": 1.2, \
     "tooltip": "Achievable system tritium breeding ratio before decay", \
     "units": "non-dimensional", \
     "uitype": "range", \
@@ -89,50 +119,66 @@ class FusionPowerPlant : public cyclus::Facility  {
     "uilabel": "Tritium Breeding Ratio" \
   }
   double TBR;
+  
+  #pragma cyclus var { \
+    "doc": "Tritium burn efficiency; fraction of tritium entering plasma which is burned", \
+    "default": 1, \
+    "tooltip": "Fraction of tritium entering the plasma which is burned", \
+    "units": "non-dimensional", \
+    "uitype": "range", \
+    "range": [0, 1], \
+    "uilabel": "Tritium Burn Efficiency" \
+  }
+  double TBE;
+
+  #pragma cyclus var {"tooltip":"Component names"}
+  std::vector<std::string> components;
+
+  #pragma cyclus var {"tooltip":"Transfer source components",\
+                      "default": []}
+  std::vector<std::string> transfer_from;
+
+  #pragma cyclus var {"tooltip":"Transfer destination components",\
+                      "default": []}
+  std::vector<std::string> transfer_to;
+
+  #pragma cyclus var {"tooltip":"Transfer rates",\
+                      "units": "s^-1",\
+                      "default": [],\
+                      "range": [0, 1e299]}
+  std::vector<double> transfer_rate;
+  
+  #pragma cyclus var {\
+    "doc": "Fraction of unburned tritium which escapes to a given component. These "\
+	   "should sum to 1, otherwise tritium will be lost without being recorded.",\
+    "tooltip":"Fractions of unburned tritium",\
+    "units": "dimensionless",\
+    "default": [],\
+    "range": [0, 1]}
+  std::vector<double> escape_fraction;
+  
+  #pragma cyclus var {\
+    "doc": "Names of components to which tritium escapes from the plasma", \
+    "default": [],\
+    "tooltip": "Tritium from plasma destination components"}
+  std::vector<std::string> escape_to;
 
   #pragma cyclus var { \
     "doc": "Minimum tritium inventory to hold in reserve in case of tritium recovery system failure", \
     "tooltip": "Minimum tritium inventory to hold in reserve", \
     "units": "kg", \
+    "default": 0, \
     "uilabel": "Reserve Inventory" \
   }
   double reserve_inventory;  
 
   #pragma cyclus var { \
-    "doc": "Equilibrium quantity of tritium which is sequestered in the system and no longer accessable", \
-    "tooltip": "sequestered tritium equilibrium quantity, should be startup-reserve inventory", \
-    "units": "kg", \
-    "uilabel": "Equilibrium Quantity of Sequestered Tritium" \
-  }
-  double sequestered_equilibrium; 
-
-  #pragma cyclus var { \
-    "default": 0.9, \
-    "doc": "Fraction of desired startup ( = reserve + sequestered) tritium inventory required for initial startup. ", \
-    "tooltip": "Fraction of reserve required for startup", \
-    "units": "dimensionless", \
-    "range": [0, 1], \
-    "uilabel": "Tritium Startup Fraction" \
-  }
-  double tritium_startup_fraction; 
-
-  #pragma cyclus var { \
     "doc": "Fresh fuel commodity", \
     "tooltip": "Name of fuel commodity requested", \
+    "default": "Tritium", \
     "uilabel": "Fuel input commodity" \
   }
   std::string fuel_incommod;
-
-    #pragma cyclus var { \
-    "default": 0.03, \
-    "doc": "Fraction of tritium that comes from the (n + Li-7 --> T + He + n) reaction", \
-    "tooltip": "Fraction of tritium from Li-7 breeding", \
-    "units": "dimensionless", \
-    "uitype": "range", \
-    "range": [0, 1], \
-    "uilabel": "Li-7 Contribution" \
-  }
-  double Li7_contribution;
 
   #pragma cyclus var { \
     "default": 'fill', \
@@ -166,128 +212,55 @@ class FusionPowerPlant : public cyclus::Facility  {
   }
   int buy_frequency;
 
-  #pragma cyclus var { \
-    "doc": "Helium-3 output commodity Designation", \
-    "tooltip": "He-3 output commodity", \
-    "uilabel": "He-3 output commodity" \
-  }
-  std::string he3_outcommod;
-
-  #pragma cyclus var { \
-    "doc": "Recipe for blanket feed material", \
-    "tooltip": "Recipe for blanket feed material", \
-    "uilabel": "Recipe for blanket feed material" \
-  }
-  std::string blanket_inrecipe;
-
-  #pragma cyclus var { \
-    "doc": "Blanket feed commodity designation", \
-    "tooltip": "Blanket feed commodity", \
-    "uilabel": "Blanket feed commodity" \
-  }
-  std::string blanket_incommod;
-
-  #pragma cyclus var { \
-    "doc": "Blanket waste commodity designation", \
-    "tooltip": "Blanket waste commodity", \
-    "uilabel": "Blanket waste commodity" \
-  }
-  std::string blanket_outcommod;
-
-  #pragma cyclus var { \
-    "default": 1000.0, \
-    "doc": "Initial mass of full blanket material", \
-    "tooltip": "Only blanket material mass, not structural mass", \
-    "units": "kg", \
-    "uitype": "range", \
-    "range": [0, 10000], \
-    "uilabel": "Initial Mass of Blanket" \
-  }
-  double blanket_size;
-
-  #pragma cyclus var { \
-    "default": 0.05, \
-    "doc": "Percent of blanket that gets recycled every blanket turnover period", \
-    "tooltip": "Defaults to 0.05 (5%), must be between 0 and 15%", \
-    "units": "dimensionless", \
-    "uitype": "range", \
-    "range": [0, 0.15], \
-    "uilabel": "Blanket Turnover Rate" \
-  }
-  double blanket_turnover_fraction;
-
-  #pragma cyclus var { \
-    "default": 1, \
-    "doc": "number of timesteps between blanket recycles", \
-    "tooltip": "Defaults to 0.05 (5%), must be between 0 and 15%", \
-    "units": "dimensionless", \
-    "uitype": "range", \
-    "range": [0, 1000], \
-    "uilabel": "Blanket Turnover Rate" \
-  }
-  int blanket_turnover_frequency;
 
   //Functions:
-  void CycleBlanket();
-  bool BlanketCycleTime();
   bool ReadyToOperate();
-  void LoadCore();
-  void BreedTritium(double T_burned);
-  void OperateReactor();
+  void OperateReactor(bool burn_tritium = true);
   void DecayInventories();
-  void ExtractHelium();
-  double SequesteredTritiumGap();
-  bool TritiumStorageClean();
+  void BuildMatrix(double tritium_consumption_rate);
+  double SequesteredTritium();
   void RecordInventories(double tritium_storage, double tritium_excess, 
-                         double sequestered_tritium, double blanket_feed, 
-                         double blanket_excess, double helium_excess);
+                         double sequestered_tritium);
 
 
  private:
   //Resource Buffers and Trackers:
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_storage;
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_excess;
-  cyclus::toolkit::ResBuf<cyclus::Material> helium_excess;
-  cyclus::toolkit::ResBuf<cyclus::Material> blanket_feed;
-  cyclus::toolkit::ResBuf<cyclus::Material> blanket_waste;
+  std::vector<cyclus::toolkit::ResBuf<cyclus::Material>> tritium_elsewhere;
 
   cyclus::toolkit::MatlBuyPolicy fuel_startup_policy;
   cyclus::toolkit::MatlBuyPolicy fuel_refill_policy;
-  cyclus::toolkit::MatlBuyPolicy blanket_fill_policy;
 
   cyclus::toolkit::MatlSellPolicy tritium_sell_policy;
-  cyclus::toolkit::MatlSellPolicy helium_sell_policy;
-  cyclus::toolkit::MatlSellPolicy blanket_waste_sell_policy;
 
   cyclus::toolkit::TotalInvTracker fuel_tracker;
-  cyclus::toolkit::TotalInvTracker blanket_tracker;
 
   //This is to correctly instantiate the TotalInvTracker(s)
   double fuel_limit = 1000.0;
-  double blanket_limit = 100000.0; 
-  Material::Ptr blanket;
-  double blanket_turnover;
   double fuel_usage_mass;
-
+  double burn_rate;
 
   //NucIDs for Pyne
   const int tritium_id = 10030000;
-
+  
   //Compositions:
   const cyclus::CompMap T = {{tritium_id, 1}};
   const cyclus::Composition::Ptr tritium_comp = cyclus::Composition::CreateFromAtom(T);
 
   //Materials:
   cyclus::Material::Ptr sequestered_tritium = cyclus::Material::CreateUntracked(0.0, tritium_comp);
-  cyclus::Material::Ptr incore_fuel = cyclus::Material::CreateUntracked(0.0, tritium_comp);
 
-  // Constants
-  static const double burn_rate; // kg/GW-y
+  // Transition rate matrix
+  Eigen::MatrixXd A;
+
+  // Indices of different components
+  std::map<std::string,int> comp_index;
 
   // And away we go!
 };
 
 }  // namespace tricycle
 
-#endif  // CYCLUS_TRICYCLE_FUSION_POWER_PLANT_H_
+#endif  // CYCLUS_TRICYCLE_FLEXIBLE_FUSION_PLANT_H_
 

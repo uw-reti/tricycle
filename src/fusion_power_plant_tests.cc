@@ -15,35 +15,49 @@ using cyclus::QueryResult;
 using cyclus::toolkit::MatQuery;
 using tricycle::FusionPowerPlant;
 
-Composition::Ptr tritium() {
+static Composition::Ptr tritium() {
   cyclus::CompMap m;
   m[10030000] = 1.0;
   return Composition::CreateFromAtom(m);
 };
 
-Composition::Ptr decayed_tritium() {
+static Composition::Ptr decayed_tritium() {
   cyclus::CompMap m;
   m[10030000] = 0.9;
   m[20030000] = 0.1;
   return Composition::CreateFromAtom(m);
 };
 
-std::string common_config =
+static Composition::Ptr enriched_lithium() {
+  cyclus::CompMap m;
+  m[30060000] = 0.3;
+  m[30070000] = 0.7;
+  return Composition::CreateFromAtom(m);
+};
+
+static std::string common_config =
     " <fusion_power>300</fusion_power>"
     " <reserve_inventory>6.0</reserve_inventory>"
-    " <compartments><val>plasma</val><val>storage</val><val>breeder</val></compartments>";
+    " <sequestered_equilibrium>2.121</sequestered_equilibrium>"
+    " <blanket_incommod>Enriched_Lithium</blanket_incommod>"
+    " <blanket_outcommod>Depleted_Lithium</blanket_outcommod>"
+    " <blanket_inrecipe>enriched_lithium</blanket_inrecipe>"
+    " <blanket_size>1000</blanket_size>"
+    " <he3_outcommod>Helium_3</he3_outcommod>";
 
-cyclus::MockSim InitializeSim(std::string config, int simdur) {
+static cyclus::MockSim InitializeSim(std::string config, int simdur) {
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:FusionPowerPlant"), config,
                       simdur);
 
   sim.AddRecipe("tritium", tritium());
+  sim.AddRecipe("enriched_lithium", enriched_lithium());
+  sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
   sim.AddSource("Tritium").recipe("tritium").Finalize();
 
   return sim;
 }
 
-QueryResult TimeInventoryQuery(cyclus::MockSim& sim, std::string time) {
+static QueryResult TimeInventoryQuery(cyclus::MockSim& sim, std::string time) {
   std::vector<Cond> conds;
 
   conds.push_back(Cond("Time", "==", time));
@@ -72,52 +86,72 @@ class FusionPowerPlantTest : public ::testing::Test {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(FusionPowerPlantTest, InitialState) {
   // Test things about the initial state of the facility here
-  EXPECT_NE(nullptr, facility);
-  EXPECT_FALSE(facility->ReadyToOperate());
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(FusionPowerPlantTest, Print) {
   EXPECT_NO_THROW(std::string s = facility->str());
   // Test FusionPowerPlant specific aspects of the print method here
-  std::string s;
-  EXPECT_NO_THROW(s = facility->str());
-  EXPECT_FALSE(s.empty());
-  EXPECT_NE(s.find("Facility"), std::string::npos);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(FusionPowerPlantTest, Tock) {
-  // Test FusionPowerPlant specific behaviors of the Tock function here
   EXPECT_NO_THROW(facility->Tock());
+  // Test FusionPowerPlant specific behaviors of the Tock function here
 }
-
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-TEST_F(FusionPowerPlantTest, MassBalance) {
-  // Test that the amount of tritium in the system is as expected after some
-  // time. Also checks that the right masses are in the right compartments
+TEST_F(FusionPowerPlantTest, BlanketCycle) {
+  // Test that the agent correctly removes and replaces a portion of the
+  // blanket every blanket turnover period. The default period is 1 timestep
+  // so it is left undefined here.
+
   std::string config =
       common_config +
-      " <fuel_incommod>Tritium</fuel_incommod>"
+      " <fusion_power>300</fusion_power>"
       " <TBR>1.00</TBR>"
-      " <TBE>1.00</TBE>";
+      " <fuel_incommod>Tritium</fuel_incommod>"
+      " <blanket_turnover_fraction>0.03</blanket_turnover_fraction>";
 
-  int simdur = 5;
+  int simdur = 4;
   cyclus::MockSim sim = InitializeSim(config, simdur);
+
   int id = sim.Run();
 
-  QueryResult qr = TimeInventoryQuery(sim, "4");
+  QueryResult qr = TimeInventoryQuery(sim, "3");
+  double waste = qr.GetVal<double>("BlanketWaste");
 
-  double storage = qr.GetVal<double>("TritiumStorage");
-  double excess = qr.GetVal<double>("TritiumExcess");
-  double sequestered = qr.GetVal<double>("TritiumSequestered");
-
-  // Basic physical validations on tracked system masses
-  EXPECT_GE(storage, 0.0);
-  EXPECT_GE(excess, 0.0);
-  EXPECT_GE(sequestered, 0.0);
+  // We expect there to be some amount of waste greater than 0.0 kg
+  EXPECT_LT(0, waste);
 }
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+TEST_F(FusionPowerPlantTest, BlanketOverCycle) {
+  // Test the catch for an overcycle of the blanket. The simulation
+  // should not crash when this happens.
+
+  std::string config =
+      common_config +
+      "  <TBR>1.00</TBR>"
+      " <fuel_incommod>Tritium</fuel_incommod>"
+      " <blanket_turnover_fraction>0.03</blanket_turnover_fraction>";
+
+  int simdur = 2;
+  cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:FusionPowerPlant"), config,
+                      simdur);
+
+  sim.AddRecipe("tritium", tritium());
+  sim.AddRecipe("enriched_lithium", enriched_lithium());
+
+  sim.AddSource("Tritium").recipe("tritium").Finalize();
+  sim.AddSource("Enriched_Lithium")
+      .capacity(0.5)
+      .recipe("enriched_lithium")
+      .Finalize();
+
+  EXPECT_NO_THROW(sim.Run());
+}
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(FusionPowerPlantTest, WrongFuelStartup) {
   // Test that the agent can identify that it has not recieved the correct fuel
@@ -125,13 +159,17 @@ TEST_F(FusionPowerPlantTest, WrongFuelStartup) {
 
   std::string config =
       common_config +
-      " <fuel_incommod>Enriched_Lithium</fuel_incommod>";
+      "  <TBR>1.00</TBR>"
+      " <fuel_incommod>Enriched_Lithium</fuel_incommod>"
+      " <blanket_turnover_fraction>0.03</blanket_turnover_fraction>";
 
   int simdur = 3;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:FusionPowerPlant"), config,
                       simdur);
 
   sim.AddRecipe("tritium", tritium());
+  sim.AddRecipe("enriched_lithium", enriched_lithium());
+  sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
 
   int id = sim.Run();
 
@@ -144,15 +182,77 @@ TEST_F(FusionPowerPlantTest, WrongFuelStartup) {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+TEST_F(FusionPowerPlantTest, DecayInventoryExtractHelium) {
+  // Test behaviors of the DecayInventory and ExtractHelium function here
+  EXPECT_NO_THROW(facility->DecayInventories());
+
+  // We use unintuitive values for reserve inventory and startup inventory here
+  // because they were the values we were originally testing with, and we had
+  // already done all the calculations.
+  std::string config = common_config +
+                       " <TBR>1.00</TBR> "
+                       " <fuel_incommod>Tritium</fuel_incommod>";
+
+  int simdur = 2;
+  cyclus::MockSim sim = InitializeSim(config, simdur);
+
+  int id = sim.Run();
+
+  QueryResult qr = TimeInventoryQuery(sim, "1");
+  double he3 = qr.GetVal<double>("HeliumExcess");
+
+  double reserve = 6.0;
+  double sequestered = 2.121;
+
+  double init_quant = reserve + sequestered;
+  // Lambda in base 2, not base e (see Decay.cc for more info)
+  double lambda = 2.57208504984001213e-09;
+  double t = 2629846;
+
+  double expected_decay = init_quant - init_quant * std::pow(2, -lambda * t);
+
+  EXPECT_NEAR(expected_decay, he3, 1e-6);
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+TEST_F(FusionPowerPlantTest, Li7EdgeCases) {
+  // Test that FPP does the same thing regardless of Li-7 Contribution
+
+  std::string config_1 = common_config +
+                         " <TBR>1.08</TBR> "
+                         " <fuel_incommod>Tritium</fuel_incommod>"
+                         " <he3_outcommod>Helium_3</he3_outcommod>"
+                         " <Li7_contribution>0.00</Li7_contribution>";
+
+  std::string config_2 = common_config +
+                         " <TBR>1.08</TBR> "
+                         " <fuel_incommod>Tritium</fuel_incommod>"
+                         " <Li7_contribution>1.00</Li7_contribution>";
+
+  int simdur = 2;
+  cyclus::MockSim sim_1 = InitializeSim(config_1, simdur);
+
+  int id_1 = sim_1.Run();
+
+  cyclus::MockSim sim_2 = InitializeSim(config_2, simdur);
+
+  int id_2 = sim_2.Run();
+
+  QueryResult qr_1 = TimeInventoryQuery(sim_1, "1");
+  double excess_1 = qr_1.GetVal<double>("TritiumExcess");
+
+  QueryResult qr_2 = TimeInventoryQuery(sim_2, "1");
+  double excess_2 = qr_2.GetVal<double>("TritiumExcess");
+
+  EXPECT_NEAR(excess_1, excess_2, 1e-3);
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(FusionPowerPlantTest, OperateReactorSustainingTBR) {
   // Test behaviors of the OperateReactor function here
 
   std::string config = common_config +
                        " <TBR>1.08</TBR> "
-		       " <reserve_inventory>0.1</reserve_inventory>"
-		       " <transfer_to><val>storage</val></transfer_to>"
-		       " <transfer_from><val>breeder</val></transfer_from>"
-		       " <transfer_rate><val>0.01</val></transfer_rate>"
                        " <fuel_incommod>Tritium</fuel_incommod>";
 
   int simdur = 10;
@@ -192,8 +292,9 @@ TEST_F(FusionPowerPlantTest, EnterNotifyInitialFillDefault) {
   QueryResult qr_2 = sim.db().Query("Resources", &conds_2);
   double quantity = qr_2.GetVal<double>("Quantity");
 
-  EXPECT_EQ(6.0, quantity);
+  EXPECT_EQ(8.121, quantity);
 }
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(FusionPowerPlantTest, EnterNotifyScheduleFill) {
   // Test schedule fill behavior of EnterNotify.
@@ -221,7 +322,7 @@ TEST_F(FusionPowerPlantTest, EnterNotifyScheduleFill) {
   QueryResult qr_2 = sim.db().Query("Resources", &conds_2);
   double quantity = qr_2.GetVal<double>("Quantity");
 
-  EXPECT_EQ(6, quantity);
+  EXPECT_EQ(8.121, quantity);
 
   std::vector<Cond> conds_3;
   conds_3.push_back(Cond("Time", "==", std::string("1")));
@@ -267,9 +368,11 @@ TEST_F(FusionPowerPlantTest, EnterNotifySellPolicy) {
                       simdur);
 
   sim.AddRecipe("tritium", tritium());
+  sim.AddRecipe("enriched_lithium", enriched_lithium());
 
   sim.AddSource("Tritium").capacity(100).recipe("tritium").Finalize();
   sim.AddSink("Tritium").Finalize();
+  sim.AddSource("Enriched_Lithium").recipe("enriched_lithium").Finalize();
 
   int id = sim.Run();
 
@@ -279,107 +382,6 @@ TEST_F(FusionPowerPlantTest, EnterNotifySellPolicy) {
   double qr_rows = qr.rows.size();
 
   EXPECT_EQ(simdur, qr_rows);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-TEST_F(FusionPowerPlantTest, InvalidTransferVectorsLength) {
-  // Tests that unequal transfer array lengths are caught in EnterNotify
-  std::string config = common_config +
-                       " <TBR>1.00</TBR> "
-                       " <fuel_incommod>Tritium</fuel_incommod>"
-                       " <transfer_from><val>breeder</val></transfer_from>"
-                       " <transfer_to><val>storage</val><val> plasma</val></transfer_to>"
-                       " <transfer_rate><val>0.1</val><val>0.2</val></transfer_rate>";
-
-  cyclus::MockSim sim = InitializeSim(config, 2);
-  EXPECT_THROW(sim.Run(), cyclus::ValueError);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-TEST_F(FusionPowerPlantTest, InvalidTransferUnknownCompartment) {
-  // Tests that referring to an undefined compartment throws an error
-  std::string config = common_config +
-                       " <TBR>1.00</TBR> "
-                       " <fuel_incommod>Tritium</fuel_incommod>"
-                       " <transfer_from><val>breeder</val></transfer_from>"
-                       " <transfer_to><val>nonexistent_compartment</val></transfer_to>"
-                       " <transfer_rate><val>0.1</val></transfer_rate>";
-
-  cyclus::MockSim sim = InitializeSim(config, 2);
-  EXPECT_THROW(sim.Run(), cyclus::ValueError);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-TEST_F(FusionPowerPlantTest, InvalidEscapeFractionSum) {
-  // Tests that escape fractions cannot physically exceed 100%
-  std::string config = common_config +
-                       " <TBR>1.00</TBR> "
-                       " <fuel_incommod>Tritium</fuel_incommod>"
-                       " <escape_fraction><val>0.6</val><val>0.5</val></escape_fraction>"
-                       " <escape_to><val>storage</val><val>breeder</val></escape_to>";
-
-  cyclus::MockSim sim = InitializeSim(config, 2);
-  EXPECT_THROW(sim.Run(), cyclus::ValueError);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-TEST_F(FusionPowerPlantTest, InvalidEscapeFractionsNegative) {
-  // Tests that escape fractions cannot be negative
-  std::string config = common_config +
-                       " <TBR>1.00</TBR> "
-                       " <fuel_incommod>Tritium</fuel_incommod>"
-                       " <escape_fraction><val>-0.1</val></escape_fraction>"
-                       " <escape_to><val>storage</val></escape_to>";
-
-  cyclus::MockSim sim = InitializeSim(config, 2);
-  EXPECT_THROW(sim.Run(), cyclus::ValueError);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-TEST_F(FusionPowerPlantTest, ValidTritiumTransferMovement) {
-  // Tests that a valid transfer configuration runs without error and tritium
-  // successfully traverses from the breeder to the storage compartment.
-  std::string config = common_config +
-                       " <TBR>1.10</TBR> "
-                       " <fuel_incommod>Tritium</fuel_incommod>"
-                       " <transfer_from><val>breeder</val></transfer_from>"
-                       " <transfer_to><val>storage</val></transfer_to>"
-                       " <transfer_rate><val>0.25</val></transfer_rate>";
-
-  int simdur = 5;
-  cyclus::MockSim sim = InitializeSim(config, simdur);
-
-  // The simulation should run cleanly
-  EXPECT_NO_THROW(sim.Run());
-
-  // Check inventory near the end of the simulation to ensure storage isn't empty
-  QueryResult qr = TimeInventoryQuery(sim, "4");
-  double storage = qr.GetVal<double>("TritiumStorage");
-
-  // Storage should have a positive mass balance accumulated from the transfer rate
-  EXPECT_GT(storage, 0.0);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-TEST_F(FusionPowerPlantTest, ValidEscapeFractionMovement) {
-  // Verify that an escape fraction from plasma correctly routes material
-  // into the designated target compartment.
-  std::string config = common_config +
-                       " <TBR>1.00</TBR> "
-                       " <fuel_incommod>Tritium</fuel_incommod>"
-                       " <escape_fraction><val>0.05</val></escape_fraction>"
-                       " <escape_to><val>storage</val></escape_to>";
-
-  int simdur = 5;
-  cyclus::MockSim sim = InitializeSim(config, simdur);
-
-  EXPECT_NO_THROW(sim.Run());
-
-  QueryResult qr = TimeInventoryQuery(sim, "4");
-  double storage = qr.GetVal<double>("TritiumStorage");
-
-  // Storage shouldn't be negative and should receive the escaped tritium
-  EXPECT_GE(storage, 0.0);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
