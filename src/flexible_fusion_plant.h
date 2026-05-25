@@ -171,6 +171,14 @@ class FlexibleFusionPlant : public cyclus::Facility  {
   std::string fuel_incommod;
 
   #pragma cyclus var { \
+    "doc": "Output fuel commodity", \
+    "tooltip": "Name of fuel commodity sold", \
+    "default": "Tritium", \
+    "uilabel": "Fuel output commodity" \
+  }
+  std::string fuel_outcommod;
+
+  #pragma cyclus var { \
     "default": 'fill', \
     "doc": "Method of refueling the reactor", \
     "tooltip": "Options: 'schedule' or 'fill'", \

@@ -20,7 +20,6 @@ const double mass_tritium = 5.01 * std::pow(10,-27);
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 FlexibleFusionPlant::FlexibleFusionPlant(cyclus::Context* ctx)
     : cyclus::Facility(ctx) {
-  fuel_tracker.Init({&tritium_storage}, fuel_limit);
 
   tritium_storage = ResBuf<Material>(true);
   tritium_excess = ResBuf<Material>(true);
@@ -36,6 +35,8 @@ std::string FlexibleFusionPlant::str() {
 void FlexibleFusionPlant::EnterNotify() {
   cyclus::Facility::EnterNotify();
 
+  fuel_tracker.Init({&tritium_storage}, fuel_limit);
+  
   burn_rate = mass_tritium * fusion_power * MW_to_W/ 
 	  (conversion_efficiency * energy_DT);
   fuel_usage_mass = burn_rate * context()->dt();
@@ -111,10 +112,12 @@ void FlexibleFusionPlant::EnterNotify() {
   // Build the matrix
   BuildMatrix(burn_rate);
 
+  double reserve = std::max(fuel_usage_mass, reserve_inventory);
+
   fuel_startup_policy
       .Init(this, &tritium_storage, std::string("Tritium Storage"),
             &fuel_tracker, std::string("ss"),
-            reserve_inventory, 5 * reserve_inventory)
+            reserve, 10 * reserve)
       .Set(fuel_incommod, tritium_comp)
       .Start();
 
@@ -135,7 +138,7 @@ void FlexibleFusionPlant::EnterNotify() {
   } else if (refuel_mode == "fill") {
     fuel_refill_policy
         .Init(this, &tritium_storage, std::string("Input"), &fuel_tracker,
-              std::string("ss"), reserve_inventory, 5 * reserve_inventory)
+              std::string("ss"), reserve, 10 * reserve)
         .Set(fuel_incommod, tritium_comp);
 
   } else {
@@ -144,7 +147,7 @@ void FlexibleFusionPlant::EnterNotify() {
   }
 
   tritium_sell_policy.Init(this, &tritium_excess, std::string("Excess Tritium"))
-      .Set(fuel_incommod)
+      .Set(fuel_outcommod)
       .Start();
   
 }

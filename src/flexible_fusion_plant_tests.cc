@@ -149,7 +149,7 @@ TEST_F(FlexibleFusionPlantTest, OperateReactorSustainingTBR) {
 
   std::string config = common_config +
                        " <TBR>1.08</TBR> "
-		       " <reserve_inventory>0.1</reserve_inventory>"
+		       " <reserve_inventory>10.0</reserve_inventory>"
 		       " <transfer_to><val>storage</val></transfer_to>"
 		       " <transfer_from><val>breeder</val></transfer_from>"
 		       " <transfer_rate><val>0.01</val></transfer_rate>"
