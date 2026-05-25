@@ -114,7 +114,7 @@ void FlexibleFusionPlant::EnterNotify() {
   fuel_startup_policy
       .Init(this, &tritium_storage, std::string("Tritium Storage"),
             &fuel_tracker, std::string("ss"),
-            reserve_inventory, reserve_inventory)
+            reserve_inventory, 5 * reserve_inventory)
       .Set(fuel_incommod, tritium_comp)
       .Start();
 
@@ -135,7 +135,7 @@ void FlexibleFusionPlant::EnterNotify() {
   } else if (refuel_mode == "fill") {
     fuel_refill_policy
         .Init(this, &tritium_storage, std::string("Input"), &fuel_tracker,
-              std::string("ss"), reserve_inventory, reserve_inventory)
+              std::string("ss"), reserve_inventory, 5 * reserve_inventory)
         .Set(fuel_incommod, tritium_comp);
 
   } else {
@@ -304,7 +304,7 @@ double FlexibleFusionPlant::SequesteredTritium() {
 bool FlexibleFusionPlant::ReadyToOperate() {
   
   // Determine tritium inventory required to operate
-  if (tritium_storage.quantity() < fuel_usage_mass / TBE ||
+  if (tritium_storage.quantity() < fuel_usage_mass ||
 		  tritium_storage.quantity() < reserve_inventory ||
 		  tritium_storage.quantity() < cyclus::eps_rsrc()) {
     return false;
