@@ -40,6 +40,13 @@ void FlexibleFusionPlant::EnterNotify() {
   burn_rate = mass_tritium * fusion_power * MW_to_W/ 
 	  (conversion_efficiency * energy_DT);
   fuel_usage_mass = burn_rate * context()->dt();
+  
+  // Ensure startup inventory is greater than reserve  
+  if (startup_inventory < reserve_inventory) {
+    throw cyclus::ValueError(
+        "Startup inventory must exceed or equal reserve inventory."
+	);
+  }
 
   int N = components.size();
   
@@ -112,17 +119,14 @@ void FlexibleFusionPlant::EnterNotify() {
   // Build the matrix
   BuildMatrix(burn_rate);
 
-  double reserve = std::max(fuel_usage_mass, reserve_inventory);
-
   fuel_startup_policy
       .Init(this, &tritium_storage, std::string("Tritium Storage"),
             &fuel_tracker, std::string("ss"),
-            reserve, 10 * reserve)
+            startup_inventory, startup_inventory)
       .Set(fuel_incommod, tritium_comp)
       .Start();
 
   // Tritium Buy Policy Selection:
-  // Keep it simple until I understand this better!
   if (refuel_mode == "schedule") {
     IntDistribution::Ptr active_dist = FixedIntDist::Ptr(new FixedIntDist(1));
     IntDistribution::Ptr dormant_dist =
@@ -136,9 +140,11 @@ void FlexibleFusionPlant::EnterNotify() {
         .Set(fuel_incommod, tritium_comp);
 
   } else if (refuel_mode == "fill") {
+    double reserve = std::max(fuel_usage_mass, reserve_inventory);
+
     fuel_refill_policy
         .Init(this, &tritium_storage, std::string("Input"), &fuel_tracker,
-              std::string("ss"), reserve, 10 * reserve)
+              std::string("ss"), reserve, reserve)
         .Set(fuel_incommod, tritium_comp);
 
   } else {
@@ -239,6 +245,7 @@ void FlexibleFusionPlant::BuildMatrix(double tritium_consumption_rate) {
 void FlexibleFusionPlant::Tick() {
 
   if (ReadyToOperate()) {
+    has_started = true;
     fuel_startup_policy.Stop();
     fuel_refill_policy.Start();
 
@@ -307,9 +314,12 @@ double FlexibleFusionPlant::SequesteredTritium() {
 bool FlexibleFusionPlant::ReadyToOperate() {
   
   // Determine tritium inventory required to operate
-  if (tritium_storage.quantity() < fuel_usage_mass ||
-		  tritium_storage.quantity() < reserve_inventory ||
-		  tritium_storage.quantity() < cyclus::eps_rsrc()) {
+  if (tritium_storage.quantity() < startup_inventory &&
+      !has_started) {
+    return false;
+  }
+  if (tritium_storage.quantity() < reserve_inventory ||
+		  tritium_storage.quantity() < fuel_usage_mass) {
     return false;
   }
   return true;

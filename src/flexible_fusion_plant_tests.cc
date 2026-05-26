@@ -30,7 +30,8 @@ static Composition::Ptr decayed_tritium() {
 
 static std::string common_config =
     " <fusion_power>300</fusion_power>"
-    " <reserve_inventory>6.0</reserve_inventory>"
+    " <reserve_inventory>1.0</reserve_inventory>"
+    " <startup_inventory>6.0</startup_inventory>"
     " <components><val>plasma</val><val>storage</val><val>breeder</val></components>";
 
 static cyclus::MockSim InitializeSim(std::string config, int simdur) {
@@ -388,8 +389,9 @@ TEST_F(FlexibleFusionPlantTest, AnalyticalPureDecayVerification) {
   std::string config =
       " <fusion_power>0</fusion_power>"
       " <conversion_efficiency>1.0</conversion_efficiency>"
-      " <reserve_inventory>6.0</reserve_inventory>"
       " <refuel_mode>schedule</refuel_mode>"
+      " <reserve_inventory>6.0</reserve_inventory>"
+      " <startup_inventory>6.0</startup_inventory>"
       " <buy_quantity>6.0</buy_quantity>"
       " <buy_frequency>100</buy_frequency>"
       " <components><val>plasma</val><val>storage</val><val>breeder</val></components>"
@@ -424,8 +426,9 @@ TEST_F(FlexibleFusionPlantTest, AnalyticalOdeBurnAndBreedVerification) {
   std::string config =
       " <fusion_power>300</fusion_power>"
       " <conversion_efficiency>1.0</conversion_efficiency>"
-      " <reserve_inventory>6.0</reserve_inventory>"
       " <refuel_mode>schedule</refuel_mode>"
+      " <reserve_inventory>6.0</reserve_inventory>"
+      " <startup_inventory>6.0</startup_inventory>"
       " <buy_quantity>6.0</buy_quantity>"
       " <buy_frequency>100</buy_frequency>"
       " <components><val>plasma</val><val>storage</val><val>breeder</val></components>"

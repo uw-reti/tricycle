@@ -163,6 +163,16 @@ class FlexibleFusionPlant : public cyclus::Facility  {
   double reserve_inventory;  
 
   #pragma cyclus var { \
+    "doc": "Minimum tritium inventory to start the reactor from fresh. Should be larger "\
+	   "than or equal to reserve inventory", \
+    "tooltip": "Minimum tritium inventory to start the reactor", \
+    "units": "kg", \
+    "default": 0, \
+    "uilabel": "Startup Inventory" \
+  }
+  double startup_inventory;  
+
+  #pragma cyclus var { \
     "doc": "Fresh fuel commodity", \
     "tooltip": "Name of fuel commodity requested", \
     "default": "Tritium", \
@@ -238,6 +248,10 @@ class FlexibleFusionPlant : public cyclus::Facility  {
   double fuel_limit = 1000.0;
   double fuel_usage_mass;
   double burn_rate;
+
+  // Controls whether to check for startup inventory
+  // or reserve inventory in deciding to operate
+  bool has_started = false;
 
   //NucIDs for Pyne
   const int tritium_id = 10030000;
