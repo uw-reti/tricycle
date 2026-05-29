@@ -40,6 +40,8 @@ void FlexibleFusionPlant::EnterNotify() {
   burn_rate = mass_tritium * fusion_power * MW_to_W/ 
 	  (conversion_efficiency * energy_DT);
   fuel_usage_mass = burn_rate * context()->dt();
+
+  failure_probability = 1.0 - std::exp(-failure_frequency * context()->dt() / 12);  
   
   // Ensure startup inventory is greater than reserve  
   if (startup_inventory < reserve_inventory) {
@@ -259,7 +261,11 @@ void FlexibleFusionPlant::Tick() {
     // Some way of leaving a record of what is going wrong is helpful info I
     // think Use the cyclus logger
   }
-  
+
+  // Decay any tritium stored in the excess
+  tritium_excess.Decay();
+
+  // Accumulate tritium into the excess store  
   double excess_tritium = std::max(tritium_storage.quantity() - 
                                   reserve_inventory, 0.0);
   
@@ -313,13 +319,35 @@ double FlexibleFusionPlant::SequesteredTritium() {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool FlexibleFusionPlant::ReadyToOperate() {
   
+  // If the plant has failed, increment the recovery counter
+  if (has_failed) {
+
+    // Plant restarts
+    if (++recovery_counter >= shutdown_duration) {
+
+      recovery_counter = 0;
+      has_failed = false;
+
+    // Plant remains off
+    } else {
+      return false;
+    }
+  }
+	  
   // Determine tritium inventory required to operate
-  if (tritium_storage.quantity() < startup_inventory &&
-      !has_started) {
+  const double tritium = tritium_storage.quantity();
+  if (tritium < startup_inventory && !has_started) {
     return false;
   }
-  if (tritium_storage.quantity() < reserve_inventory ||
-		  tritium_storage.quantity() < fuel_usage_mass) {
+  if (tritium < std::max(reserve_inventory, fuel_usage_mass)) {
+    return false;
+  }
+
+  // Check if there is a disruption that prevents operation
+  double xi = context()->random_01();
+  if (xi < failure_probability) {
+    has_failed = true;
+    recovery_counter = 0;
     return false;
   }
   return true;

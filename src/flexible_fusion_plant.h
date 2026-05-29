@@ -121,6 +121,29 @@ class FlexibleFusionPlant : public cyclus::Facility  {
   }
   double TBE;
 
+  #pragma cyclus var { \
+    "doc": "Frequency of plant failures, causing an outage. Defines a Bernoulli "\
+	   "distribution which decides whether the plant trips during a step.   "\
+           "If there is a trip, the plant will be offline for at least 1 step.  ", \
+    "default": 0, \
+    "tooltip": "Plant failure frequency", \
+    "units": "1/month", \
+    "uitype": "range", \
+    "range": [0, 1e299], \
+    "uilabel": "Failure frequency" \
+  }
+  double failure_frequency;
+  
+  #pragma cyclus var { \
+    "doc": "Number of steps during which the plant is shutdown following a failure.",\
+    "default": 1, \
+    "tooltip": "Post-failure shutdown duration", \
+    "uitype": "range", \
+    "range": [1, 100], \
+    "uilabel": "Shutdown duration" \
+  }
+  int shutdown_duration;
+
   #pragma cyclus var {"tooltip":"Component names"}
   std::vector<std::string> components;
 
@@ -248,6 +271,11 @@ class FlexibleFusionPlant : public cyclus::Facility  {
   double fuel_limit = 1000.0;
   double fuel_usage_mass;
   double burn_rate;
+
+  // Variables controlling failure frequency and recovery
+  int recovery_counter = 0;
+  double failure_probability;
+  bool has_failed = false;
 
   // Controls whether to check for startup inventory
   // or reserve inventory in deciding to operate

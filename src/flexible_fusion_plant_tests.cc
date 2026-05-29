@@ -456,6 +456,49 @@ TEST_F(FlexibleFusionPlantTest, AnalyticalOdeBurnAndBreedVerification) {
   EXPECT_NEAR(storage, expected_storage, 1e-4);
   EXPECT_NEAR(breeder, expected_breeder, 1e-4);
 }
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+TEST_F(FlexibleFusionPlantTest, GuaranteedFailurePreventsOperation) {
+  // Test that an extremely high failure frequency forces the failure probability
+  // to ~1.0, guaranteeing the plant will fail and prevent operation.
+  std::string config = common_config +
+                       " <TBR>1.00</TBR> "
+                       " <fuel_incommod>Tritium</fuel_incommod>"
+                       " <failure_frequency>1e7</failure_frequency>";
+
+  int simdur = 4;
+  cyclus::MockSim sim = InitializeSim(config, simdur);
+
+  EXPECT_NO_THROW(sim.Run());
+
+  QueryResult qr = TimeInventoryQuery(sim, "3");
+  double seq_trit = qr.GetVal<double>("TritiumSequestered");
+
+  // Because the plant constantly fails the random roll, it should never start.
+  // Therefore, no tritium should be sequestered into the intermediate components.
+  EXPECT_EQ(0.0, seq_trit);
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+TEST_F(FlexibleFusionPlantTest, ZeroFailureAllowsOperation) {
+  // Test that a zero failure frequency forces the failure probability to 0.0,
+  // ensuring the plant operates reliably without any stochastic interruptions.
+  std::string config = common_config +
+                       " <TBR>1.00</TBR> "
+                       " <fuel_incommod>Tritium</fuel_incommod>"
+                       " <failure_frequency>0.0</failure_frequency>";
+
+  int simdur = 4;
+  cyclus::MockSim sim = InitializeSim(config, simdur);
+
+  EXPECT_NO_THROW(sim.Run());
+
+  QueryResult qr = TimeInventoryQuery(sim, "3");
+  double seq_trit = qr.GetVal<double>("TritiumSequestered");
+
+  // With a zero failure probability, the plant should start normally and
+  // sequester tritium into the breeder/storage loops.
+  EXPECT_GT(seq_trit, 0.0);
+}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Do Not Touch! Below section required for connection with Cyclus
