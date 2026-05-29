@@ -124,7 +124,7 @@ class FusionPowerPlant : public cyclus::Facility  {
   std::string fuel_incommod;
 
   #pragma cyclus var { "default":"",\
-    "doc": "Fresh fuel commodity", \
+    "doc": "Fuel commodity leaving power plant", \
     "tooltip": "Name of fuel commodity offered", \
     "uilabel": "Fuel output commodity" \
   }
