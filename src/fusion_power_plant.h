@@ -99,7 +99,7 @@ class FusionPowerPlant : public cyclus::Facility  {
   double reserve_inventory;  
 
   #pragma cyclus var { \
-    "doc": "Equilibrium quantity of tritium which is sequestered in the system and no longer accessable", \
+    "doc": "Equilibrium quantity of tritium which is sequestered in the system and no longer accessible", \
     "tooltip": "sequestered tritium equilibrium quantity, should be startup-reserve inventory", \
     "units": "kg", \
     "uilabel": "Equilibrium Quantity of Sequestered Tritium" \
@@ -123,7 +123,14 @@ class FusionPowerPlant : public cyclus::Facility  {
   }
   std::string fuel_incommod;
 
-    #pragma cyclus var { \
+  #pragma cyclus var { "default":"",\
+    "doc": "Fuel commodity leaving power plant", \
+    "tooltip": "Name of fuel commodity offered", \
+    "uilabel": "Fuel output commodity" \
+  }
+  std::string fuel_outcommod;
+
+  #pragma cyclus var { \
     "default": 0.03, \
     "doc": "Fraction of tritium that comes from the (n + Li-7 --> T + He + n) reaction", \
     "tooltip": "Fraction of tritium from Li-7 breeding", \
