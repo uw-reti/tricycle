@@ -19,28 +19,86 @@ namespace tricycle {
 ///
 /// @section intro Introduction
 /// This agent is designed to function as a basic representation of a fusion
-/// power plant with respect to tritium flows. This is currently the alpha
-/// version of the agent, and as such some simplifying assumptions were made.
-/// This version only tracks tritium; not lithium or He. Allows an arbitrary
-/// number of components where tritium may reside and migrate to and from.
+/// power plant with respect to tritium flows. This version only tracks 
+/// tritium; not lithium or He. Allows an arbitrary number of components
+/// where tritium may reside and migrate to and from - hence 'flexible'.
+/// Also allows specifying a plant failure frequency, causing the plant
+/// to randomly fail to operate, e.g., due to a plasma disruption.
 ///
 /// @section agentparams Agent Parameters
-/// .... e.g., power?
-/// Place a description of the required input parameters which define the
-/// agent implementation. Saving for Later.
+/// fusion_power: the electrical power in MW produced by the plant.
+/// TBR: tritium breeding ratio
+/// components: the names of the components that make up the plant. Required
+/// components are 'plasma', 'storage', and 'breeder'. There can be any number
+/// of components.
 ///
 /// @section optionalparams Optional Parameters
-/// ... e.g., specific plant type
-/// Place a description of the optional input parameters to define the
-/// agent implementation. Saving for later.
+/// TBE: tritium burn efficiency, the fraction of tritium sent to the plasma
+/// which is burned. Defaults to 1.
+/// conversion_efficiency: the efficiency of conversion from fusion heat
+/// to electricity. Defaults to 1.
+/// failure_frequency: the frequency (per month) with which the plant shuts
+/// down - a measure of plant reliability. Defaults to 0, i.e., perfectly
+/// reliable.
+/// shutdown_duration: the number of timesteps following a failure for which
+/// the plant is shutdown. Defaults to 1, i.e., shutdown for a single step.
+/// transfer_from: list of components from which tritium is transferred/lost.
+/// Must have the same size as transfer_to and transfer_rate, with each entry
+/// corresponding to the same to-from-rate triplet.
+/// transfer_to: list of components to which tritium is transferred/lost.
+/// Must have the same size as transfer_from and transfer_rate, with each entry
+/// corresponding to the same to-from-rate triplet.
+/// transfer_rate: list of rates (1/s) at which tritium is transferred from
+/// one component to another.
+/// Must have the same size as transfer_to and transfer_from, with each entry
+/// corresponding to the same to-from-rate triplet.
+/// escape_fraction: list of fractions of the unburned tritium which escapes
+/// to a given component.
+/// Must have the same size as escape_to with each entry corresponding
+/// to the same to-fraction doublet.
+/// escape_to: list of components to which tritium escapes from the plasma.
+/// Must have the same size as escape_fraction with each entry corresponding
+/// to the same to-fraction doublet.
+/// fuel_incommod: name of the incoming fuel, defaults to 'Tritium'.
+/// fuel_outcommod: name of the outgoing fuel in excess of what is required.
+/// Defaults to 'Tritium'.
+/// reserve_inventory: mass of tritium (kg) which must be kept in reserve
+/// for the plant to operate. Defaults to 0.
+/// startup_inventory: mass of tritium (kg) required to first begin operation.
+/// Defaults to 0.
+/// refuel_mode: Method of refuelling the reactor. Can be either 'schedule'
+/// or 'fill'. Defaults to 'fill'.
+/// buy_quantity: Amount of tritium purchased in schedule fuelling mode.
+/// Defaults of 0.1 kg per purchase.
+/// buy_frequency: How frequently (in timesteps) the reactor attempts to 
+/// purchase new fuel. Defaults to 1, i.e., purchasing every timestep.
 ///
 /// @section detailed Detailed Behavior
-/// ... 
+/// The plant consists of several 'components' which can each contain tritium.
+/// During Tick, the plant decides whether to operate based on several factors.
+/// If the plant has not previously operated, it checks whether it has a
+/// sufficiently large startup_inventory. If the plant has previously operated,
+/// it instead checks whether it has a sufficient reserve_inventory.
+/// In case these are both small, the plant also checks whether it has enough
+/// tritium to burn during the timestep.
+/// Finally, the plant may fail during a step, depending on its failure_frequency.
+/// A failure probability is calculated, a random number is generated, and
+/// its value then determines whether the plant operates. If it fails, it 
+/// will not operate for a specified number of timesteps.
+///
+/// Whether or not the plant operates, the tritium in the system will be evolved.
+/// Operation only determines whether tritium is extracted from storage and into
+/// the plasma, and whether tritium is then bred in the blanket or escapes the
+/// plasma and into other components. If the plant does not operate, tritium 
+/// will still leak/transfer from other components as specified, e.g., from the
+/// blanket into storage.
+///
+/// Following operation, tritium in excess of the reserve is moved to the
+/// excess store where it can be sold.
+///
 /// Place a description of the detailed behavior of the agent. Consider
 /// describing the behavior at the tick and tock as well as the behavior
 /// upon sending and receiving materials and messages.
-///
-/// This section needs to be filled out once there is some behavior to describe.
 ///
 class FlexibleFusionPlant : public cyclus::Facility  {
  public:
@@ -83,7 +141,6 @@ class FlexibleFusionPlant : public cyclus::Facility  {
     "units": "MW", \
     "uitype": "range", \
     "range": [0, 1e299], \
-    "default": 300, \
     "uilabel": "Fusion Power" \
   }
   double fusion_power;
@@ -101,7 +158,6 @@ class FlexibleFusionPlant : public cyclus::Facility  {
 
   #pragma cyclus var { \
     "doc": "Achievable system tritium breeding ratio before decay", \
-    "default": 1.2, \
     "tooltip": "Achievable system tritium breeding ratio before decay", \
     "units": "non-dimensional", \
     "uitype": "range", \

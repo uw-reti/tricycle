@@ -258,8 +258,6 @@ void FlexibleFusionPlant::Tick() {
     // Tritium in the system leaks and decays, but no burning plasma
     OperateReactor(false);
 
-    // Some way of leaving a record of what is going wrong is helpful info I
-    // think Use the cyclus logger
   }
 
   // Decay any tritium stored in the excess
@@ -282,8 +280,6 @@ void FlexibleFusionPlant::Tick() {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FlexibleFusionPlant::Tock() {
-  // ExplicitInventories wasn't working. If possible, may be best to use that
-  // down the road.
   RecordInventories(tritium_storage.quantity(), tritium_excess.quantity(),
                     SequesteredTritium());
 }
@@ -411,7 +407,7 @@ void FlexibleFusionPlant::OperateReactor(bool burn_tritium) {
         tritium_storage.Push(cyclus::Material::Create(this, delta, tritium_comp));
       }
     }
-    // Handle Other Components (e.g., Breeder)
+    // Handle other components
     else {
       if (delta < -cyclus::eps_rsrc()) {
         tritium_elsewhere[i].Pop(-delta);
