@@ -263,9 +263,12 @@ void FlexibleFusionPlant::Tick() {
   // Decay any tritium stored in the excess
   tritium_excess.Decay();
 
-  // Accumulate tritium into the excess store  
-  double excess_tritium = std::max(tritium_storage.quantity() - 
-                                  reserve_inventory, 0.0);
+  // Accumulate tritium into the excess store
+  double excess_tritium = 0.0;
+  if (has_started) {
+    excess_tritium = std::max(tritium_storage.quantity() - 
+                                  (reserve_inventory + margin_to_excess), 0.0);
+  }
   
   // Otherwise the ResBuf encounters an error when it tries to squash
   if (excess_tritium > cyclus::eps_rsrc()) {

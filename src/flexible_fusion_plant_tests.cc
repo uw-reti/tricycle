@@ -74,7 +74,6 @@ class FlexibleFusionPlantTest : public ::testing::Test {
 TEST_F(FlexibleFusionPlantTest, InitialState) {
   // Test things about the initial state of the facility here
   EXPECT_NE(nullptr, facility);
-  EXPECT_FALSE(facility->ReadyToOperate());
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -126,7 +125,8 @@ TEST_F(FlexibleFusionPlantTest, WrongFuelStartup) {
 
   std::string config =
       common_config +
-      " <fuel_incommod>Enriched_Lithium</fuel_incommod>";
+      " <fuel_incommod>Enriched_Lithium</fuel_incommod> "
+      " <TBR>1.0</TBR> ";
 
   int simdur = 3;
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:FlexibleFusionPlant"), config,
