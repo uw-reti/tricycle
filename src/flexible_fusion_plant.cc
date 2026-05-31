@@ -288,11 +288,6 @@ void FlexibleFusionPlant::Tick() {
   if (excess_tritium > cyclus::eps_rsrc()) {
     tritium_excess.Push(tritium_storage.Pop(excess_tritium));
   }
-
-  if (SequesteredTritium() != 0) {
-    fuel_startup_policy.Stop();
-    fuel_refill_policy.Start();
-  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

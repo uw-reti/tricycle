@@ -137,7 +137,6 @@ class FlexibleFusionPlant : public cyclus::Facility  {
   /// A verbose printer for the FlexibleFusionPlant
   virtual std::string str();
 
-
   //Functions:
   bool ReadyToOperate();
   void OperateReactor(bool burn_tritium = true);
@@ -146,7 +145,6 @@ class FlexibleFusionPlant : public cyclus::Facility  {
   double SequesteredTritium();
   void RecordInventories(double tritium_storage, double tritium_excess, 
                          double sequestered_tritium);
-
 
  private:
   //State Variables:
