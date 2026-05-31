@@ -32,7 +32,7 @@ static std::string common_config =
     " <fusion_power>300</fusion_power>"
     " <reserve_inventory>1.0</reserve_inventory>"
     " <startup_inventory>6.0</startup_inventory>"
-    " <components><val>plasma</val><val>storage</val><val>breeder</val></components>";
+    " <components><val>storage</val><val>breeder</val></components>";
 
 static cyclus::MockSim InitializeSim(std::string config, int simdur) {
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:FlexibleFusionPlant"), config,
@@ -289,7 +289,7 @@ TEST_F(FlexibleFusionPlantTest, InvalidTransferVectorsLength) {
                        " <TBR>1.00</TBR> "
                        " <fuel_incommod>Tritium</fuel_incommod>"
                        " <transfer_from><val>breeder</val></transfer_from>"
-                       " <transfer_to><val>storage</val><val> plasma</val></transfer_to>"
+                       " <transfer_to><val>storage</val></transfer_to>"
                        " <transfer_rate><val>0.1</val><val>0.2</val></transfer_rate>";
 
   cyclus::MockSim sim = InitializeSim(config, 2);
@@ -394,7 +394,7 @@ TEST_F(FlexibleFusionPlantTest, AnalyticalPureDecayVerification) {
       " <startup_inventory>6.0</startup_inventory>"
       " <buy_quantity>6.0</buy_quantity>"
       " <buy_frequency>100</buy_frequency>"
-      " <components><val>plasma</val><val>storage</val><val>breeder</val></components>"
+      " <components><val>storage</val><val>breeder</val></components>"
       " <TBR>1.00</TBR>"
       " <TBE>1.00</TBE>"
       " <fuel_incommod>Tritium</fuel_incommod>";
@@ -411,9 +411,9 @@ TEST_F(FlexibleFusionPlantTest, AnalyticalPureDecayVerification) {
   double storage = qr.GetVal<double>("TritiumStorage");
 
   // Analytical Calculation: 6.0 * exp(-lambda_T * dt)
-  // lambda_T = ln(2)/(12.32*365*24*3600) = 1.78405e-9 /s
+  // lambda_T = ln(2)/(12.32*365.25*24*3600) = 1.7828335e-9 /s
   // dt = 2629800 s (1 default Cyclus month)
-  double expected_storage = 5.9719157;
+  double expected_storage = 5.97193487;
 
   // Use EXPECT_NEAR to accommodate minor floating point precision limits
   EXPECT_NEAR(storage, expected_storage, 1e-5);
@@ -431,7 +431,7 @@ TEST_F(FlexibleFusionPlantTest, AnalyticalOdeBurnAndBreedVerification) {
       " <startup_inventory>6.0</startup_inventory>"
       " <buy_quantity>6.0</buy_quantity>"
       " <buy_frequency>100</buy_frequency>"
-      " <components><val>plasma</val><val>storage</val><val>breeder</val></components>"
+      " <components><val>storage</val><val>breeder</val></components>"
       " <TBR>1.00</TBR>"
       " <TBE>1.00</TBE>"
       " <fuel_incommod>Tritium</fuel_incommod>";
@@ -450,8 +450,8 @@ TEST_F(FlexibleFusionPlantTest, AnalyticalOdeBurnAndBreedVerification) {
 
   // Expected analytical results calculated using the corrected rate-based
   // matrix exponential: M = exp(A * dt)
-  double expected_storage = 4.573487;
-  double expected_breeder = 1.398428;
+  double expected_storage = 4.57395076;
+  double expected_breeder = 1.39798411;
 
   EXPECT_NEAR(storage, expected_storage, 1e-4);
   EXPECT_NEAR(breeder, expected_breeder, 1e-4);

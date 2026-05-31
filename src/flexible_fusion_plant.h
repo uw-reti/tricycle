@@ -37,7 +37,7 @@ namespace tricycle {
 /// which is burned. Defaults to 1.
 /// conversion_efficiency: the efficiency of conversion from fusion heat
 /// to electricity. Defaults to 1.
-/// failure_frequency: the frequency (per month) with which the plant shuts
+/// failure_frequency: the frequency (per year) with which the plant shuts
 /// down - a measure of plant reliability. Defaults to 0, i.e., perfectly
 /// reliable.
 /// shutdown_duration: the number of timesteps following a failure for which
@@ -137,6 +137,18 @@ class FlexibleFusionPlant : public cyclus::Facility  {
   /// A verbose printer for the FlexibleFusionPlant
   virtual std::string str();
 
+
+  //Functions:
+  bool ReadyToOperate();
+  void OperateReactor(bool burn_tritium = true);
+  void DecayInventories();
+  Eigen::MatrixXd BuildMatrix(double tritium_consumption_rate);
+  double SequesteredTritium();
+  void RecordInventories(double tritium_storage, double tritium_excess, 
+                         double sequestered_tritium);
+
+
+ private:
   //State Variables:
   #pragma cyclus var { \
     "doc": "Nameplate fusion power of the reactor", \
@@ -186,7 +198,7 @@ class FlexibleFusionPlant : public cyclus::Facility  {
            "If there is a trip, the plant will be offline for at least 1 step.  ", \
     "default": 0, \
     "tooltip": "Plant failure frequency", \
-    "units": "1/month", \
+    "units": "1/year", \
     "uitype": "range", \
     "range": [0, 1e299], \
     "uilabel": "Failure frequency" \
@@ -311,18 +323,6 @@ class FlexibleFusionPlant : public cyclus::Facility  {
   }
   int buy_frequency;
 
-
-  //Functions:
-  bool ReadyToOperate();
-  void OperateReactor(bool burn_tritium = true);
-  void DecayInventories();
-  void BuildMatrix(double tritium_consumption_rate);
-  double SequesteredTritium();
-  void RecordInventories(double tritium_storage, double tritium_excess, 
-                         double sequestered_tritium);
-
-
- private:
   //Resource Buffers and Trackers:
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_storage;
   cyclus::toolkit::ResBuf<cyclus::Material> tritium_excess;
@@ -335,8 +335,6 @@ class FlexibleFusionPlant : public cyclus::Facility  {
 
   cyclus::toolkit::TotalInvTracker fuel_tracker;
 
-  //This is to correctly instantiate the TotalInvTracker(s)
-  double fuel_limit = 1000.0;
   double fuel_usage_mass;
   double burn_rate;
 
@@ -349,21 +347,20 @@ class FlexibleFusionPlant : public cyclus::Facility  {
   // or reserve inventory in deciding to operate
   bool has_started = false;
 
-  //NucIDs for Pyne
-  const int tritium_id = 10030000;
-  
-  //Compositions:
-  const cyclus::CompMap T = {{tritium_id, 1}};
-  const cyclus::Composition::Ptr tritium_comp = cyclus::Composition::CreateFromAtom(T);
-
   //Materials:
-  cyclus::Material::Ptr sequestered_tritium = cyclus::Material::CreateUntracked(0.0, tritium_comp);
+  cyclus::Material::Ptr sequestered_tritium;
 
-  // Transition rate matrix
-  Eigen::MatrixXd A;
+  // Transition rate matrices
+  // One for with plasma, one for without
+  Eigen::MatrixXd A_burn;
+  Eigen::MatrixXd A_off;
 
   // Indices of different components
   std::map<std::string,int> comp_index;
+
+  // Private function for string checking
+  void _require_string(std::map<std::string, int> string_map, 
+		  std::string required, std::string error_string);
 
   // And away we go!
 };
