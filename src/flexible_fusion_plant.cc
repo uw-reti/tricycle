@@ -195,11 +195,13 @@ void FlexibleFusionPlant::EnterNotify() {
 // zero if the plant is switched off. 
 Eigen::MatrixXd FlexibleFusionPlant::BuildMatrix(double tritium_consumption_rate) {
 
-  // Add +1 for the plasma
-  int N = components.size() + 1;
+  // Add +1 for the plasma and +1 for the excess inventory
+  int N = components.size() + 2;
   
   // For legibility: plasma is the last element
   int plasma = N - 1;
+  int excess = N - 2;
+  int storage = comp_index["storage"];
   
   Eigen::MatrixXd A = Eigen::MatrixXd::Zero(N,N);
       
@@ -209,6 +211,12 @@ Eigen::MatrixXd FlexibleFusionPlant::BuildMatrix(double tritium_consumption_rate
 
       int from = comp_index[transfer_from[flow]];
       int to   = comp_index[transfer_to[flow]];
+
+      // Replace 'storage' with 'excess' to ensure
+      // that bred/new tritium is handled separately, e.g.,
+      // allowing storage to coast down from the startup
+      // inventory to the reserve
+      if (to == storage) to = excess;
       
       double rate = transfer_rate[flow];
 
@@ -227,6 +235,12 @@ Eigen::MatrixXd FlexibleFusionPlant::BuildMatrix(double tritium_consumption_rate
 
       int to = comp_index[escape_to[flow]];
       
+      // Replace 'storage' with 'excess' to ensure
+      // that bred/new tritium is handled separately, e.g.,
+      // allowing storage to coast down from the startup
+      // inventory to the reserve
+      if (to == storage) to = excess;
+      
       double fraction = escape_fraction[flow];
 
       A(to, plasma) = fraction * (1 - TBE) * tritium_consumption_rate;
@@ -239,7 +253,6 @@ Eigen::MatrixXd FlexibleFusionPlant::BuildMatrix(double tritium_consumption_rate
   // which does not itself gain tritium. Because the plasma vector element
   // is constant, in the matrix equation, this line corresponds to a constant 
   // removal rate from the storage.
-  int storage = comp_index["storage"];
   A(storage, plasma) = -tritium_consumption_rate;
   
   // Add the tritium source term
@@ -248,8 +261,8 @@ Eigen::MatrixXd FlexibleFusionPlant::BuildMatrix(double tritium_consumption_rate
   int breeder = comp_index["breeder"];
   A(breeder, plasma) = TBR * TBE * tritium_consumption_rate;
 
-  // Also add diagonal tritium decay term
-  for (int component = 0; component < components.size(); component++) {
+  // Also add diagonal tritium decay term except in the plasma
+  for (int component = 0; component < components.size() + 1; component++) {
     A(component, component) -= lambda_T;
   }
 
@@ -274,20 +287,19 @@ void FlexibleFusionPlant::Tick() {
 
   }
 
-  // Decay any tritium stored in the excess
-  tritium_excess.Decay();
+  // If storage requires more tritium, check if the excess can provide it
+  double current = tritium_storage.quantity();
+  double deficit = reserve_inventory - current;
+  if (deficit > cyclus::eps_rsrc() &&
+      tritium_excess.quantity() > cyclus::eps_rsrc()) {
 
-  // Accumulate tritium into the excess store
-  double excess_tritium = 0.0;
-  if (has_started) {
-    excess_tritium = std::max(tritium_storage.quantity() - 
-                                  (reserve_inventory + margin_to_excess), 0.0);
+    double transfer_mass = std::min(deficit, tritium_excess.quantity());
+
+    cyclus::Material::Ptr mat = tritium_excess.Pop(transfer_mass);
+
+    tritium_storage.Push(mat);
   }
-  
-  // Otherwise the ResBuf encounters an error when it tries to squash
-  if (excess_tritium > cyclus::eps_rsrc()) {
-    tritium_excess.Push(tritium_storage.Pop(excess_tritium));
-  }
+
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -370,7 +382,10 @@ void FlexibleFusionPlant::OperateReactor(bool burn_tritium) {
   // Construct tritium vector and evolve it according to 
   // burn rate and transition rates.
   // The final element is the plasma
-  int N = components.size() + 1;
+  // The penultimate element is the excess
+  int N = components.size() + 2;
+  int plasma = N - 1;
+  int excess = N - 2;
   Eigen::VectorXd tritium_vector(N);
   std::vector<cyclus::Material::Ptr> popped_mats(N - 1);
   
@@ -380,8 +395,10 @@ void FlexibleFusionPlant::OperateReactor(bool burn_tritium) {
     // Essentially assumes tritium has zero residence time in
     // the plasma.
     // Contains '1' to act as an inhomogeneous source
-    if (i == N - 1) {
+    if (i == plasma) {
       tritium_vector(i) = 1;
+    } else if (i == excess) {
+      tritium_vector(i) = tritium_excess.quantity();
     } else if (i == comp_index["storage"]) {
       tritium_vector(i) = tritium_storage.quantity();
     } else {
@@ -416,6 +433,14 @@ void FlexibleFusionPlant::OperateReactor(bool burn_tritium) {
         tritium_storage.Push(cyclus::Material::Create(this, delta, tritium_comp));
       }
     }
+    // and excess buffer
+    else if (i == excess) {
+      if (delta < -cyclus::eps_rsrc()) {
+        tritium_excess.Pop(-delta);
+      } else if (delta > cyclus::eps_rsrc()) {
+        tritium_excess.Push(cyclus::Material::Create(this, delta, tritium_comp));
+      }
+    }
     // Handle other components
     else {
       if (delta < -cyclus::eps_rsrc()) {
@@ -424,7 +449,6 @@ void FlexibleFusionPlant::OperateReactor(bool burn_tritium) {
         tritium_elsewhere[i].Push(cyclus::Material::Create(this, delta, tritium_comp));
       }
     }
-
 
   }
 

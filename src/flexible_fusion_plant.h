@@ -29,7 +29,7 @@ namespace tricycle {
 /// fusion_power: the electrical power in MW produced by the plant.
 /// TBR: tritium breeding ratio
 /// components: the names of the components that make up the plant. Required
-/// components are 'plasma', 'storage', and 'breeder'. There can be any number
+/// components are 'storage', and 'breeder'. There can be any number
 /// of components.
 ///
 /// @section optionalparams Optional Parameters
