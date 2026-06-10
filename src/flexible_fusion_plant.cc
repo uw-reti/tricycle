@@ -19,7 +19,6 @@ const double mass_tritium = pyne::atomic_mass(tritium_id) / (1000.0 * pyne::N_A)
 
 const double MW_to_W = 1000000;
 const double MeV_to_J = 1.6021766E-13;
-const double lambda_T = std::log(2.0) / (12.32 * cyclusYear);
 const double energy_DT = 17.6 * MeV_to_J;
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -52,13 +51,6 @@ void FlexibleFusionPlant::EnterNotify() {
 
   failure_probability = 1.0 - std::exp(-failure_frequency * context()->dt() / cyclusYear);  
   
-  // Ensure startup inventory is greater than reserve  
-  if (startup_inventory < reserve_inventory) {
-    throw cyclus::ValueError(
-        "Startup inventory must exceed or equal reserve inventory."
-	);
-  }
-
   int N = components.size();
   
   // Size vector of intermediate buffers
@@ -69,82 +61,7 @@ void FlexibleFusionPlant::EnterNotify() {
     comp_index[components[i]] = i;
   }
 
-  // Ensure that the components contains storage and breeder
-  std::vector<std::string> required = {
-      "breeder",
-      "storage"
-  };
-
-  for (auto const& name : required) {
-    if (comp_index.count(name) == 0) {
-      throw cyclus::ValueError(
-          "Required tritium component '" +
-          name +
-          "' was not defined in input.");
-    }
-  }
-
-  // Ensure that the components DO NOT contain plasma
-  if (comp_index.count("plasma") > 0) {
-    throw cyclus::ValueError("plasma is a reserved component name");
-  }
-
-  // Ensure transfer vectors have the same length
-  if (transfer_from.size() != transfer_to.size() ||
-      transfer_from.size() != transfer_rate.size()) {
-    throw cyclus::ValueError(
-        "Transfer vectors must have equal length.");
-  }
-  
-  // Check that transfers are going to/from real places
-  if (transfer_rate.size() > 0) {
-    for (int flow = 0; flow < transfer_rate.size(); flow++) {
-
-      _require_string(comp_index, transfer_from[flow],
-		      "Unknown transfer source component: " + 
-		      transfer_from[flow]);
-
-      _require_string(comp_index, transfer_to[flow],
-		      "Unknown transfer destination component: " + 
-		      transfer_to[flow]);
-
-    }
-  }
-  
-  // And escape fractions
-  if (escape_to.size() != escape_fraction.size()) {
-    throw cyclus::ValueError(
-        "Escape vectors must have equal length.");
-  }
-
-  // Ensure tritium escape fraction sums to less than one,
-  // are all positive, and to real locations
-  if (escape_fraction.size() > 0) {
-    
-    // Check total
-    double total = std::accumulate(escape_fraction.begin(),
-		    escape_fraction.end(), 0.0);
-    if (total > 1.0) {
-      throw cyclus::ValueError(
-        "Escape fractions must sum to <= 1.");
-    }
-
-    // Check positivity
-    if (std::any_of(escape_fraction.begin(), escape_fraction.end(),
-			    [](double f) {return f < 0;})) {
-      throw cyclus::ValueError(
-          "All escape fractions must be non-negative.");
-    }
-    
-    // Check validity of destinations
-    for (int flow = 0; flow < escape_fraction.size(); flow++) {
-
-      _require_string(comp_index, escape_to[flow],
-		      "Unknown escape destination component: " + 
-		      escape_to[flow]);
-    }
-
-  }
+  ValidateInput();
 
   // Create matrices
   A_burn = BuildMatrix(burn_rate / TBE);
@@ -206,46 +123,42 @@ Eigen::MatrixXd FlexibleFusionPlant::BuildMatrix(double tritium_consumption_rate
   Eigen::MatrixXd A = Eigen::MatrixXd::Zero(N,N);
       
   // Fill transfer terms
-  if (transfer_rate.size() > 0) {
-    for (int flow = 0; flow < transfer_rate.size(); flow++) {
+  for (int flow = 0; flow < transfer_rate.size(); flow++) {
 
-      int from = comp_index[transfer_from[flow]];
-      int to   = comp_index[transfer_to[flow]];
+    int from = comp_index[transfer_from[flow]];
+    int to   = comp_index[transfer_to[flow]];
 
-      // Replace 'storage' with 'excess' to ensure
-      // that bred/new tritium is handled separately, e.g.,
-      // allowing storage to coast down from the startup
-      // inventory to the reserve
-      if (to == storage) to = excess;
+    // Replace 'storage' with 'excess' to ensure
+    // that bred/new tritium is handled separately, e.g.,
+    // allowing storage to coast down from the startup
+    // inventory to the reserve
+    if (to == storage) to = excess;
       
-      double rate = transfer_rate[flow];
+    double rate = transfer_rate[flow];
 
-      // Off-diagonal gain
-      A(to, from) += rate;
+    // Off-diagonal gain
+    A(to, from) += rate;
 
-      // Diagonal loss to other component
-      A(from, from) -= rate;
+    // Diagonal loss to other component
+    A(from, from) -= rate;
 
-    }
   }
 
   // Fill plasma escape terms
-  if (escape_fraction.size() > 0) {
-    for (int flow = 0; flow < escape_fraction.size(); flow++) {
+  for (int flow = 0; flow < escape_fraction.size(); flow++) {
 
-      int to = comp_index[escape_to[flow]];
+    int to = comp_index[escape_to[flow]];
       
-      // Replace 'storage' with 'excess' to ensure
-      // that bred/new tritium is handled separately, e.g.,
-      // allowing storage to coast down from the startup
-      // inventory to the reserve
-      if (to == storage) to = excess;
+    // Replace 'storage' with 'excess' to ensure
+    // that bred/new tritium is handled separately, e.g.,
+    // allowing storage to coast down from the startup
+    // inventory to the reserve
+    if (to == storage) to = excess;
       
-      double fraction = escape_fraction[flow];
+    double fraction = escape_fraction[flow];
 
-      A(to, plasma) = fraction * (1 - TBE) * tritium_consumption_rate;
+    A(to, plasma) = fraction * (1 - TBE) * tritium_consumption_rate;
 	
-    }
   }
 
   // Add constant removal from storage into plasma
@@ -263,10 +176,98 @@ Eigen::MatrixXd FlexibleFusionPlant::BuildMatrix(double tritium_consumption_rate
 
   // Also add diagonal tritium decay term except in the plasma
   for (int component = 0; component < components.size() + 1; component++) {
-    A(component, component) -= lambda_T;
+    A(component, component) -= pyne::decay_const(tritium_id);
   }
 
   return A;
+
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void FlexibleFusionPlant::ValidateInput() {
+  
+  // Ensure that components contains storage and breeder
+  std::vector<std::string> required = {
+      "breeder",
+      "storage"
+  };
+
+  for (auto const& name : required) {
+    if (comp_index.count(name) == 0) {
+      throw cyclus::ValueError(
+          "Required tritium component '" +
+          name +
+          "' was not defined in input.");
+    }
+  }
+
+  // Ensure that components DO NOT contain plasma
+  if (comp_index.count("plasma") > 0) {
+    throw cyclus::ValueError("plasma is a reserved component name");
+  }
+
+  // Ensure transfer vectors have the same length
+  if (transfer_from.size() != transfer_to.size() ||
+      transfer_from.size() != transfer_rate.size()) {
+    throw cyclus::ValueError(
+        "Transfer vectors must have equal length.");
+  }
+  
+  // Check that transfers are going to/from real places
+  for (int flow = 0; flow < transfer_rate.size(); flow++) {
+
+    _require_string(comp_index, transfer_from[flow],
+		    "Unknown transfer source component: " + 
+		    transfer_from[flow]);
+
+      _require_string(comp_index, transfer_to[flow],
+		    "Unknown transfer destination component: " + 
+		    transfer_to[flow]);
+
+  }
+  
+  // And escape fractions
+  if (escape_to.size() != escape_fraction.size()) {
+    throw cyclus::ValueError(
+        "Escape vectors must have equal length.");
+  }
+
+  // Ensure tritium escape fraction sums to less than one,
+  // are all positive, and to real locations
+  if (escape_fraction.size() > 0) {
+    
+    // Check total
+    double total = std::accumulate(escape_fraction.begin(),
+		    escape_fraction.end(), 0.0);
+    if (total > 1.0) {
+      throw cyclus::ValueError(
+        "Escape fractions must sum to <= 1.");
+    }
+
+    // Check positivity
+    if (std::any_of(escape_fraction.begin(), escape_fraction.end(),
+			    [](double f) {return f < 0;})) {
+      throw cyclus::ValueError(
+          "All escape fractions must be non-negative.");
+    }
+    
+    // Check validity of destinations
+    for (int flow = 0; flow < escape_fraction.size(); flow++) {
+
+      _require_string(comp_index, escape_to[flow],
+		      "Unknown escape destination component: " + 
+		      escape_to[flow]);
+    }
+
+  }
+  
+  // Ensure startup inventory is greater than reserve  
+  if (startup_inventory < reserve_inventory) {
+    throw cyclus::ValueError(
+        "Startup inventory must exceed or equal reserve inventory."
+	);
+  }
+
 
 }
 
@@ -377,7 +378,6 @@ bool FlexibleFusionPlant::ReadyToOperate() {
 void FlexibleFusionPlant::OperateReactor(bool burn_tritium) {
 
   double dt = context()->dt();
-  double Q = 0;
   
   // Construct tritium vector and evolve it according to 
   // burn rate and transition rates.

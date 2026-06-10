@@ -140,7 +140,6 @@ class FlexibleFusionPlant : public cyclus::Facility  {
   //Functions:
   bool ReadyToOperate();
   void OperateReactor(bool burn_tritium = true);
-  void DecayInventories();
   Eigen::MatrixXd BuildMatrix(double tritium_consumption_rate);
   double SequesteredTritium();
   void RecordInventories(double tritium_storage, double tritium_excess, 
@@ -355,6 +354,9 @@ class FlexibleFusionPlant : public cyclus::Facility  {
 
   // Indices of different components
   std::map<std::string,int> comp_index;
+
+  // Private function for input checking
+  void ValidateInput();
 
   // Private function for string checking
   void _require_string(std::map<std::string, int> string_map, 
