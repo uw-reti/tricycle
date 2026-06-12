@@ -15,27 +15,27 @@ using cyclus::QueryResult;
 using cyclus::toolkit::MatQuery;
 using tricycle::FusionPowerPlant;
 
-Composition::Ptr tritium() {
+static Composition::Ptr tritium() {
   cyclus::CompMap m;
   m[10030000] = 1.0;
   return Composition::CreateFromAtom(m);
 };
 
-Composition::Ptr decayed_tritium() {
+static Composition::Ptr decayed_tritium() {
   cyclus::CompMap m;
   m[10030000] = 0.9;
   m[20030000] = 0.1;
   return Composition::CreateFromAtom(m);
 };
 
-Composition::Ptr enriched_lithium() {
+static Composition::Ptr enriched_lithium() {
   cyclus::CompMap m;
   m[30060000] = 0.3;
   m[30070000] = 0.7;
   return Composition::CreateFromAtom(m);
 };
 
-std::string common_config =
+static std::string common_config =
     " <fusion_power>300</fusion_power>"
     " <reserve_inventory>6.0</reserve_inventory>"
     " <sequestered_equilibrium>2.121</sequestered_equilibrium>"
@@ -45,7 +45,7 @@ std::string common_config =
     " <blanket_size>1000</blanket_size>"
     " <he3_outcommod>Helium_3</he3_outcommod>";
 
-cyclus::MockSim InitializeSim(std::string config, int simdur) {
+static cyclus::MockSim InitializeSim(std::string config, int simdur) {
   cyclus::MockSim sim(cyclus::AgentSpec(":tricycle:FusionPowerPlant"), config,
                       simdur);
 
@@ -57,7 +57,7 @@ cyclus::MockSim InitializeSim(std::string config, int simdur) {
   return sim;
 }
 
-QueryResult TimeInventoryQuery(cyclus::MockSim& sim, std::string time) {
+static QueryResult TimeInventoryQuery(cyclus::MockSim& sim, std::string time) {
   std::vector<Cond> conds;
 
   conds.push_back(Cond("Time", "==", time));
