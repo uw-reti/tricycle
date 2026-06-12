@@ -88,11 +88,10 @@ void FlexibleFusionPlant::EnterNotify() {
         .Set(fuel_incommod, tritium_comp);
 
   } else if (refuel_mode == "fill") {
-    double reserve = std::max(fuel_usage_mass, reserve_inventory);
 
     fuel_refill_policy
         .Init(this, &tritium_storage, std::string("Input"), &fuel_tracker,
-              std::string("ss"), reserve, reserve)
+              std::string("ss"), reserve_inventory, reserve_inventory)
         .Set(fuel_incommod, tritium_comp);
 
   } else {
@@ -186,6 +185,17 @@ Eigen::MatrixXd FlexibleFusionPlant::BuildMatrix(double tritium_consumption_rate
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void FlexibleFusionPlant::ValidateInput() {
   
+  // Give a warning if the reserve inventory is incompatible with the
+  // timestep. If the timestep is very long, it is possible that the
+  // fuel usage per step is larger than reserve inventory. Therefore
+  // the plant would never reach an equilibrium.
+  if (reserve_inventory < fuel_usage_mass) {
+    cyclus::Warn<cyclus::VALUE_WARNING>("The simulation time step is too "
+		    "long for the Flexible Fusion Plant reserve inventory.\n"
+		    "It is recommended to reduce the step length to avoid"
+		    " erroneous results.");
+  }
+
   // Ensure that components contains storage and breeder
   std::vector<std::string> required = {
       "breeder",
@@ -360,7 +370,7 @@ bool FlexibleFusionPlant::ReadyToOperate() {
   if (tritium < startup_inventory && !has_started) {
     return false;
   }
-  if (tritium < std::max(reserve_inventory, fuel_usage_mass)) {
+  if (tritium < fuel_usage_mass) {
     return false;
   }
 
